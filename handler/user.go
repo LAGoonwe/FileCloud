@@ -91,6 +91,7 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	//	token := r.Form.Get("token")
 
+	//以下逻辑已在拦截器中重写
 	// // 2. 验证token是否有效
 	// isValidToken := IsTokenValid(token)
 	// if !isValidToken {
