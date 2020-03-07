@@ -192,7 +192,9 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TryFastUploadHandler : 尝试秒传接口
+/**
+文件秒传接口
+*/
 func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
