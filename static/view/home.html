@@ -21,7 +21,7 @@
   <div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
     <div style="font-size:20px;font-weight:bold;
                 margin:0;background: rgb(195, 228, 250);height:32px;">
-      文件云盘首页
+      宙斯云盘
     </div>
     <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
       <tbody>
@@ -80,11 +80,36 @@
       success: function (body, textStatus, jqXHR) {
         var resp = JSON.parse(body);
         document.getElementById("username").innerHTML = resp.data.Username;
-        document.getElementById("regtime").innerHTML = resp.data.SignupAt;
+        var SignupAt = new Date(resp.data.SignupAt)
+        document.getElementById("regtime").innerHTML = formatDate(SignupAt);
         updateFileList();
       }
     });
   }
+
+  /**
+   *前端页面的时间格式化函数
+   */
+  function checkTime(i){
+    if (i<10){
+      i="0" + i
+    }
+    return i;
+  }
+
+  function formatDate(date) {
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var weekday = date.getDate();
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var seconds = date.getSeconds();
+
+    return (year + "-" + checkTime(month) + "-" + checkTime(weekday)+" "+checkTime(hours)+":"+
+    checkTime(minutes)+":"+checkTime(seconds));
+  }
+
+
 
   function updateFileList() {
     $.ajax({
@@ -110,6 +135,7 @@
         }
 
         for (var i = 0; i < data.length; i++) {
+
           var x = document.getElementById('filetbl').insertRow();
           var cell = x.insertCell();
           cell.innerHTML = data[i].FileHash.substr(0, 20)+"...";
@@ -121,10 +147,12 @@
           cell.innerHTML = data[i].FileSize;
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].UploadAt;
+          var UploadAt = new Date(data[i].UploadAt)
+          cell.innerHTML = formatDate(UploadAt);
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].LastUpdated;
+          var LastUpdated = new Date(data[i].LastUpdated);
+          cell.innerHTML = formatDate(LastUpdated);
 
           cell = x.insertCell();
           cell.innerHTML = '<button class="btn btn-success" ' +

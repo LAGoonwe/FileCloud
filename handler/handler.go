@@ -3,6 +3,7 @@ package handler
 import (
 	dblayer "FileCloud/db"
 	"FileCloud/meta"
+	"FileCloud/store/oss"
 	"FileCloud/util"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,9 @@ import (
 )
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
+
+	r.ParseForm()
+	username := r.Form.Get("username")
 
 	if r.Method == "GET" {
 		//返回上传html页面
@@ -32,6 +36,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("Failed to get data,err:%s\n", err.Error())
 			return
 		}
+
 		defer file.Close()
 
 		fileMeta := meta.FileMeta{
@@ -57,11 +62,32 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		newFile.Seek(0, 0)
 		fileMeta.FileSha1 = util.FileSha1(newFile)
-		meta.UpdateFileMetaDB(fileMeta)
 
-		//TODO:更新用户文件表记录
-		r.ParseForm()
-		username := r.Form.Get("username")
+		//将文件写入到阿里云oss中
+		// 读取文件流。
+		fd, err := os.Open(fileMeta.Location)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(-1)
+		}
+		//开始同步写入
+		//TODO:异步实现
+
+		/**
+		以当前上传文件的用户名作为在oss存储上的文件夹名称
+		即实行简单的一用户一文件夹策略
+		*/
+		ossPath := username + "/" + fileMeta.FileName
+		err = oss.Bucket().PutObject(ossPath, fd)
+		if err != nil {
+			fmt.Println(err.Error())
+			w.Write([]byte(" Oss Upload failed"))
+			return
+		}
+		fileMeta.Location = ossPath
+
+		_ = meta.UpdateFileMetaDB(fileMeta)
+
 		suc := dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
 		if suc {
 			http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
@@ -239,4 +265,14 @@ func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 	return
+}
+
+//生成文件下载地址
+func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	filehash := r.Form.Get("filehash")
+	//从文件表中查找记录
+	row, _ := dblayer.GetFileMeta(filehash)
+	signedURL := oss.DownloadURL(row.FileAddr.String)
+	w.Write([]byte(signedURL))
 }
