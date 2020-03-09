@@ -1,8 +1,10 @@
 package handler
 
 import (
+	cfg "FileCloud/config"
 	dblayer "FileCloud/db"
 	"FileCloud/meta"
+	"FileCloud/mq"
 	"FileCloud/store/oss"
 	"FileCloud/util"
 	"encoding/json"
@@ -65,27 +67,57 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		//将文件写入到阿里云oss中
 		// 读取文件流。
-		fd, err := os.Open(fileMeta.Location)
-		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(-1)
-		}
+		//fd, err := os.Open(fileMeta.Location)
+		//if err != nil {
+		//	fmt.Println("Error:", err)
+		//	os.Exit(-1)
+		//}
 		//开始同步写入
-		//TODO:异步实现
-
 		/**
 		以当前上传文件的用户名作为在oss存储上的文件夹名称
 		即实行简单的一用户一文件夹策略
 		*/
+		newFile.Seek(0, 0)
 		ossPath := username + "/" + fileMeta.FileName
-		err = oss.Bucket().PutObject(ossPath, fd)
-		if err != nil {
-			fmt.Println(err.Error())
-			w.Write([]byte(" Oss Upload failed"))
-			return
-		}
-		fileMeta.Location = ossPath
+		//err = oss.Bucket().PutObject(ossPath, fd)
+		//if err != nil {
+		//	fmt.Println(err.Error())
+		//	w.Write([]byte(" Oss Upload failed"))
+		//	return
+		//}
+		//fileMeta.Location = ossPath
 
+		//通过RabbitMQ异步实现
+		// 写入异步转移任务队列
+		if !cfg.AsyncTransferEnable {
+			err = oss.Bucket().PutObject(ossPath, newFile)
+			if err != nil {
+				fmt.Println(err.Error())
+				w.Write([]byte("Upload failed!"))
+				return
+			}
+		} else {
+			// 写入异步转移任务队列
+			data := mq.TransferData{
+				FileHash:     fileMeta.FileSha1,
+				CurLocation:  fileMeta.Location,
+				DestLocation: ossPath,
+			}
+			pubData, _ := json.Marshal(data)
+			pubSuc := mq.Publish(
+				cfg.TransExchangeName,
+				cfg.TransOSSRoutingKey,
+				pubData,
+			)
+			if !pubSuc {
+				// TODO: 当前发送转移信息失败，稍后重试
+			} else {
+				fmt.Println("成功发送消息：" + string(pubData))
+			}
+		}
+
+		//更改文件保存地址为阿里云的云端存储地址
+		fileMeta.Location = ossPath
 		_ = meta.UpdateFileMetaDB(fileMeta)
 
 		suc := dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
