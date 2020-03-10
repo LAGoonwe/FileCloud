@@ -24,7 +24,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		//返回上传html页面
-		data, err := ioutil.ReadFile("src/FileCloud/static/view/index.html")
+		data, err := ioutil.ReadFile("src/FileCloud/static/view/upload.html")
 		if err != nil {
 			io.WriteString(w, "internal ser ver error")
 			return
