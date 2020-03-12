@@ -30,7 +30,44 @@ func OnFileUploadFinished(filehash string, filename string,
 		return true
 	}
 
+	return true
+}
+
+//用户文件信息重命名
+func UpdateName(filename, filehash string) bool {
+	stmt, err := mydb.DBConn().Prepare(
+		"update tbl_user_file set`file_name`=? where  `file_sha1`=? ")
+	if err != nil {
+		fmt.Println("预编译sql失败, err:" + err.Error())
+		return false
+	}
+	defer stmt.Close()
+
+	ret, err := stmt.Exec(filename, filehash)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	if rf, err := ret.RowsAffected(); nil == err {
+		//如果是新上传的文件影响数应该为0，如果是覆盖更新文件，影响数应该大于0
+		if rf < 0 {
+			fmt.Printf("更新文件名称失败, filehash:%s", filehash)
+		}
+		return true
+	}
 	return false
+}
+
+//用户文件信息删除
+func DeleteUserFile(filehash string) {
+	stmt, err := mydb.DBConn().Prepare(`DELETE FROM tbl_user_file WHERE file_sha1=?`)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	_, err = stmt.Exec(filehash)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 type TableFile struct {

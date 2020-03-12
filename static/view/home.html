@@ -26,7 +26,7 @@
   <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
     <tbody>
     <tr style="margin-bottom: 20px;">
-      <td style="width:20%;height: 100%;background: lightsteelblue;">
+      <td style="width:10%;height: 100%;background: lightsteelblue;">
         <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
           <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
           用户名: <p id="username" style="color: seagreen"></p>
@@ -118,27 +118,44 @@
       data: {
         limit: 15
       },
-      error: function (jqXHR, textStatus, errorThrown) {
-        if (textStatus == "error") {
-          alert(textStatus + " : " + errorThrown);
-        } else {
-          alert(textStatus);
-        }
+      error: function (err) {
+        alert(JSON.stringify(err));
       },
-      success: function (body, textStatus, jqXHR) {
+      success: function (body) {
         if (!body) {
           return;
         }
-        var data = JSON.parse(body);
+        var data = body;
         if (!data || data.length <= 0) {
           return;
         }
 
-        for (var i = 0; i < data.length; i++) {
+        var dlHost = 'http://localhost:8080';
+        var dlEntry = localStorage.getItem('downloadEntry');
+        if (dlEntry != null) {
+          if (dlEntry.indexOf('http:')<0) {
+            dlHost = 'http://' + dlEntry;
+          } else {
+            dlHost = dlEntry;
+          }
+        }
 
+        var downloadHtml = '<button class="btn btn-info" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
+        var renameFileHtml = '<button class="btn btn-warning" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/file/' +
+                'update?op=0&filehash={2}&{3}\')">重命名</button>';
+        var deleteFileHtml = '<button class="btn btn-danger" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "deleteFile(\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+
+        data = JSON.parse(data)
+        for (var i = 0; i < data.length; i++) {
           var x = document.getElementById('filetbl').insertRow();
           var cell = x.insertCell();
-          cell.innerHTML = data[i].FileHash.substr(0, 20)+"...";
+          cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
 
           cell = x.insertCell();
           cell.innerHTML = data[i].FileName;
@@ -147,18 +164,16 @@
           cell.innerHTML = data[i].FileSize;
 
           cell = x.insertCell();
-          var UploadAt = new Date(data[i].UploadAt)
-          cell.innerHTML = formatDate(UploadAt);
+          cell.innerHTML = data[i].UploadAt;
 
           cell = x.insertCell();
-          var LastUpdated = new Date(data[i].LastUpdated);
-          cell.innerHTML = formatDate(LastUpdated);
+          cell.innerHTML = data[i].LastUpdated;
 
           cell = x.insertCell();
-          cell.innerHTML = '<button class="btn btn-success" ' +
-                  'style="height:30px;margin:5px 0;"' +
-                  'onClick = "downloadFile(\'http://localhost:8080/file/' +
-                  'downloadurl?filehash=' + data[i].FileHash + '&' + queryParams() + '\')">下载</button>';
+          cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
+                          .format(data[i].FileHash, queryParams()) +
+                  renameFileHtml.format(data[i].FileHash, data[i].FileName, data[i].FileHash,
+                          queryParams());
         }
       }
     });
@@ -166,6 +181,33 @@
 
   function toUploadFile() {
     window.location.href = '/file/upload?' + queryParams();
+  }
+
+  function renameFile(filehash, filename, renameUrl) {
+    var newFileName = prompt("\n当前文件名: {0}\n\n请输入新的文件名: ".format(filename));
+    newFileName = newFileName.trim();
+
+    if (newFileName.length <= 0) {
+      alert("文件名不能为空");
+      return;
+    }
+
+    if (newFileName.indexOf(" ") >= 0) {
+      alert("文件名不能包含空格");
+      return;
+    }
+
+    $.ajax({
+      url: renameUrl + "&filename=" + newFileName,
+      type: "POST",
+      error: function (msg) {
+        alert(msg);
+      },
+      success: function (body) {
+        alert("文件名修改成功");
+        window.location.href = '/static/view/home.html';
+      }
+    });
   }
 
   function downloadFile(durl) {
@@ -189,6 +231,25 @@
         } catch (e) {
           alert(e);
         }
+      }
+    });
+  }
+
+
+  function deleteFile(durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (jqXHR, textStatus, errorThrown) {
+        if (textStatus == "error") {
+          alert(textStatus + " : " + errorThrown);
+        } else {
+          alert(textStatus);
+        }
+      },
+      success: function (body, textStatus, jqXHR) {
+        alert("文件删除成功");
+        window.location.href = '/static/view/home.html'
       }
     });
   }

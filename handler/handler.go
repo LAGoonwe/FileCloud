@@ -219,9 +219,9 @@ func FileMetaUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	curFileMeta := meta.GetFileMeta(fileSha1)
+	curFileMeta, _ := meta.GetFileMetaDB(fileSha1)
 	curFileMeta.FileName = newFileName
-	meta.UpdateFileMeta(curFileMeta)
+	dblayer.UpdateName(curFileMeta.FileName, curFileMeta.FileSha1)
 
 	w.WriteHeader(http.StatusOK)
 	data, err := json.Marshal(curFileMeta)
@@ -237,14 +237,23 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	fileSha1 := r.Form.Get("filehash")
-
 	//物理上的删除
 	//TODO:物理上的删除似乎没有起作用，延迟再看
-	fMeta := meta.GetFileMeta(fileSha1)
+	fMeta, err := meta.GetFileMetaDB(fileSha1)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	os.Remove(fMeta.Location)
 
-	//元信息，即索引的删除
-	meta.RemoveFileMeta(fileSha1)
+	//用户文件元信息的删除
+	dblayer.DeleteUserFile(fileSha1)
+
+	//oss云上的删除
+	bucket := oss.Bucket()
+	err = bucket.DeleteObject(fMeta.Location)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
 
 	w.WriteHeader(http.StatusOK)
 

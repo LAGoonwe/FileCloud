@@ -77,10 +77,7 @@
         alert('请求报错信息: ' + JSON.stringify(err));
       },
       success: function (res) {
-        alert('请求返回结果: ' + JSON.stringify(res));
-        if (res.code == 0) {
-          window.location.href = "/static/view/home.html";
-        }
+        window.location.href = "/static/view/home.html";
       }
     });
   }

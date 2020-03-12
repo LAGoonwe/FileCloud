@@ -15,12 +15,12 @@ type FileMeta struct {
 
 var fileMetas map[string]FileMeta
 
-func init()  {
+func init() {
 	fileMetas = make(map[string]FileMeta)
 }
 
 //新增或者更新文件元信息
-func UpdateFileMeta(fmeta FileMeta){
+func UpdateFileMeta(fmeta FileMeta) {
 	fileMetas[fmeta.FileSha1] = fmeta
 }
 
@@ -35,10 +35,10 @@ func GetFileMeta(fileSha1 string) FileMeta {
 }
 
 //通过sha1值从mysql数据库获取文件元信息
-func GetFileMetaDB(fileSha1 string) (FileMeta,error)  {
-	tfile,err := mydb.GetFileMeta(fileSha1)
-	if err != nil{
-		return FileMeta{},err
+func GetFileMetaDB(fileSha1 string) (FileMeta, error) {
+	tfile, err := mydb.GetFileMeta(fileSha1)
+	if err != nil {
+		return FileMeta{}, err
 	}
 	fmeta := FileMeta{
 		FileSha1: tfile.FileHash,
@@ -47,10 +47,10 @@ func GetFileMetaDB(fileSha1 string) (FileMeta,error)  {
 		Location: tfile.FileAddr.String,
 		UploadAt: tfile.FileCreateAt.Time.String(),
 	}
-	return fmeta,nil
+	return fmeta, nil
 }
 
 //根据哈希值删除文件元信息
-func RemoveFileMeta(fileSha1 string)  {
-	delete(fileMetas,fileSha1)
+func RemoveFileMeta(fileSha1 string) {
+	delete(fileMetas, fileSha1)
 }
