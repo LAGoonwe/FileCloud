@@ -146,7 +146,7 @@
         var renameFileHtml = '<button class="btn btn-warning" ' +
                 'style="height:30px;margin:5px 3px;"' +
                 'onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/file/' +
-                'update?op=0&filehash={2}&{3}\')">重命名</button>';
+                'update?op=2&filehash={2}&{3}\')">重命名</button>';
         var deleteFileHtml = '<button class="btn btn-danger" ' +
                 'style="height:30px;margin:5px 3px;"' +
                 'onClick = "deleteFile(\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
@@ -197,13 +197,17 @@
       return;
     }
 
+    xhr = new XMLHttpRequest()
+
     $.ajax({
       url: renameUrl + "&filename=" + newFileName,
       type: "POST",
       error: function (msg) {
-        alert(msg);
+        console.log(JSON.stringify(msg))
+        alert(JSON.stringify(msg));
       },
       success: function (body) {
+        console.log(body)
         alert("文件名修改成功");
         window.location.href = '/static/view/home.html';
       }

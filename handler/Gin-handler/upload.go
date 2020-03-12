@@ -8,6 +8,7 @@ import (
 	"FileCloud/store/oss"
 	"FileCloud/util"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
@@ -202,54 +203,62 @@ func DownloadHandler(c *gin.Context) {
 
 //FileMetaUpdateHandler: 更新文件元信息
 func FileMetaUpdateHandler(c *gin.Context) {
+
 	opType := c.Request.FormValue("op")
 	fileSha1 := c.Request.FormValue("filehash")
 	newFileName := c.Request.FormValue("filename")
 
 	if opType != "0" {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "参数错误",
+		c.JSON(http.StatusForbidden, gin.H{
+			"msg":  "类型错误，禁止重命名",
 			"code": -1,
 		})
 		return
 	}
-
-	// 更新文件元信息
-	curFileMeta := meta.GetFileMeta(fileSha1)
-	curFileMeta.FileName = newFileName
-	meta.UpdateFileMeta(curFileMeta)
-
-	data, err := json.Marshal(curFileMeta)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "文件元信息格式化失败",
+	if c.Request.Method != "POST" {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{
+			"msg":  "方法错误，禁止重命名",
 			"code": -2,
 		})
 		return
 	}
-	c.Data(http.StatusOK, "application/json", data)
+
+	curFileMeta, _ := meta.GetFileMetaDB(fileSha1)
+	curFileMeta.FileName = newFileName
+	db.UpdateName(curFileMeta.FileName, curFileMeta.FileSha1)
+
+	data, err := json.Marshal(curFileMeta)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"msg":  "重命名失败",
+			"code": -3,
+		})
+	}
+	c.Data(http.StatusOK, "text/plain", data)
 }
 
 //FileDeleteHandler: 删除文件
 func FileDeleteHandler(c *gin.Context) {
+
 	fileSha1 := c.Request.FormValue("filehash")
 
-	//删除本地文件
-	fMeta := meta.GetFileMeta(fileSha1)
-	err := os.Remove(fMeta.Location)
+	//物理上的删除
+	//TODO:物理上的删除似乎没有起作用，延迟再看
+	fMeta, err := meta.GetFileMetaDB(fileSha1)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "服务器删除文件失败",
-			"code": -1,
-		})
-		return
+		fmt.Println(err.Error())
 	}
+	os.Remove(fMeta.Location)
 
-	//删除元信息
-	meta.RemoveFileMeta(fileSha1)
+	//用户文件元信息的删除
+	db.DeleteUserFile(fileSha1)
 
+	//oss云上的删除
+	bucket := oss.Bucket()
+	err = bucket.DeleteObject(fMeta.Location)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
 	c.Writer.WriteHeader(http.StatusOK)
 }
 
