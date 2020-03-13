@@ -115,6 +115,36 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+//更新用户信息
+func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
+	var realpassword string
+	//接收参数
+	r.ParseForm()
+	email := r.Form.Get("email")
+	phone := r.Form.Get("phone")
+	password := r.Form.Get("password")
+	username := r.Form.Get("username")
+	//如果密码有改动则调用更新密码的db方法
+	//如果密码无改动则调用不更新密码的db方法
+	if password != "" {
+		realpassword = password
+		enc_passwd := util.Sha1([]byte(realpassword + pwd_salt))
+		//调用db模块
+		res := dblayer.UpdateUserInfoIncludePWD(username, enc_passwd, phone, email)
+		if res {
+			fmt.Println("更新成功！")
+			http.Redirect(w, r, "http://"+r.Host+"/static/view/home.html", http.StatusFound)
+		}
+	} else {
+		res := dblayer.UpdateUserExceptPWD(username, phone, email)
+		if res {
+			fmt.Println("更新成功！")
+			http.Redirect(w, r, "http://"+r.Host+"/static/view/home.html", http.StatusFound)
+		}
+	}
+
+}
+
 // GenToken : 生成token
 func GenToken(username string) string {
 	// 40位字符:md5(username+timestamp+token_salt)+timestamp[:8]

@@ -31,7 +31,61 @@
           <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
           用户名: <p id="username" style="color: seagreen"></p>
           注册时间: <p id="regtime" style="color: seagreen"></p>
+          电话: <p id="phone" style="color: seagreen"></p>
+          邮箱: <p id="email" style="color: seagreen"></p>
+          <button class="btn  btn-primary" data-toggle="modal" data-target="#UpdateInfoModal">修改个人信息</button>
         </div>
+        <!--修改信息模态框-->
+        <!-- 模态框（Modal） -->
+        <div class="modal fade" id="UpdateInfoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                  &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                  修改你的个人信息
+                </h4>
+              </div>
+              <div class="modal-body">
+                <form action="/user/update" id="updateform" method="post" class="bs-example bs-example-form" role="form">
+                  <div class="input-group">
+                    <span class="input-group-addon">用户名（不可修改）</span>
+                    <input id="ModalUsername" class="form-control" disabled="true">
+                    <input id="realusername" name="username" hidden="hidden">
+                  </div><br>
+                  <input id="token" name="token" hidden="hidden">
+                  <div class="input-group">
+                    <span class="input-group-addon">注册时间</span>
+                    <input id="ModalRegtime" type="text" class="form-control" disabled="true">
+                  </div><br>
+                  <div class="input-group">
+                    <span class="input-group-addon">输入新密码</span>
+                    <input type="text" name="password" class="form-control" value="">
+                  </div><br>
+                  <div class="input-group">
+                    <span class="input-group-addon">电话</span>
+                    <input id="ModalPhone" name="phone" type="text" class="form-control" value="">
+                  </div><br>
+                  <div class="input-group">
+                    <span class="input-group-addon">邮箱</span>
+                    <input id="ModalEmail" name="email" type="text" class="form-control" value="">
+                  </div><br>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                </button>
+                <button type="button" class="btn btn-primary" onclick="update_info()">
+                  保存更改
+                </button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal -->
+        </div>
+
+
         <div style="height: 80%;"></div>
       </td>
       <td style="width: 3px;height:100%;">
@@ -65,6 +119,15 @@
 </body>
 
 <script lang="javascript">
+
+  //更新用户信息
+  function update_info()
+  {
+    var form = document.getElementById('updateform');
+    form.submit();
+
+  }
+
   window.onload = function () {
     var username = document.getElementById('username');
     $.ajax({
@@ -80,8 +143,15 @@
       success: function (body, textStatus, jqXHR) {
         var resp = JSON.parse(body);
         document.getElementById("username").innerHTML = resp.data.Username;
+        $("#ModalUsername").attr("value",resp.data.Username)
         var SignupAt = new Date(resp.data.SignupAt)
         document.getElementById("regtime").innerHTML = formatDate(SignupAt);
+        $("#ModalRegtime").attr("value",formatDate(SignupAt))
+        document.getElementById("phone").innerHTML = resp.data.Phone;
+        $("#ModalPhone").attr("value",resp.data.Phone)
+        document.getElementById("email").innerHTML = resp.data.Email;
+        $("#ModalEmail").attr("value",resp.data.Email)
+
         updateFileList();
       }
     });
@@ -108,8 +178,6 @@
     return (year + "-" + checkTime(month) + "-" + checkTime(weekday)+" "+checkTime(hours)+":"+
             checkTime(minutes)+":"+checkTime(seconds));
   }
-
-
 
   function updateFileList() {
     $.ajax({
@@ -151,6 +219,13 @@
                 'style="height:30px;margin:5px 3px;"' +
                 'onClick = "deleteFile(\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
 
+
+        //给模态框表单添加验证
+        $("#realusername").attr("value",localStorage.getItem("username"))
+        console.log(localStorage.getItem("username"))
+        $("#token").attr("value",localStorage.getItem("token"))
+        console.log(localStorage.getItem("token"))
+
         data = JSON.parse(data)
         for (var i = 0; i < data.length; i++) {
           var x = document.getElementById('filetbl').insertRow();
@@ -175,6 +250,7 @@
                   renameFileHtml.format(data[i].FileHash, data[i].FileName, data[i].FileHash,
                           queryParams());
         }
+
       }
     });
   }

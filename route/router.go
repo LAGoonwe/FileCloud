@@ -26,6 +26,7 @@ func Router() *gin.Engine {
 	// Use 中间件之后的接口，都需要通过拦截器
 	// 用户信息
 	router.POST("/user/info", handler.UserInfoHandler)
+	router.POST("/user/update", handler.UpdateUserInfo)
 
 	// 上传文件
 	router.GET("/file/upload", handler.UploadHandler)

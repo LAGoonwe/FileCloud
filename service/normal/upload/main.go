@@ -36,6 +36,7 @@ func main() {
 	http.HandleFunc("/user/signup", handler.SignupHandler)
 	http.HandleFunc("/user/signin", handler.SignInHandler)
 	http.HandleFunc("/user/info", handler.HTTPInterceptor(handler.UserInfoHandler))
+	http.HandleFunc("/user/update", handler.HTTPInterceptor(handler.UpdateUserInfo))
 
 	fmt.Printf("上传服务启动中，开始监听监听[%s]...\n", config.UploadServiceHost)
 

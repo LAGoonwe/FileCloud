@@ -8,6 +8,7 @@ import (
 // User : 用户表model
 type User struct {
 	Username     string
+	Userpwd      string
 	Email        string
 	Phone        string
 	SignupAt     string
@@ -84,7 +85,7 @@ func GetUserInfo(username string) (User, error) {
 	user := User{}
 
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,signup_at from tbl_user where user_name=? limit 1")
+		"select user_name,user_pwd,signup_at,email,phone from tbl_user where user_name=? limit 1")
 	if err != nil {
 		fmt.Println(err.Error())
 		return user, err
@@ -92,9 +93,38 @@ func GetUserInfo(username string) (User, error) {
 	defer stmt.Close()
 
 	// 执行查询的操作
-	err = stmt.QueryRow(username).Scan(&user.Username, &user.SignupAt)
+	err = stmt.QueryRow(username).Scan(&user.Username, &user.Userpwd, &user.SignupAt, &user.Email, &user.Phone)
 	if err != nil {
 		return user, err
 	}
 	return user, nil
+}
+
+//更新用户信息（包含密码）
+func UpdateUserInfoIncludePWD(username, userpwd, phone, email string) bool {
+	stmt, err := mydb.DBConn().Prepare("update tbl_user set user_pwd=?,phone= ?,email=? where user_name= ? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = stmt.Exec(userpwd, phone, email, username)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
+func UpdateUserExceptPWD(username, phone, email string) bool {
+	stmt, err := mydb.DBConn().Prepare("update tbl_user set phone= ?,email=? where user_name= ? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = stmt.Exec(phone, email, username)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
 }

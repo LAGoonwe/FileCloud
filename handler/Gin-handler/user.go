@@ -6,6 +6,7 @@ import (
 	dblayer "FileCloud/db"
 	nativeHandler "FileCloud/handler"
 	"FileCloud/util"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -117,4 +118,34 @@ func UserInfoHandler(c *gin.Context) {
 		Data: user,
 	}
 	c.Data(http.StatusOK, "text/plain", resp.JSONBytes())
+}
+
+//更新用户信息
+func UpdateUserInfo(c *gin.Context) {
+	var realpassword string
+	//接收参数
+	email := c.Request.FormValue("email")
+	phone := c.Request.FormValue("phone")
+	password := c.Request.FormValue("password")
+	username := c.Request.FormValue("username")
+
+	//如果密码有改动则调用更新密码的db方法
+	//如果密码无改动则调用不更新密码的db方法
+	if password != "" {
+		realpassword = password
+		enc_passwd := util.Sha1([]byte(realpassword + config.PwdSalt))
+		//调用db模块
+		res := dblayer.UpdateUserInfoIncludePWD(username, enc_passwd, phone, email)
+		if res {
+			fmt.Println("更新成功！")
+			c.Redirect(http.StatusFound, "http://localhost:8080/static/view/home.html")
+		}
+	} else {
+		res := dblayer.UpdateUserExceptPWD(username, phone, email)
+		if res {
+			fmt.Println("更新成功！")
+			c.Redirect(http.StatusFound, "http://localhost:8080/static/view/home.html")
+		}
+	}
+
 }
