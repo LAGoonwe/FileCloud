@@ -80,11 +80,22 @@
         }
       },
       success: function (body, textStatus, jqXHR) {
-        console.log(body)
         var resp = JSON.parse(body);
-        localStorage.setItem("token", resp.data.Token)
-        localStorage.setItem("username", resp.data.Username)
-        window.location.href = resp.data.Location;
+        console.log(resp)
+        if (resp.data.Status == 0){
+          alert("欢迎你！普通用户，为你跳转至云盘首页...")
+          localStorage.setItem("token", resp.data.Token)
+          localStorage.setItem("username", resp.data.Username)
+          window.location.href = resp.data.Location;
+        }else if (resp.data.Status == 7){
+          alert("欢迎你！系统管理员，为你跳转至云盘管理后台...")
+          localStorage.setItem("token", resp.data.Token)
+          localStorage.setItem("username", resp.data.Username)
+          window.location.href = resp.data.Location;
+        }else if (resp.data.Status == 1) {
+          alert("该账户已被封禁！禁止登录！")
+        }
+
       }
     });
   }

@@ -33,7 +33,7 @@
           注册时间: <p id="regtime" style="color: seagreen"></p>
           电话: <p id="phone" style="color: seagreen"></p>
           邮箱: <p id="email" style="color: seagreen"></p>
-          <button class="btn  btn-primary" data-toggle="modal" data-target="#UpdateInfoModal">修改个人信息</button>
+          <button class="btn  btn-primary" data-toggle="modal" data-target="#UpdateInfoModal">修改个人信息</button><br><br>
         </div>
         <!--修改信息模态框-->
         <!-- 模态框（Modal） -->
@@ -253,10 +253,6 @@
 
       }
     });
-  }
-
-  function toUploadFile() {
-    window.location.href = '/file/upload?' + queryParams();
   }
 
   function renameFile(filehash, filename, renameUrl) {

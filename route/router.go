@@ -19,6 +19,8 @@ func Router() *gin.Engine {
 	router.GET("/user/signin", handler.SignInHandler)
 	router.POST("/user/signin", handler.DoSignInHandler)
 	router.GET("/", handler.SignInHandler)
+	router.GET("/user/addAdmin", handler.AddHandler)
+	router.POST("/user/addAdmin", handler.AddAdmin)
 
 	// 加入中间件，用于验证token的拦截器
 	router.Use(handler.HTTPInterceptor())
@@ -27,6 +29,8 @@ func Router() *gin.Engine {
 	// 用户信息
 	router.POST("/user/info", handler.UserInfoHandler)
 	router.POST("/user/update", handler.UpdateUserInfo)
+	router.POST("/user/query", handler.UserQueryHandler)
+	router.POST("/status/update", handler.UpdateUserStatus)
 
 	// 上传文件
 	router.GET("/file/upload", handler.UploadHandler)

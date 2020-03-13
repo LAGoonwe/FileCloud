@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 //SignupHandler: 返回注册页面
@@ -53,6 +54,7 @@ func SignInHandler(c *gin.Context) {
 
 //DoSignInHandler: 处理登录请求
 func DoSignInHandler(c *gin.Context) {
+	var location string
 	username := c.Request.FormValue("username")
 	password := c.Request.FormValue("password")
 
@@ -77,18 +79,30 @@ func DoSignInHandler(c *gin.Context) {
 		})
 		return
 	}
-
-	//3.封装凭证与响应信息给客户端
+	//查询用户状态值
+	user, err := dblayer.GetUserStatus(username)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	//普通用户权限登录跳转
+	if user.Status == 0 {
+		location = "http://localhost:8080/static/view/home.html"
+		//管理员权限登录跳转
+	} else if user.Status == 7 {
+		location = "http://localhost:8080/static/view/admin.html"
+	}
 	resp := util.RespMsg{
 		Code: 0,
 		Msg:  "OK",
 		Data: struct {
 			Location string
 			Username string
+			Status   int
 			Token    string
 		}{
-			Location: "/static/view/home.html",
+			Location: location,
 			Username: username,
+			Status:   user.Status,
 			Token:    token,
 		},
 	}
@@ -146,6 +160,65 @@ func UpdateUserInfo(c *gin.Context) {
 			fmt.Println("更新成功！")
 			c.Redirect(http.StatusFound, "http://localhost:8080/static/view/home.html")
 		}
+	}
+}
+
+//查询所有注册用户
+func UserQueryHandler(c *gin.Context) {
+	if c.Request.Method == "GET" {
+		//返回上传html页面
+		c.Redirect(http.StatusFound, "http://localhost:8080/static/view/admin.html")
+		//data, err := ioutil.ReadFile("src/FileCloud/static/view/admin.html")
+	} else {
+		users, err := dblayer.GetAllUser()
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		resp := util.RespMsg{
+			Data: users,
+		}
+		c.Data(http.StatusOK, "text/plain", resp.JSONBytes())
+	}
+}
+
+//改变用户账户状态
+func UpdateUserStatus(c *gin.Context) {
+	username := c.Request.Form.Get("CurlUsername")
+	status := c.Request.Form.Get("status")
+	realStatus, _ := strconv.Atoi(status)
+	dblayer.UpdateUserStatus(username, realStatus)
+}
+
+//新增管理员页面接口
+func AddHandler(c *gin.Context) {
+	c.Redirect(http.StatusFound, "/static/view/AddAdmin.html")
+}
+
+//新增管理员
+func AddAdmin(c *gin.Context) {
+
+	username := c.Request.FormValue("username")
+	password := c.Request.FormValue("password")
+	status := c.Request.FormValue("status")
+	fmt.Println(username + password + status)
+	realStatus, _ := strconv.Atoi(status)
+	if len(username) < 3 || len(password) < 5 {
+		fmt.Println("设置错误")
+		return
+	}
+
+	//对用户密码进行哈希的加密处理
+	enc_passwd := util.Sha1([]byte(password + config.PwdSalt))
+	suc := dblayer.AddAdmin(username, enc_passwd, realStatus)
+	if suc {
+		c.Writer.Write([]byte("SUCCESS"))
+	} else {
+		c.Writer.Write([]byte("FAILED"))
 	}
 
 }

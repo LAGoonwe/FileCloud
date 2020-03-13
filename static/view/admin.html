@@ -1,0 +1,242 @@
+<html>
+
+<head>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+
+    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
+    <script src="/static/js/auth.js"></script>
+</head>
+
+<body style="width:100%;height:100%">
+<div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
+    <div style="font-size:20px;font-weight:bold;
+                margin:0;background: rgb(195, 228, 250);height:32px;">
+        宙斯云盘用户管理后台
+    </div>
+    <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
+        <tbody>
+        <tr style="margin-bottom: 20px;">
+            <td style="width:10%;height: 100%;background: lightsteelblue;">
+                <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
+                    <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
+                    用户名: <p id="username" style="color: seagreen"></p>
+                    注册时间: <p id="regtime" style="color: seagreen"></p>
+                    电话: <p id="phone" style="color: seagreen"></p>
+                    邮箱: <p id="email" style="color: seagreen"></p>
+                    <button class="btn  btn-primary" onclick="toFileMan()">文件管理</button>
+                </div>
+                <div style="height: 80%;"></div>
+            </td>
+            <td style="width: 3px;height:100%;">
+                <div style="width:100%;height: 100%;background:rgb(202, 157, 248);"></div>
+            </td>
+            <td style="text-align: top;">
+                <div>用户列表
+                    <button class="btn btn-success" onclick="toAddAdmin()" style="float: right;margin-right: 30px;">新增管理员
+                    </button>
+                    <div style="width:100%;height: 1px;background:rgb(202, 157, 248);margin-top: 15px;"></div>
+                </div>
+                <div style="height:95%;" style="width:100%;">
+                    <table id="filetbl" style="margin-left:3%;width:96%;">
+                        <thead style="height:50px;border:1px;">
+                        <tr style="height:50px;border:1px;">
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>手机号</th>
+                            <th>注册时间</th>
+                            <th>最近活跃时间</th>
+                            <th>账户状态</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+
+<script lang="javascript">
+
+    //跳转去文件管理页面
+    function toFileMan() {
+        alert("...")
+        window.open ("https://oss.console.aliyun.com/bucket/oss-cn-hangzhou/bucketwinki-filestore/object");
+    }
+
+    //更新用户信息
+    function update_info()
+    {
+        var form = document.getElementById('updateform');
+        form.submit();
+
+    }
+
+    window.onload = function () {
+        var username = document.getElementById('username');
+        $.ajax({
+            url: "/user/info?" + queryParams(),
+            type: "POST",
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (textStatus == "error") {
+                    alert(textStatus + " : " + errorThrown);
+                } else {
+                    alert(textStatus);
+                }
+            },
+            success: function (body, textStatus, jqXHR) {
+                var resp = JSON.parse(body);
+                document.getElementById("username").innerHTML = resp.data.Username;
+                $("#ModalUsername").attr("value",resp.data.Username)
+                var SignupAt = new Date(resp.data.SignupAt)
+                document.getElementById("regtime").innerHTML = formatDate(SignupAt);
+                $("#ModalRegtime").attr("value",formatDate(SignupAt))
+                document.getElementById("phone").innerHTML = resp.data.Phone;
+                $("#ModalPhone").attr("value",resp.data.Phone)
+                document.getElementById("email").innerHTML = resp.data.Email;
+                $("#ModalEmail").attr("value",resp.data.Email)
+
+                updateFileList();
+            }
+        });
+    }
+
+    /**
+     *前端页面的时间格式化函数
+     */
+    function checkTime(i){
+        if (i<10){
+            i="0" + i
+        }
+        return i;
+    }
+
+    function formatDate(date) {
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var weekday = date.getDate();
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var seconds = date.getSeconds();
+
+        return (year + "-" + checkTime(month) + "-" + checkTime(weekday)+" "+checkTime(hours)+":"+
+            checkTime(minutes)+":"+checkTime(seconds));
+    }
+
+    function updateFileList() {
+        $.ajax({
+            url: "/user/query?" + queryParams(),
+            type: "POST",
+            error: function (err) {
+                alert(JSON.stringify(err));
+            },
+            success: function (body) {
+                if (!body) {
+                    return;
+                }
+                var data = body;
+                if (!data || data.length <= 0) {
+                    return;
+                }
+
+                var dlHost = 'http://localhost:8080';
+                var dlEntry = localStorage.getItem('downloadEntry');
+                if (dlEntry != null) {
+                    if (dlEntry.indexOf('http:')<0) {
+                        dlHost = 'http://' + dlEntry;
+                    } else {
+                        dlHost = dlEntry;
+                    }
+                }
+
+                var renameUserHtml = '<button class="btn btn-warning" ' +
+                    'style="height:30px;margin:5px 3px;"' +
+                    'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
+                    'update?CurlUsername={0}&{2}\')">账户变更</button>';
+
+
+                data = JSON.parse(data).data
+                for (var i = 0; i < data.length; i++) {
+                    var x = document.getElementById('filetbl').insertRow();
+                    var cell = x.insertCell();
+                    cell.innerHTML = data[i].Username;
+
+                    cell = x.insertCell();
+                    cell.innerHTML = data[i].Email;
+
+                    cell = x.insertCell();
+                    cell.innerHTML = data[i].Phone;
+
+                    cell = x.insertCell();
+                    var SignupAt = new Date(data[i].SignupAt)
+                    cell.innerHTML = formatDate(SignupAt);
+
+                    cell = x.insertCell();
+                    var LastActiveAt = new Date(data[i].LastActiveAt)
+                    cell.innerHTML = formatDate(LastActiveAt);
+
+                    cell = x.insertCell();
+                    if (data[i].Status == 0){
+                        cell.innerHTML = "普通用户【0】正常使用中...";
+                    }else if (data[i].Status == 7){
+                        cell.innerHTML = "系统管理员【7】正常使用中...";
+                    }else if (data[i].Status == 1){
+                        cell.innerHTML = "账户已被封禁【1】";
+                    }
+
+
+                    cell = x.insertCell();
+                    cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams());
+                }
+
+            }
+        });
+    }
+
+    function toAddAdmin() {
+        window.location.href = '/user/addAdmin?' + queryParams();
+    }
+
+    function renameUser(username, status, renameUrl) {
+        var newStatus = prompt("\n账户{0}当前状态: {1}\n\n请给账户赋值新的状态值:\n\n0是账户正常使用，1是封禁该账户，7是将账户升级为管理员 ".format(username,status));
+        newStatus = newStatus.trim();
+
+        if (newStatus.length <= 0) {
+            alert("状态值不能为空");
+            return;
+        }
+
+        if (newStatus.indexOf(" ") >= 0) {
+            alert("状态值不能包含空格");
+            return;
+        }
+
+        $.ajax({
+            url: renameUrl + "&status=" + newStatus,
+            type: "POST",
+            error: function (msg) {
+                console.log(JSON.stringify(msg))
+                alert(renameUrl);
+            },
+            success: function (body) {
+                console.log(body)
+                alert("账户变更成功");
+                window.location.href = '/static/view/admin.html';
+            }
+        });
+    }
+</script>
+
+</html>
