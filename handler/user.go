@@ -262,6 +262,6 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	if dblayer.DeleteUser(username) {
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.Write([]byte("文件删除失败！"))
+		w.Write([]byte("用户删除失败！"))
 	}
 }
