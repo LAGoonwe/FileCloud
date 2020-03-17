@@ -73,6 +73,7 @@
         "password": password.value
       },
       error: function (jqXHR, textStatus, errorThrown) {
+        alert("账号或密码错误！")
         if (textStatus == "error") {
           alert(textStatus + " : " + errorThrown);
         } else {

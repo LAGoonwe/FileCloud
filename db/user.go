@@ -211,3 +211,18 @@ func AddAdmin(username string, passwd string, status int) bool {
 	}
 	return false
 }
+
+//删除系统用户
+func DeleteUser(username string) bool {
+	stmt, err := mydb.DBConn().Prepare(`DELETE FROM tbl_user WHERE user_name =?`)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = stmt.Exec(username)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}

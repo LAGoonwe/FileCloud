@@ -222,3 +222,13 @@ func AddAdmin(c *gin.Context) {
 	}
 
 }
+
+//删除系统用户
+func DeleteUserHandler(c *gin.Context) {
+	username := c.Request.FormValue("username")
+	if dblayer.DeleteUser(username) {
+		c.Writer.WriteHeader(http.StatusOK)
+	} else {
+		c.Writer.Write([]byte("文件删除失败！"))
+	}
+}

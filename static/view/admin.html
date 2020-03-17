@@ -165,6 +165,9 @@
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
                     'update?CurlUsername={0}&{2}\')">账户变更</button>';
+                var deleteUserHtml = '<button class="btn btn-danger" ' +
+                    'style="height:30px;margin:5px 3px;"' +
+                    'onClick = "deleteUser(\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
 
 
                 data = JSON.parse(data).data
@@ -198,7 +201,8 @@
 
 
                     cell = x.insertCell();
-                    cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams());
+                    cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams())+
+                    deleteUserHtml.format(data[i].Username, queryParams());
                 }
 
             }
@@ -209,6 +213,7 @@
         window.location.href = '/user/addAdmin?' + queryParams();
     }
 
+    //更改用户状态
     function renameUser(username, status, renameUrl) {
         var newStatus = prompt("\n账户{0}当前状态: {1}\n\n请给账户赋值新的状态值:\n\n0是账户正常使用，1是封禁该账户，7是将账户升级为管理员 ".format(username,status));
         newStatus = newStatus.trim();
@@ -234,6 +239,25 @@
                 console.log(body)
                 alert("账户变更成功");
                 window.location.href = '/static/view/admin.html';
+            }
+        });
+    }
+
+    //删除用户
+    function deleteUser(durl) {
+        $.ajax({
+            url: durl,
+            type: "POST",
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (textStatus == "error") {
+                    alert(textStatus + " : " + errorThrown);
+                } else {
+                    alert(textStatus);
+                }
+            },
+            success: function (body, textStatus, jqXHR) {
+                alert("用户删除成功");
+                window.location.href = '/static/view/admin.html'
             }
         });
     }

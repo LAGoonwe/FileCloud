@@ -254,3 +254,14 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+//删除系统用户
+func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.Form.Get("username")
+	if dblayer.DeleteUser(username) {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.Write([]byte("文件删除失败！"))
+	}
+}

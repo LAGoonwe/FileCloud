@@ -31,6 +31,7 @@ func Router() *gin.Engine {
 	router.POST("/user/update", handler.UpdateUserInfo)
 	router.POST("/user/query", handler.UserQueryHandler)
 	router.POST("/status/update", handler.UpdateUserStatus)
+	router.POST("/user/delete", handler.DeleteUserHandler)
 
 	// 上传文件
 	router.GET("/file/upload", handler.UploadHandler)

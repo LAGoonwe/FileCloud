@@ -40,6 +40,7 @@ func main() {
 	http.HandleFunc("/status/update", handler.HTTPInterceptor(handler.UpdateUserStatus))
 	http.HandleFunc("/user/query", handler.HTTPInterceptor(handler.UserQueryHandler))
 	http.HandleFunc("/user/addAdmin", handler.AddAdmin)
+	http.HandleFunc("/user/delete", handler.HTTPInterceptor(handler.DeleteUserHandler))
 
 	fmt.Printf("上传服务启动中，开始监听监听[%s]...\n", config.UploadServiceHost)
 
