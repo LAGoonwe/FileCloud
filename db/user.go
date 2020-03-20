@@ -105,7 +105,7 @@ func GetUserInfo(username string) (User, error) {
 	user := User{}
 
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,user_pwd,signup_at,email,phone from tbl_user where user_name=? limit 1")
+		"select user_name,user_pwd,signup_at,email,phone,status from tbl_user where user_name=? limit 1")
 	if err != nil {
 		fmt.Println(err.Error())
 		return user, err
@@ -113,7 +113,7 @@ func GetUserInfo(username string) (User, error) {
 	defer stmt.Close()
 
 	// 执行查询的操作
-	err = stmt.QueryRow(username).Scan(&user.Username, &user.Userpwd, &user.SignupAt, &user.Email, &user.Phone)
+	err = stmt.QueryRow(username).Scan(&user.Username, &user.Userpwd, &user.SignupAt, &user.Email, &user.Phone, &user.Status)
 	if err != nil {
 		return user, err
 	}

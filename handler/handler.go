@@ -317,3 +317,22 @@ func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
 	signedURL := oss.DownloadURL(row.FileAddr.String)
 	w.Write([]byte(signedURL))
 }
+
+//获取数据库所有文件元数据信息
+func GetAllFileMetaHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	limitCnt, _ := strconv.Atoi(r.Form.Get("limit"))
+	userFiles, err := dblayer.GetAllFileMeta(limitCnt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(userFiles)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+}

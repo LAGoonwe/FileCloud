@@ -56,5 +56,30 @@ func QueryUserFileMetas(username string, limit int) ([]UserFile, error) {
 		userFiles = append(userFiles, ufile)
 	}
 	return userFiles, nil
+}
 
+//获取所有文件元数据信息
+func GetAllFileMeta(limit int) ([]UserFile, error) {
+	stmt, err := mydb.DBConn().Prepare("select file_sha1,file_name,file_size,upload_at,last_update,user_name from tbl_user_file limit ?")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	var userFiles []UserFile
+	for rows.Next() {
+		ufile := UserFile{}
+		err = rows.Scan(&ufile.FileHash, &ufile.FileName, &ufile.FileSize, &ufile.UploadAt, &ufile.LastUpdated, &ufile.UserName)
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+		userFiles = append(userFiles, ufile)
+	}
+	return userFiles, nil
 }
