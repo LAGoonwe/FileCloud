@@ -317,3 +317,29 @@ func DownloadURLHandler(c *gin.Context) {
 
 	c.Writer.Write([]byte(signedURL))
 }
+
+//获取数据库所有文件元数据信息
+func GetAllFileMetaHandler(c *gin.Context) {
+	limitCnt, _ := strconv.Atoi(c.Request.FormValue("limit"))
+
+	userFiles, err := db.GetAllFileMeta(limitCnt)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "文件元信息不存在",
+			"code": -1,
+		})
+		return
+	}
+
+	data, err := json.Marshal(userFiles)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "文件元信息格式化失败",
+			"code": -2,
+		})
+		return
+	}
+	c.Data(http.StatusOK, "text/plain", data)
+}

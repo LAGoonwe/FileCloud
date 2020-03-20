@@ -40,6 +40,7 @@ func Router() *gin.Engine {
 	// 查询文件
 	router.POST("/file/meta", handler.GetFileMetaHandler)
 	router.POST("/file/query", handler.FileQueryHandler)
+	router.POST("/file/all", handler.GetAllFileMetaHandler)
 	// 下载文件
 	router.POST("/file/download", handler.DownloadHandler)
 	router.POST("/file/downloadurl", handler.DownloadURLHandler)
