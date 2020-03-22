@@ -193,10 +193,12 @@
                     cell.innerHTML = data[i].FileSize;
 
                     cell = x.insertCell();
-                    cell.innerHTML = data[i].UploadAt;
+                    var UploadAt = new Date(data[i].UploadAt)
+                    cell.innerHTML = formatDate(UploadAt);
 
                     cell = x.insertCell();
-                    cell.innerHTML = data[i].LastUpdated;
+                    var LastUpdated = new Date(data[i].LastUpdated);
+                    cell.innerHTML = formatDate(LastUpdated);
 
                     cell = x.insertCell();
                     cell.innerHTML = data[i].UserName;

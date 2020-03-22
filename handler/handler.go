@@ -183,6 +183,7 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	fm := meta.GetFileMeta(fsha1)
 	//根据文件元信息中的定位信息获取文件本体
 	f, err := os.Open(fm.Location)
+	fmt.Println(fm.Location)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -238,14 +239,15 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	fileSha1 := r.Form.Get("filehash")
 	//物理上的删除
-	//TODO:物理上的删除似乎没有起作用，延迟再看
+	//TODO:存在有时失效问题
 	fMeta, err := meta.GetFileMetaDB(fileSha1)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	os.Remove(fMeta.Location)
+	Location := "src/FileCloud/static/files/" + fMeta.FileName
+	os.Remove(Location)
 
-	//用户文件元信息的删除
+	//用户文件元信息的删除（删除用户文件表中的记录）
 	dblayer.DeleteUserFile(fileSha1)
 
 	//oss云上的删除

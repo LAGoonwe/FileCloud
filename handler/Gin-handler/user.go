@@ -5,11 +5,13 @@ import (
 	"FileCloud/config"
 	dblayer "FileCloud/db"
 	nativeHandler "FileCloud/handler"
+	"FileCloud/store/oss"
 	"FileCloud/util"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -226,6 +228,35 @@ func AddAdmin(c *gin.Context) {
 //删除系统用户
 func DeleteUserHandler(c *gin.Context) {
 	username := c.Request.FormValue("username")
+
+	//删除文件表与该用户关联的记录
+	//查询到归属该用户下的所有文件hash值
+	UserFiles, err := dblayer.GetAllFileHashByUsername(username)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	for i := 0; i < len(UserFiles); i++ {
+
+		//根据文件表查询到文件位置信息
+		filemetas, err := dblayer.GetFileMeta(UserFiles[i].FileHash)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		Location := "src/FileCloud/static/files/" + filemetas.FileName.String
+		os.Remove(Location)
+
+		//oss云上的删除
+		bucket := oss.Bucket()
+		err = bucket.DeleteObject(filemetas.FileAddr.String)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		fmt.Println(UserFiles[i].FileHash)
+	}
+	//删除系统数据库中用户文件表归属于该用户的文件信息（移除用户文件表）
+	dblayer.DeleteUserFileByUserAdmin(username)
+
 	if dblayer.DeleteUser(username) {
 		c.Writer.WriteHeader(http.StatusOK)
 	} else {

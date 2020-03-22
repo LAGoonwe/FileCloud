@@ -2,11 +2,13 @@ package handler
 
 import (
 	dblayer "FileCloud/db"
+	"FileCloud/store/oss"
 	"FileCloud/util"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -255,10 +257,44 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//删除系统用户
+/**
+移除系统用户
+移除系统用户移除与该用户关联的所有记录
+移除移除出用户表，移除出用户文件表以及OSS上的文件
+
+!文件表不必移除，文件表的记录保留是文件秒传的保证
+*/
 func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.Form.Get("username")
+	//删除文件表与该用户关联的记录
+	//查询到归属该用户下的所有文件hash值
+	UserFiles, err := dblayer.GetAllFileHashByUsername(username)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	for i := 0; i < len(UserFiles); i++ {
+
+		//根据文件表查询到文件位置信息
+		filemetas, err := dblayer.GetFileMeta(UserFiles[i].FileHash)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		Location := "src/FileCloud/static/files/" + filemetas.FileName.String
+		os.Remove(Location)
+
+		//oss云上的删除
+		bucket := oss.Bucket()
+		err = bucket.DeleteObject(filemetas.FileAddr.String)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		fmt.Println(UserFiles[i].FileHash)
+	}
+	//删除系统数据库中用户文件表归属于该用户的文件信息（移除用户文件表）
+	dblayer.DeleteUserFileByUserAdmin(username)
+
+	//删除系统数据库用户表中的该用户信息（移除用户表）
 	if dblayer.DeleteUser(username) {
 		w.WriteHeader(http.StatusOK)
 	} else {

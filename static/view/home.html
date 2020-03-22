@@ -101,7 +101,6 @@
           <table id="filetbl" style="margin-left:3%;width:96%;">
             <thead style="height:50px;border:1px;">
             <tr style="height:50px;border:1px;">
-              <th>文件hash</th>
               <th>文件名</th>
               <th>文件大小</th>
               <th>上传时间</th>
@@ -234,20 +233,23 @@
         data = JSON.parse(data)
         for (var i = 0; i < data.length; i++) {
           var x = document.getElementById('filetbl').insertRow();
-          var cell = x.insertCell();
-          cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
+          // var cell = x.insertCell();
+          // cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
 
           cell = x.insertCell();
           cell.innerHTML = data[i].FileName;
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].FileSize;
+          cell.innerHTML = data[i].FileSize+" KB";
+
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].UploadAt;
+          var UploadAt = new Date(data[i].UploadAt)
+          cell.innerHTML = formatDate(UploadAt);
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].LastUpdated;
+          var LastUpdated = new Date(data[i].LastUpdated);
+          cell.innerHTML = formatDate(LastUpdated);
 
           cell = x.insertCell();
           cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml

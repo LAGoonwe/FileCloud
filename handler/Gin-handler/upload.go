@@ -243,14 +243,15 @@ func FileDeleteHandler(c *gin.Context) {
 	fileSha1 := c.Request.FormValue("filehash")
 
 	//物理上的删除
-	//TODO:物理上的删除似乎没有起作用，延迟再看
+	//TODO:
 	fMeta, err := meta.GetFileMetaDB(fileSha1)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	os.Remove(fMeta.Location)
+	Location := "src/FileCloud/static/files/" + fMeta.FileName
+	os.Remove(Location)
 
-	//用户文件元信息的删除
+	//用户文件元信息的删除(删除用户文件表记录)
 	db.DeleteUserFile(fileSha1)
 
 	//oss云上的删除
