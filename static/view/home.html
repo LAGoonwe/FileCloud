@@ -238,13 +238,15 @@
         console.log(localStorage.getItem("token"))
 
         data = JSON.parse(data)
+        console.log(data)
         for (var i = 0; i < data.length; i++) {
           var x = document.getElementById('filetbl').insertRow();
           // var cell = x.insertCell();
           // cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
 
           cell = x.insertCell();
-          cell.innerHTML = data[i].FileName;
+          fileShowURL = "fileshow.html?src=" + data[i].SignedURL;
+          cell.innerHTML = "<a target='_blank' href= "+fileShowURL+">"+ data[i].FileName+"</a>";
 
           cell = x.insertCell();
           cell.innerHTML = data[i].FileSize+" KB";

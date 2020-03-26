@@ -14,6 +14,7 @@ type UserFile struct {
 	FileSize    int64
 	UploadAt    string
 	LastUpdated string
+	SignedURL   string
 }
 
 //更新用户文件表

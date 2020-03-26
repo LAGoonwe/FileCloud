@@ -160,6 +160,14 @@ func FileQueryHandler(w http.ResponseWriter, r *http.Request) {
 	limitCnt, _ := strconv.Atoi(r.Form.Get("limit"))
 	username := r.Form.Get("username")
 	userFiles, err := dblayer.QueryUserFileMetas(username, limitCnt)
+
+	//给文件元信息体传递下载链接去前台
+	for i := 0; i < len(userFiles); i++ {
+		row, _ := dblayer.GetFileMeta(userFiles[i].FileHash)
+		signedURL := oss.DownloadURL(row.FileAddr.String)
+		userFiles[i].SignedURL = signedURL
+	}
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
