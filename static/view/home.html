@@ -62,7 +62,7 @@
                   </div><br>
                   <div class="input-group">
                     <span class="input-group-addon">输入新密码</span>
-                    <input type="text" name="password" class="form-control" value="">
+                    <input id="newpwd" type="text" name="password" class="form-control" value="">
                   </div><br>
                   <div class="input-group">
                     <span class="input-group-addon">电话</span>
@@ -77,7 +77,7 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭
                 </button>
-                <button type="button" class="btn btn-primary" onclick="update_info()">
+                <button type="submit" class="btn btn-primary" onclick="return update_info()">
                   保存更改
                 </button>
               </div>
@@ -127,9 +127,16 @@
   //更新用户信息
   function update_info()
   {
-    var form = document.getElementById('updateform');
-    form.submit();
+    var newpassword = document.getElementById('newpwd').value;
 
+    console.log(newpassword)
+    if(newpassword.length >=5 ){
+      var form = document.getElementById('updateform');
+      form.submit();
+    }else{
+      alert("密码长度不得少于5，请重新输入！")
+      return false;
+    }
   }
 
   window.onload = function () {
