@@ -43,7 +43,7 @@
               <label for="password" class="l"> 密码:</label>
             </td>
             <td>
-              <input id="password" type="text" style="height:30px;width:250px;padding-right:50px;">
+              <input id="password" type="password" style="height:30px;width:250px;padding-right:50px;">
             </td>
           </tr>
           <tr>
@@ -56,7 +56,7 @@
               <label for="passwordc" class="l"> 确认密码:</label>
             </td>
             <td>
-              <input id="passwordc" type="text" style="height:30px;width:250px;padding-right:50px;">
+              <input id="passwordc" type="password" style="height:30px;width:250px;padding-right:50px;" onkeyup="validate()">&nbsp;&nbsp;<span id="msg"></span>
             </td>
           </tr>
           <tr>
@@ -67,7 +67,7 @@
             <td>
             </td>
             <td>
-              <input class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="点击注册" onclick='onSignup()' />
+              <input id="signup" class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="点击注册" onclick='onSignup()' />
               <label name='login_hint' id='login_hint' style='display:none'>注册成功，２秒后跳转到登录页面...</label>
             </td>
           </tr>
@@ -78,6 +78,27 @@
 </body>
 
 <script lang="javascript">
+  
+  <!-- 密码与确认密码一致性校验 -->
+  function validate() {
+
+    var pwd = $("#password").val();
+    var pwd1 = $("#passwordc").val();
+    <!-- 对比两次输入的密码 -->
+    if(pwd == pwd1)
+    {
+      $("#msg").html("两次密码相同");
+      $("#msg").css("color","green");
+      $("#signup").removeAttr("disabled");
+    }
+    else {
+      $("#msg").html("两次密码不相同");
+      $("#msg").css("color","red")
+      $("#signup").attr("disabled","disabled");
+    }
+  }
+  
+  
   function onSignup() {
     var username = document.getElementById('username');
     var password = document.getElementById('password');
