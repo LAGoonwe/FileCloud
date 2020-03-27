@@ -187,7 +187,8 @@
                     cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
 
                     cell = x.insertCell();
-                    cell.innerHTML = data[i].FileName;
+                    fileShowURL = dlHost+"/static/files/"+data[i].RealName;
+                    cell.innerHTML = "<a target='_blank' href= "+fileShowURL+">"+ data[i].FileName+"</a>";
 
                     cell = x.insertCell();
                     cell.innerHTML = data[i].FileSize;

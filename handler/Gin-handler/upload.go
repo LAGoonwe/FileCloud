@@ -171,6 +171,12 @@ func FileQueryHandler(c *gin.Context) {
 		return
 	}
 
+	//给文件元信息体传递源文件名去前台
+	for i := 0; i < len(userFiles); i++ {
+		row, _ := db.GetFileMeta(userFiles[i].FileHash)
+		userFiles[i].RealName = row.FileName.String
+	}
+
 	data, err := json.Marshal(userFiles)
 	if err != nil {
 		log.Println(err.Error())
@@ -331,6 +337,12 @@ func GetAllFileMetaHandler(c *gin.Context) {
 			"code": -1,
 		})
 		return
+	}
+
+	//给所有文件元信息体传递源文件名去前台
+	for i := 0; i < len(userFiles); i++ {
+		row, _ := db.GetFileMeta(userFiles[i].FileHash)
+		userFiles[i].RealName = row.FileName.String
 	}
 
 	data, err := json.Marshal(userFiles)
