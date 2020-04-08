@@ -33,7 +33,7 @@
                     注册时间: <p id="regtime" style="color: seagreen"></p>
                     电话: <p id="phone" style="color: seagreen"></p>
                     邮箱: <p id="email" style="color: seagreen"></p>
-                    <button class="btn  btn-primary" onclick="toFileMan()">文件本体内容管理</button><br><br>
+                    <button class="btn  btn-primary" onclick="toFileMan()">文件内容管理</button><br><br>
                     <button class="btn  btn-primary" onclick="toFileMetaMan()">文件元数据管理</button>
                 </div>
                 <div style="height: 80%;"></div>
@@ -143,6 +143,9 @@
             checkTime(minutes)+":"+checkTime(seconds));
     }
 
+    //设置全局变量，需要更改发送的账户状态值
+    var sendStatus
+
     function updateFileList() {
         $.ajax({
             url: "/user/query?" + queryParams(),
@@ -169,16 +172,25 @@
                     }
                 }
 
-                var renameUserHtml = '<button class="btn btn-warning" ' +
+                var renameUserHtml = '<button id="{0}_status" class="btn btn-warning" ' +
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
-                    'update?CurlUsername={0}&{2}\')">账户变更</button>';
-                var deleteUserHtml = '<button class="btn btn-danger" ' +
+                    'update?CurlUsername={0}&{2}\')">禁用账户</button>';
+
+                var upUserHtml = '<button id="{0}_up" class="btn btn-warning" ' +
+                    'style="height:30px;margin:5px 3px;"' +
+                    'onClick = "upUser(\'{0}\',7,\''+dlHost+'/status/' +
+                    'update?CurlUsername={0}&{2}\')">升级为系统管理员</button>';
+
+                var deleteUserHtml = '<button id="{0}_delete" class="btn btn-danger" ' +
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "deleteUser(\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
 
 
+
+
                 data = JSON.parse(data).data
+                console.log( data)
                 for (var i = 0; i < data.length; i++) {
                     var x = document.getElementById('filetbl').insertRow();
                     var cell = x.insertCell();
@@ -198,21 +210,44 @@
                     var LastActiveAt = new Date(data[i].LastActiveAt)
                     cell.innerHTML = formatDate(LastActiveAt);
 
-                    cell = x.insertCell();
-                    if (data[i].Status == 0){
-                        cell.innerHTML = "普通用户【0】正常使用中...";
-                    }else if (data[i].Status == 7){
-                        cell.innerHTML = "系统管理员【7】正常使用中...";
-                    }else if (data[i].Status == 1){
-                        cell.innerHTML = "账户已被封禁【1】";
-                    }
+                    //账户状态值单元格
+                    cell2 = x.insertCell();
+
 
 
                     cell = x.insertCell();
                     cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams())+
+                        upUserHtml.format(data[i].Username, data[i].Status, queryParams())+
                     deleteUserHtml.format(data[i].Username, queryParams());
-                }
 
+                    //开始对账户状态值单元格做判断
+                    if (data[i].Status == 0){
+                        cell2.innerHTML = "普通用户/正常使用中...";
+
+                    }else if (data[i].Status == 7){
+                        cell2.innerHTML = "系统管理员/正常使用中...";
+
+                        $("#"+data[i].Username+"_up").hide();
+
+                    }else if (data[i].Status == 1){
+                        cell2.innerHTML = "账户已被封禁";
+                        console.log(data[i].Status)
+                        //更改按钮文案为恢复账户
+                        //唯一状态值标识
+                        realStatus = data[i].Username+"_status"
+                        $('#'+realStatus).text("恢复账户");
+
+                        //更改按钮颜色
+                        $('#'+realStatus).attr("class","btn btn-primary");
+
+                    }
+
+                    if(data[i].Username == localStorage.getItem("username")){
+                        realStatus = data[i].Username+"_status"
+                        $("#"+realStatus).attr('disabled',true);
+                        $("#"+data[i].Username+"_delete").attr('disabled',true);
+                    }
+                }
             }
         });
     }
@@ -221,23 +256,27 @@
         window.location.href = '/user/addAdmin?' + queryParams();
     }
 
-    //更改用户状态
+    //设定弹窗文案值
+    var msg
+    //封禁或者解禁用户
     function renameUser(username, status, renameUrl) {
-        var newStatus = prompt("\n账户{0}当前状态: {1}\n\n请给账户赋值新的状态值:\n\n0是账户正常使用，1是封禁该账户，7是将账户升级为管理员 ".format(username,status));
-        newStatus = newStatus.trim();
-
-        if (newStatus.length <= 0) {
-            alert("状态值不能为空");
-            return;
+        if (status == 0){
+            sendStatus = 1
+        }else if (status == 1){
+            sendStatus = 0
+        }else {
+            //如果是管理员账户默认先执行封禁
+            sendStatus = 1
         }
 
-        if (newStatus.indexOf(" ") >= 0) {
-            alert("状态值不能包含空格");
-            return;
+        if (sendStatus == 1){
+            msg = "成功禁用该账户！"
+        }else if (sendStatus == 0){
+            msg = "成功恢复该账户！"
         }
 
         $.ajax({
-            url: renameUrl + "&status=" + newStatus,
+            url: renameUrl + "&status="+sendStatus,
             type: "POST",
             error: function (msg) {
                 console.log(JSON.stringify(msg))
@@ -245,7 +284,25 @@
             },
             success: function (body) {
                 console.log(body)
-                alert("账户变更成功");
+                alert(msg);
+                window.location.href = '/static/view/admin.html';
+            }
+        });
+    }
+
+    //升级普通用户为系统管理员
+    function upUser(username, status, renameUrl) {
+        msg = "升级成功！"
+        $.ajax({
+            url: renameUrl + "&status="+status,
+            type: "POST",
+            error: function (msg) {
+                console.log(JSON.stringify(msg))
+                alert(renameUrl);
+            },
+            success: function (body) {
+                console.log(body)
+                alert(msg);
                 window.location.href = '/static/view/admin.html';
             }
         });
@@ -269,6 +326,7 @@
             }
         });
     }
+
 </script>
 
 </html>
