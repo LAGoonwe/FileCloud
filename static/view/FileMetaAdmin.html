@@ -80,7 +80,7 @@
     //跳转去用户管理页面
     function toFileMetaMan() {
         alert("即将跳转至用户管理页面...")
-        window.location.href = "http://localhost:8080/static/view/admin.html"
+        window.location.href = "http://localhost:9090/static/view/admin.html"
     }
 
     //更新用户信息
@@ -162,7 +162,7 @@
                     return;
                 }
 
-                var dlHost = 'http://localhost:8080';
+                var dlHost = 'http://localhost:9090';
                 var dlEntry = localStorage.getItem('downloadEntry');
                 if (dlEntry != null) {
                     if (dlEntry.indexOf('http:')<0) {

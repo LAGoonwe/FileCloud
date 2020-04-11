@@ -88,10 +88,10 @@ func DoSignInHandler(c *gin.Context) {
 	}
 	//普通用户权限登录跳转
 	if user.Status == 0 {
-		location = "http://localhost:8080/static/view/home.html"
+		location = "http://localhost:9090/static/view/home.html"
 		//管理员权限登录跳转
 	} else if user.Status == 7 {
-		location = "http://localhost:8080/static/view/admin.html"
+		location = "http://localhost:9090/static/view/admin.html"
 	}
 	resp := util.RespMsg{
 		Code: 0,
@@ -154,13 +154,13 @@ func UpdateUserInfo(c *gin.Context) {
 		res := dblayer.UpdateUserInfoIncludePWD(username, enc_passwd, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			c.Redirect(http.StatusFound, "http://localhost:8080/static/view/home.html")
+			c.Redirect(http.StatusFound, "http://localhost:9090/static/view/home.html")
 		}
 	} else {
 		res := dblayer.UpdateUserExceptPWD(username, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			c.Redirect(http.StatusFound, "http://localhost:8080/static/view/home.html")
+			c.Redirect(http.StatusFound, "http://localhost:9090/static/view/home.html")
 		}
 	}
 }
@@ -169,7 +169,7 @@ func UpdateUserInfo(c *gin.Context) {
 func UserQueryHandler(c *gin.Context) {
 	if c.Request.Method == "GET" {
 		//返回上传html页面
-		c.Redirect(http.StatusFound, "http://localhost:8080/static/view/admin.html")
+		c.Redirect(http.StatusFound, "http://localhost:9090/static/view/admin.html")
 		//data, err := ioutil.ReadFile("src/FileCloud/static/view/admin.html")
 	} else {
 		users, err := dblayer.GetAllUser()
