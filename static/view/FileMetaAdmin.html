@@ -34,6 +34,7 @@
                     电话: <p id="phone" style="color: seagreen"></p>
                     邮箱: <p id="email" style="color: seagreen"></p>
                     <button class="btn  btn-primary" onclick="toFileMetaMan()">用户管理</button><br><br>
+                    <button class="btn  btn-primary" onclick="toIndex()">退出登录</button><br><br>
                 </div>
 
                 <div style="height: 80%;"></div>
@@ -69,6 +70,12 @@
 </body>
 
 <script lang="javascript">
+
+    function toIndex() {
+        // window.location.href = '/file/upload?' + queryParams();
+        window.location.href = "/static/view/signin.html";
+    }
+
 
     //跳转去用户管理页面
     function toFileMetaMan() {

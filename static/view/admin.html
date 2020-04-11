@@ -34,7 +34,8 @@
                     电话: <p id="phone" style="color: seagreen"></p>
                     邮箱: <p id="email" style="color: seagreen"></p>
                     <button class="btn  btn-primary" onclick="toFileMan()">文件内容管理</button><br><br>
-                    <button class="btn  btn-primary" onclick="toFileMetaMan()">文件元数据管理</button>
+                    <button class="btn  btn-primary" onclick="toFileMetaMan()">文件元数据管理</button><br><br>
+                    <button class="btn  btn-primary" onclick="toIndex()">退出登录</button><br><br>
                 </div>
                 <div style="height: 80%;"></div>
             </td>
@@ -70,6 +71,11 @@
 </body>
 
 <script lang="javascript">
+
+    function toIndex() {
+        // window.location.href = '/file/upload?' + queryParams();
+        window.location.href = "/static/view/signin.html";
+    }
 
     //跳转去文件本体管理页面
     function toFileMan() {
@@ -162,7 +168,7 @@
                     return;
                 }
 
-                var dlHost = 'http://localhost:8080';
+                var dlHost = 'http://localhost:9090';
                 var dlEntry = localStorage.getItem('downloadEntry');
                 if (dlEntry != null) {
                     if (dlEntry.indexOf('http:')<0) {
@@ -280,7 +286,6 @@
             type: "POST",
             error: function (msg) {
                 console.log(JSON.stringify(msg))
-                alert(renameUrl);
             },
             success: function (body) {
                 console.log(body)

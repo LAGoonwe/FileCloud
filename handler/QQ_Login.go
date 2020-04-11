@@ -1,17 +1,15 @@
-package main
+package handler
 
 import (
+	"FileCloud/config"
+	"FileCloud/db"
+	"FileCloud/util"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-)
-
-const (
-	AppId       = "101827468"
-	AppKey      = "0d2d856e48e0ebf6b98e0d0c879fe74d"
-	redirectURI = "http://127.0.0.1:9090/qqLogin"
 )
 
 type PrivateInfo struct {
@@ -21,24 +19,12 @@ type PrivateInfo struct {
 	OpenId       string `json:"open_id"`
 }
 
-func main() {
-	http.HandleFunc("/toLogin", GetAuthCode)
-	http.HandleFunc("/qqLogin", GetToken)
-
-	fmt.Println("started...")
-	err := http.ListenAndServe(":9090", nil)
-	if err != nil {
-		panic(err)
-	}
-}
-
 //Get Authorization Code
 func GetAuthCode(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{}
 	params.Add("response_type", "code")
-	params.Add("client_id", AppId)
-	params.Add("state", "test")
-	str := fmt.Sprintf("%s&redirect_uri=%s", params.Encode(), redirectURI)
+	params.Add("client_id", config.AppId)
+	str := fmt.Sprintf("%s&redirect_uri=%s", params.Encode(), config.RedirectURI)
 	loginURL := fmt.Sprintf("%s?%s", "https://graph.qq.com/oauth2.0/authorize", str)
 
 	http.Redirect(w, r, loginURL, http.StatusFound)
@@ -49,10 +35,10 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	params := url.Values{}
 	params.Add("grant_type", "authorization_code")
-	params.Add("client_id", AppId)
-	params.Add("client_secret", AppKey)
+	params.Add("client_id", config.AppId)
+	params.Add("client_secret", config.AppKey)
 	params.Add("code", code)
-	str := fmt.Sprintf("%s&redirect_uri=%s", params.Encode(), redirectURI)
+	str := fmt.Sprintf("%s&redirect_uri=%s", params.Encode(), config.RedirectURI)
 	loginURL := fmt.Sprintf("%s?%s", "https://graph.qq.com/oauth2.0/token", str)
 
 	response, err := http.Get(loginURL)
@@ -71,11 +57,11 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 	info.RefreshToken = resultMap["refresh_token"]
 	info.ExpiresIn = resultMap["expires_in"]
 
-	GetOpenId(info, w)
+	GetOpenId(info, w, r)
 }
 
 // 3. Get OpenId
-func GetOpenId(info *PrivateInfo, w http.ResponseWriter) {
+func GetOpenId(info *PrivateInfo, w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(fmt.Sprintf("%s?access_token=%s", "https://graph.qq.com/oauth2.0/me", info.AccessToken))
 	if err != nil {
 		w.Write([]byte(err.Error()))
@@ -86,15 +72,16 @@ func GetOpenId(info *PrivateInfo, w http.ResponseWriter) {
 	body := string(bs)
 	info.OpenId = body[45:77]
 
-	GetUserInfo(info, w)
+	GetUserInfo(info, w, r)
 }
 
 // 4. Get User info
-func GetUserInfo(info *PrivateInfo, w http.ResponseWriter) {
+func GetUserInfo(info *PrivateInfo, w http.ResponseWriter, r *http.Request) {
+
 	params := url.Values{}
 	params.Add("access_token", info.AccessToken)
 	params.Add("openid", info.OpenId)
-	params.Add("oauth_consumer_key", AppId)
+	params.Add("oauth_consumer_key", config.AppId)
 
 	uri := fmt.Sprintf("https://graph.qq.com/user/get_user_info?%s", params.Encode())
 	resp, err := http.Get(uri)
@@ -104,7 +91,48 @@ func GetUserInfo(info *PrivateInfo, w http.ResponseWriter) {
 	defer resp.Body.Close()
 
 	bs, _ := ioutil.ReadAll(resp.Body)
-	w.Write(bs)
+	classDetailMap := make(map[string]string)
+	_ = json.Unmarshal(bs, &classDetailMap)
+	w.Write([]byte(classDetailMap["nickname"]))
+
+	//查询用户表中是否已经有该用户名存在，如果不存在则代表是首次扫码登录，新增一条记录
+	user, err := db.GetUserInfo(classDetailMap["nickname"])
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	if user.Username == "" {
+		//插入新数据
+		//对用户密码进行哈希的加密处理
+		enc_passwd := util.Sha1([]byte(classDetailMap["nickname"] + pwd_salt))
+		_ = db.UserSignup(classDetailMap["nickname"], enc_passwd)
+	} else {
+		//如果用户表存在该用户名，则代表之前扫码登陆过系统，取出相应的账号密码即可
+		fmt.Println(user.Username)
+	}
+
+	token := GenToken(classDetailMap["nickname"])
+	upRes := db.UpdateToken(classDetailMap["nickname"], token)
+	if !upRes {
+		w.Write([]byte("FAILED"))
+		return
+	}
+
+	resp2 := util.RespMsg{
+		Code: 0,
+		Msg:  "OK",
+		Data: struct {
+			Location string
+			Username string
+			Status   int
+			Token    string
+		}{
+			Location: "http://" + r.Host + "/static/view/home.html",
+			Username: classDetailMap["nickname"],
+			Status:   user.Status,
+			Token:    token,
+		},
+	}
+	w.Write(resp2.JSONBytes())
 }
 
 func convertToMap(str string) map[string]string {
@@ -116,5 +144,3 @@ func convertToMap(str string) map[string]string {
 	}
 	return resultMap
 }
-
-//封装转化来自

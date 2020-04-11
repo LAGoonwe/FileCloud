@@ -43,6 +43,10 @@ func main() {
 	http.HandleFunc("/user/addAdmin", handler.AddAdmin)
 	http.HandleFunc("/user/delete", handler.HTTPInterceptor(handler.DeleteUserHandler))
 
+	//第三方控制器
+	http.HandleFunc("/toLogin", handler.GetAuthCode)
+	http.HandleFunc("/qqLogin", handler.GetToken)
+
 	fmt.Printf("上传服务启动中，开始监听监听[%s]...\n", config.UploadServiceHost)
 
 	err := http.ListenAndServe(config.UploadServiceHost, nil)
