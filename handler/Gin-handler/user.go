@@ -63,10 +63,7 @@ func DoSignInHandler(c *gin.Context) {
 	encPasswd := util.Sha1([]byte(password + config.PwdSalt))
 	pwdChecked := dblayer.UserSignin(username, encPasswd)
 	if !pwdChecked {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "Name or password wrong",
-			"code": common.StatusLoginFailed,
-		})
+		c.Writer.Write([]byte("FAILED"))
 		return
 	}
 
@@ -74,10 +71,7 @@ func DoSignInHandler(c *gin.Context) {
 	token := nativeHandler.GenToken(username)
 	upRes := dblayer.UpdateToken(username, token)
 	if !upRes {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "update token failed",
-			"code": common.StatusLoginFailed,
-		})
+		c.Writer.Write([]byte("FAILED"))
 		return
 	}
 	//查询用户状态值
@@ -153,13 +147,17 @@ func UpdateUserInfo(c *gin.Context) {
 		res := dblayer.UpdateUserInfoIncludePWD(username, enc_passwd, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			c.Redirect(http.StatusFound, "http://localhost:9090/static/view/home.html")
+			c.Writer.Write([]byte("SUCCESS WITH PWD"))
+		} else {
+			c.Writer.Write([]byte("FAILED"))
 		}
 	} else {
 		res := dblayer.UpdateUserExceptPWD(username, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			c.Redirect(http.StatusFound, "http://localhost:9090/static/view/home.html")
+			c.Writer.Write([]byte("SUCCESS WITHOUT PWD"))
+		} else {
+			c.Writer.Write([]byte("FAILED"))
 		}
 	}
 }

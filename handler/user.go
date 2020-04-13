@@ -153,6 +153,7 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 	phone := r.Form.Get("phone")
 	password := r.Form.Get("password")
 	username := r.Form.Get("username")
+	fmt.Println(username, email, phone, password)
 	//如果密码有改动则调用更新密码的db方法
 	//如果密码无改动则调用不更新密码的db方法
 	if password != "" {
@@ -162,13 +163,17 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 		res := dblayer.UpdateUserInfoIncludePWD(username, enc_passwd, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			http.Redirect(w, r, "http://"+r.Host+"/static/view/home.html", http.StatusFound)
+			w.Write([]byte("SUCCESS WITH PWD"))
+		} else {
+			w.Write([]byte("FAILED"))
 		}
 	} else {
 		res := dblayer.UpdateUserExceptPWD(username, phone, email)
 		if res {
 			fmt.Println("更新成功！")
-			http.Redirect(w, r, "http://"+r.Host+"/static/view/home.html", http.StatusFound)
+			w.Write([]byte("SUCCESS WITHOUT PWD"))
+		} else {
+			w.Write([]byte("FAILED"))
 		}
 	}
 

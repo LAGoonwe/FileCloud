@@ -50,7 +50,6 @@
                 </h4>
               </div>
               <div class="modal-body">
-                <form action="/user/update" id="updateform" method="post" class="bs-example bs-example-form" role="form">
                   <div class="input-group">
                     <span class="input-group-addon">用户名（不可修改）</span>
                     <input id="ModalUsername" class="form-control" disabled="true">
@@ -63,7 +62,7 @@
                   </div><br>
                   <div class="input-group">
                     <span class="input-group-addon">输入新密码</span>
-                    <input id="newpwd" type="text" name="password" class="form-control" value="">
+                    <input id="newpwd" type="text" name="text" class="form-control" >
                   </div><br>
                   <div class="input-group">
                     <span class="input-group-addon">电话</span>
@@ -73,12 +72,11 @@
                     <span class="input-group-addon">邮箱</span>
                     <input id="ModalEmail" name="email" type="text" class="form-control" value="">
                   </div><br>
-                </form>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭
                 </button>
-                <button type="submit" class="btn btn-primary" onclick="return update_info()">
+                <button type="button" id="update" class="btn btn-primary" data-dismiss="modal">
                   保存更改
                 </button>
               </div>
@@ -135,19 +133,37 @@
   }
 
   //更新用户信息
-  function update_info()
-  {
-    var newpassword = document.getElementById('newpwd').value;
-
-    console.log(newpassword)
-    if(newpassword.length >=5 ){
-      var form = document.getElementById('updateform');
-      form.submit();
-    }else{
-      alert("密码长度不得少于5，请重新输入！")
-      return false;
-    }
-  }
+    $("#update").click(function () {
+      username = $("#realusername").val();
+      email = $("#ModalEmail").val();
+      phone = $("#ModalPhone").val();
+      pwd = $("#newpwd").val();
+      $.ajax({
+        url: "/user/update?" + queryParams(),
+        type:"POST",
+        data: {
+          username:username,
+          email:email,
+          phone:phone,
+          password:pwd
+        },
+        error:function (error) {
+          alert(error)
+        },
+        success:function (data) {
+          console.log(data)
+         if (data == "SUCCESS WITH PWD"){
+           alert("您修改过密码！需重新登录！")
+           window.location.href="/static/view/signin.html"
+         }else if (data == "SUCCESS WITHOUT PWD"){
+           alert("信息更新成功！")
+           location.reload()
+         }else {
+           alert("信息更新失败！")
+         }
+        }
+      });
+    });
 
   window.onload = function () {
     var username = document.getElementById('username');
