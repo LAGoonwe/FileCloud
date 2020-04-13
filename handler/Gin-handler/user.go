@@ -26,27 +26,26 @@ func DoSignupHandler(c *gin.Context) {
 	passwd := c.Request.FormValue("password")
 
 	if len(username) < 3 || len(passwd) < 5 {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "Invalid Parameter",
-			"code": common.StatusParamInvalid,
-		})
+		c.Writer.Write([]byte("Invalid Parameter"))
 		return
 	}
 
-	//对密码进行加盐及取Sha1值加密
-	encPasswd := util.Sha1([]byte(passwd + config.PwdSalt))
-	ok := dblayer.UserSignup(username, encPasswd)
-	if ok {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "Signup succeeded",
-			"code": common.StatusOK,
-		})
+	//用户名唯一性检验
+	user, _ := dblayer.GetUserInfo(username)
+	fmt.Println(user)
+	if user.Username == "" {
+		//对密码进行加盐及取Sha1值加密
+		encPasswd := util.Sha1([]byte(passwd + config.PwdSalt))
+		ok := dblayer.UserSignup(username, encPasswd)
+		if ok {
+			c.Writer.Write([]byte("SUCCESS"))
+		} else {
+			c.Writer.Write([]byte("FAILED"))
+		}
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "Signup failed",
-			"code": common.StatusRegisterFailed,
-		})
+		c.Writer.Write([]byte("Signined"))
 	}
+
 }
 
 //SignInHandler: 登录接口

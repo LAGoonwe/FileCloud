@@ -30,7 +30,7 @@
               <label for="username" class="l"> 新用户名:</label>
             </td>
             <td>
-              <input id="username" type="text" style="height:30px;width:250px;padding-right:50px;">
+              <input id="username" type="text" style="height:30px;width:250px;padding-right:50px;" placeholder="用户名长度不得小于3！">
             </td>
           </tr>
           <tr>
@@ -43,7 +43,7 @@
               <label for="password" class="l"> 密码:</label>
             </td>
             <td>
-              <input id="password" type="password" style="height:30px;width:250px;padding-right:50px;">
+              <input id="password" type="password" style="height:30px;width:250px;padding-right:50px;" placeholder="密码长度不得小于5！">
             </td>
           </tr>
           <tr>
@@ -124,7 +124,13 @@
             window.location.href = '/static/view/signin.html';
           }, 2000);
 
-        } else {
+        }else if (data == "invalid parameter"){
+          alert('用户名或密码长度有误！')
+        }else if (data == "Signined"){
+          alert('该用户名已被注册，请更换其他用户名！\n用户名注册后不可修改！')
+        }
+        else {
+          console.log(data)
           alert('注册失败');
         }
       }

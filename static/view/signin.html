@@ -83,7 +83,8 @@
             <td>
             </td>
             <td>
-              <input class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="登录" onclick='onSignin()' />
+              <input class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="登录" onclick='onSignin()' /><br><br>
+              <input class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="注册" onclick='onSignup()' />
             </td>
           </tr>
         </tbody>
@@ -138,6 +139,10 @@
 
   function QQSignin() {
     window.location.href="https://graph.qq.com/oauth2.0/show?which=Login&display=pc&client_id=101827468&response_type=code&redirect_uri=http://127.0.0.1:9090/qqLogin"
+  }
+
+  function onSignup() {
+    window.location.href="http://localhost:9090/user/signup"
   }
 </script>
 

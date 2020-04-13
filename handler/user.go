@@ -35,19 +35,28 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	passwd := r.Form.Get("password")
 
+	//用户名密码长度校验
 	if len(username) < 3 || len(passwd) < 5 {
 		w.Write([]byte("invalid parameter"))
 		return
 	}
 
-	//对用户密码进行哈希的加密处理
-	enc_passwd := util.Sha1([]byte(passwd + pwd_salt))
-	suc := dblayer.UserSignup(username, enc_passwd)
-	if suc {
-		w.Write([]byte("SUCCESS"))
+	//用户名唯一性检验
+	user, _ := dblayer.GetUserInfo(username)
+	fmt.Println(user)
+	if user.Username == "" {
+		//对用户密码进行哈希的加密处理
+		enc_passwd := util.Sha1([]byte(passwd + pwd_salt))
+		suc := dblayer.UserSignup(username, enc_passwd)
+		if suc {
+			w.Write([]byte("SUCCESS"))
+		} else {
+			w.Write([]byte("FAILED"))
+		}
 	} else {
-		w.Write([]byte("FAILED"))
+		w.Write([]byte("Signined"))
 	}
+
 }
 
 //用户登录接口
