@@ -1,84 +1,93 @@
+<!DOCTYPE html>
 <html>
-
 <head>
+  <title>宙斯云盘注册</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../css/uikit.min.css" />
+  <script src="../js/uikit.min.js"></script>
+  <script src="../js/uikit-icons.min.js"></script>
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-  <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-    crossorigin="anonymous">
+  <style type="text/css">
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .signindiv{
+      width: 500px;
+      height: 500px;
+      margin: 0 auto;
+      /* background-color: blanchedalmond; */
+      position: relative;
+      top: 40%; /*偏移*/
+      transform: translateY(-50%);
+    }
+    .signindiv .logo{
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
 
-  <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-    crossorigin="anonymous">
-
-  <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-    crossorigin="anonymous"></script>
-  <script lang="javascript">
-  </script>
+    }
+    .signindiv .form{
+      margin: 0 auto;
+      text-align: center;
+    }
+  </style>
 </head>
-
 <body>
-  <form>
-    <div style="width:500px;margin:10px auto;text-align: center;">
-      <div style="font-size:28px;font-weight:bold;margin:0px auto;">用户注册</div>
-      <br />
-      <table style="width:100%;text-align: left;">
-        <tbody>
-          <tr style="margin-bottom: 20px;">
-            <td>
-              <span class="p">*</span>
-              <label for="username" class="l"> 新用户名:</label>
-            </td>
-            <td>
-              <input id="username" type="text" style="height:30px;width:250px;padding-right:50px;" placeholder="用户名长度不得小于3！">
-            </td>
-          </tr>
-          <tr>
-            <td><br></td>
-            <td></td>
-          </tr>
-          <tr style="margin-bottom: 20px;">
-            <td>
-              <span class="p">*</span>
-              <label for="password" class="l"> 密码:</label>
-            </td>
-            <td>
-              <input id="password" type="password" style="height:30px;width:250px;padding-right:50px;" placeholder="密码长度不得小于5！">
-            </td>
-          </tr>
-          <tr>
-            <td><br></td>
-            <td></td>
-          </tr>
-          <tr style="margin-bottom: 20px;">
-            <td>
-              <span class="p">*</span>
-              <label for="passwordc" class="l"> 确认密码:</label>
-            </td>
-            <td>
-              <input id="passwordc" type="password" style="height:30px;width:250px;padding-right:50px;" onkeyup="validate()">&nbsp;&nbsp;<span id="msg"></span>
-            </td>
-          </tr>
-          <tr>
-            <td><br></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>
-            </td>
-            <td>
-              <input id="signup" class="btn btn-success" type="button" style="margin:0 auto;width:250px;" value="点击注册" onclick='onSignup()' />
-              <label name='login_hint' id='login_hint' style='display:none'>注册成功，２秒后跳转到登录页面...</label>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </form>
-</body>
 
+<!-- 登录框开始 -->
+<div class="signindiv">
+
+
+  <!--背景开始-->
+  <div>
+    <div class="uk-background-muted uk-padding uk-panel">
+      <!--logo开始-->
+      <div class="logo">
+        <img src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3477754960,2654242643&fm=26&gp=0.jpg">
+      </div>
+      <!--logo结束-->
+      <div class="form">
+        <h1 class="uk-heading-line uk-text-center"><span style="font-size: 20px;">宙斯云盘-注册</span></h1>
+        <!--用户名密码框开始-->
+        <div class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: user"></span>
+            <input class="uk-input" id="username" type="text" placeholder="用户名长度不得小于3！">
+          </div>
+        </div>
+
+        <div class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: lock"></span>
+            <input class="uk-input" id="password" type="password" placeholder="密码长度不得小于5！">
+          </div>
+        </div>
+
+        <div class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: lock"></span>
+            <input class="uk-input" id="passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
+          </div><br>
+          <span id="msg"></span>
+        </div>
+
+        <!--用户名密码框结束-->
+
+        <button style="width: 235px;" id="signup" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignup()">注册</button>
+        <button style="width: 235px;" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignin()">返回登录</button>
+      </div>
+
+    </div>
+  </div>
+  <!--背景结束-->
+</div>
+</body>
 <script lang="javascript">
-  
+
   <!-- 密码与确认密码一致性校验 -->
   function validate() {
 
@@ -97,17 +106,19 @@
       $("#signup").attr("disabled","disabled");
     }
   }
-  
-  
+
+
   function onSignup() {
     var username = document.getElementById('username');
     var password = document.getElementById('password');
+    var passwordc = document.getElementById('passwordc');
     $.ajax({
       url: "/user/signup",
       type: "POST",
       data: {
         "username": username.value,
-        "password": password.value
+        "password": password.value,
+        "passwordc": passwordc.value
       },
       error: function (jqXHR, textStatus, errorThrown) {
         if (textStatus == "error") {
@@ -119,23 +130,28 @@
       success: function (data, textStatus, jqXHR) {
         if (data == 'SUCCESS') {
           // 成功后跳到登录页
-          document.getElementById("login_hint").style.display = "block";
+          UIkit.notification({message: '注册成功，跳转至登录界面中...', status: 'success'})
           setTimeout(() => {
             window.location.href = '/static/view/signin.html';
           }, 2000);
 
+        }else if (data == "None passwordc"){
+          UIkit.notification({message: '请确认密码！', status: 'danger'})
         }else if (data == "invalid parameter"){
-          alert('用户名或密码长度有误！')
+          UIkit.notification({message: '用户名或密码长度有误！', status: 'danger'})
         }else if (data == "Signined"){
-          alert('该用户名已被注册，请更换其他用户名！\n用户名注册后不可修改！')
+          UIkit.notification({message: '该用户名已被注册，请更换其他用户名！\n用户名注册后不可修改！', status: 'danger'})
         }
         else {
           console.log(data)
-          alert('注册失败');
+          UIkit.notification({message: '注册失败', status: 'danger'})
         }
       }
     });
   }
-</script>
 
+  function onSignin() {
+    window.location.href="http://localhost:9090/static/view/signin.html"
+  }
+</script>
 </html>

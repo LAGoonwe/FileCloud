@@ -34,10 +34,15 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.Form.Get("username")
 	passwd := r.Form.Get("password")
+	passwdc := r.Form.Get("passwordc")
 
 	//用户名密码长度校验
 	if len(username) < 3 || len(passwd) < 5 {
 		w.Write([]byte("invalid parameter"))
+		return
+	}
+	if len(passwdc) == 0 {
+		w.Write([]byte("None passwordc"))
 		return
 	}
 

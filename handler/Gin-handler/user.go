@@ -24,9 +24,14 @@ func SignupHandler(c *gin.Context) {
 func DoSignupHandler(c *gin.Context) {
 	username := c.Request.FormValue("username")
 	passwd := c.Request.FormValue("password")
+	passwdc := c.Request.FormValue("passwordc")
 
 	if len(username) < 3 || len(passwd) < 5 {
 		c.Writer.Write([]byte("Invalid Parameter"))
+		return
+	}
+	if len(passwdc) == 0 {
+		c.Writer.Write([]byte("None passwordc"))
 		return
 	}
 
