@@ -65,10 +65,29 @@
         <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
       </form>
     </div>
-    <button class="uk-button uk-button-primary" onclick="toUploadFile()" style="float: right;margin-right: 30px;">上传文件</button>
-
+    <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle style="float: right;margin-right: 30px;">上传文件</button>
   </div>
 </nav>
+<!--上传文件模态框-->
+<div id="modal-upload" uk-modal>
+  <div class="uk-modal-dialog uk-modal-body">
+    <button class="uk-modal-close-default" type="button" uk-close></button>
+    <div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
+      <div style="font-size:20px;font-weight:bold;color:#ddd;
+      margin:0;padding-top:3px;background:#383e4b;height:40px;">
+        文件上传
+      </div>
+      <div class="uk-margin" uk-margin>
+          <div uk-form-custom="target: true">
+            <input id="file" name="file" type="file">
+            <input class="uk-input uk-form-width-medium" type="text" placeholder="选择文件" disabled>
+          </div>
+          <button class="uk-button uk-button-default" onclick="onUpload()">上传</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!--搜索结果抽屉 -->
 <div id="offcanvas-usage" uk-offcanvas>
   <div class="uk-offcanvas-bar">
@@ -110,8 +129,8 @@
           <dd id="email"></dd>
         </div>
         <div class="uk-card-footer">
-          <button class="uk-button uk-button-primary uk-margin-small-bottom">修改信息</button>
-          <button class="uk-button uk-button-primary uk-margin-small-bottom">退出登录</button>
+          <button class="uk-button uk-button-primary uk-margin-small-bottom" href="#modal-change" uk-toggle>修改信息</button>
+          <button class="uk-button uk-button-primary uk-margin-small-bottom" onclick="toIndex()">退出登录</button>
         </div>
       </div>
 
@@ -134,7 +153,6 @@
     </table>
 
     <!--下载提示模态框-->
-
     <div id="modal-download" uk-modal>
       <div class="uk-modal-dialog uk-modal-body">
         <button class="uk-modal-close-default" type="button" uk-close></button>
@@ -151,7 +169,7 @@
         </div>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
-          <button id="renameActionButton" class="uk-button uk-button-primary uk-modal-close" type="button">确定</button>
+          <button id="renameActionButton" class="uk-button uk-button-primary " type="button">确定</button>
         </p>
       </div>
     </div>
@@ -162,7 +180,58 @@
         <P>确认删除吗？</P>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
-          <button class="uk-button uk-button-primary " type="button">确定</button>
+          <button id="deleteActionButton" class="uk-button uk-button-primary " type="button">确定</button>
+        </p>
+      </div>
+    </div>
+
+    <!--修改信息模态框-->
+    <div id="modal-change" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">
+        <!--用户名-->
+        <div class="uk-margin">
+          <span class="uk-label uk-label-success">昵称</span>
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: user"></span>
+            <input id="ModalUsername" class="uk-input" type="text" disabled="disabled">
+            <input id="realusername" type="hidden">
+          </div>
+        </div>
+        <!--注册时间-->
+        <div class="uk-margin">
+          <span class="uk-label uk-label-success">时间</span>
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: calendar"></span>
+            <input id="ModalRegtime" class="uk-input" type="text" disabled="disabled">
+          </div>
+        </div>
+        <!--密码-->
+        <div class="uk-margin">
+          <span class="uk-label uk-label-success">密码</span>
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: lock"></span>
+            <input id="newpwd" class="uk-input" type="text">
+          </div>
+        </div>
+        <!--电话-->
+        <div class="uk-margin">
+          <span class="uk-label uk-label-success">电话</span>
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: receiver"></span>
+            <input id="ModalPhone" class="uk-input" type="text">
+          </div>
+        </div>
+        <!--邮箱-->
+        <div class="uk-margin">
+          <span class="uk-label uk-label-success">邮箱</span>
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: mail"></span>
+            <input id="ModalEmail" class="uk-input" type="text">
+          </div>
+        </div>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+          <button id="update" class="uk-button uk-button-primary " type="button">确定</button>
         </p>
       </div>
     </div>
@@ -173,6 +242,38 @@
 
 <script lang="javascript">
 
+  //文件上传
+  function onUpload() {
+    var upUrl = "/file/upload?" + queryParams();
+    var upEntry = localStorage.getItem("uploadEntry");
+    if (upEntry != null ) {
+      if (upEntry.indexOf("http:")>=0) {
+        upUrl = upEntry + "/file/upload?" + queryParams();
+      } else {
+        upUrl = "http://" + upEntry + "/file/upload?" + queryParams();
+      }
+    }
+    var formData = new FormData();
+    formData.append("file",$("#file")[0].files[0]);
+    $.ajax({
+      url: upUrl,
+      type: 'POST',
+      cache: false,
+      data: formData,
+      processData: false,
+      contentType: false,
+      error: function (err) {
+        alert('请求报错信息: ' + JSON.stringify(err));
+      },
+      success: function (res) {
+        UIkit.notification({message: '文件上传成功！', status: 'success'})
+        setTimeout(function(){
+          window.location.href = "/static/view/home.html";
+        }, 2000);
+      }
+    });
+  }
+
   function toUploadFile() {
     // window.location.href = '/file/upload?' + queryParams();
     window.location.href = "/static/view/upload.html";
@@ -180,6 +281,8 @@
 
   function toIndex() {
     // window.location.href = '/file/upload?' + queryParams();
+    sessionStorage.clear();
+    localStorage.clear();
     window.location.href = "/static/view/signin.html";
   }
 
@@ -204,13 +307,17 @@
       success:function (data) {
         console.log(data)
         if (data == "SUCCESS WITH PWD"){
-          alert("您修改过密码！需重新登录！")
-          window.location.href="/static/view/signin.html"
+          UIkit.notification({message: '您修改过密码！需重新登录！', status: 'danger'})
+          setTimeout(function(){
+            window.location.href = "/static/view/signin.html";
+          }, 2000);
         }else if (data == "SUCCESS WITHOUT PWD"){
-          alert("信息更新成功！")
-          location.reload()
+          UIkit.notification({message: '信息更新成功！', status: 'success'})
+          setTimeout(function(){
+            location.reload()
+          }, 1000);
         }else {
-          alert("信息更新失败！")
+          UIkit.notification({message: '信息更新失败！', status: 'danger'})
         }
       }
     });
@@ -223,9 +330,13 @@
       type: "POST",
       error: function (jqXHR, textStatus, errorThrown) {
         if (textStatus == "error") {
-          alert(textStatus + " : " + errorThrown);
+          if (errorThrown == "Forbidden")
+            UIkit.notification({message: '请先登录本系统！', status: 'danger'})
+            setTimeout(function(){
+              window.location.href = "/static/view/signin.html";
+            }, 1000);
         } else {
-          alert(textStatus);
+          UIkit.notification({message: textStatus, status: 'danger'})
         }
       },
       success: function (body, textStatus, jqXHR) {
@@ -302,9 +413,8 @@
                 ' onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
         var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle' +
                 ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/file/update?op=2&filehash={2}&{3}\')\">重命名</button>';
-        var deleteFileHtml = '<button class="btn btn-danger" ' +
-                'style="height:30px;margin:5px 3px;"' +
-                'onClick = "deleteFile(\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle'+
+                ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
 
 
         //给模态框表单添加验证
@@ -322,7 +432,7 @@
 
           cell = x.insertCell();
           fileShowURL = dlHost+"/static/files/"+data[i].RealName;
-          cell.innerHTML = "<a id='filename' target='_blank' href= "+fileShowURL+">"+ data[i].FileName+"</a>";
+          cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
 
           cell = x.insertCell();
           cell.innerHTML = data[i].FileSize+" KB";
@@ -350,10 +460,7 @@
 
   function renameFile(filehash, filename, renameUrl) {
     $("#FileName").text("当前文件名:"+filename);
-    $("#renameActionButton").click(function () {
-
-      $("#renameAction").attr("value","");
-
+    $("#renameActionButton").unbind("click").click(function () {
       newFileName=$('#renameAction').val()
 
       console.log(newFileName)
@@ -365,7 +472,6 @@
         UIkit.notification({message: '文件名不能包含空格！', status: 'danger'})
         return;
       }
-      xhr = new XMLHttpRequest()
       $.ajax({
         url: renameUrl + "&filename=" + newFileName,
         type: "POST",
@@ -375,11 +481,24 @@
         success: function (body) {
           console.log(body)
           UIkit.notification({message: '文件名修改成功！', status: 'success'})
-          $('#filename').text(newFileName)
-
+          filenameID= filehash
+          $('#'+filenameID).text(newFileName)
         }
       });
+      UIkit.modal($('#modal-newname')).hide()
+      $("#renameAction").val("");
     })
+  }
+
+  function download(url){
+    try {
+      var elemIF = document.createElement("iframe");
+      elemIF.src = url;
+      elemIF.style.display = "none";
+      document.body.appendChild(elemIF);
+    } catch (e) {
+      alert("下载异常！");
+    }
   }
 
   function downloadFile(durl) {
@@ -388,20 +507,18 @@
       type: "POST",
       error: function (jqXHR, textStatus, errorThrown) {
         if (textStatus == "error") {
-          alert(textStatus + " : " + errorThrown);
+          mes = textStatus + " : " + errorThrown
+          UIkit.notification({message: mes, status: 'danger'})
         } else {
-          alert(textStatus);
+          UIkit.notification({message: textStatus, status: 'danger'})
         }
       },
       success: function (body, textStatus, jqXHR) {
         try {
           document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
           setTimeout(function(){
-            var elemIF = document.createElement("iframe");
-            elemIF.src = body;
-            elemIF.style.display = "none";
-            document.body.appendChild(elemIF);
-          }, 3000);
+            download(body)
+          }, 2000);
         } catch (e) {
           alert(e);
         }
@@ -410,22 +527,27 @@
   }
 
 
-  function deleteFile(durl) {
-    $.ajax({
-      url: durl,
-      type: "POST",
-      error: function (jqXHR, textStatus, errorThrown) {
-        if (textStatus == "error") {
-          alert(textStatus + " : " + errorThrown);
-        } else {
-          alert(textStatus);
+  function deleteFile(filehash,durl) {
+
+    $('#deleteActionButton').unbind("click").click(function () {
+      $.ajax({
+        url: durl,
+        type: "POST",
+        error: function (jqXHR, textStatus, errorThrown) {
+          if (textStatus == "error") {
+            mes = textStatus + " : " + errorThrown
+            UIkit.notification({message: mes, status: 'danger'})
+          } else {
+            UIkit.notification({message: textStatus, status: 'danger'})
+          }
+        },
+        success: function (body, textStatus, jqXHR) {
+          UIkit.notification({message: '文件删除成功！', status: 'success'})
+          $("#"+filehash).parent().parent().remove();
         }
-      },
-      success: function (body, textStatus, jqXHR) {
-        alert("文件删除成功");
-        window.location.href = '/static/view/home.html'
-      }
-    });
+      });
+      UIkit.modal($('#modal-delete')).hide()
+    })
   }
 </script>
 
