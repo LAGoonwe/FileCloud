@@ -26,7 +26,7 @@ func DoSignupHandler(c *gin.Context) {
 	passwd := c.Request.FormValue("password")
 	passwdc := c.Request.FormValue("passwordc")
 
-	if len(username) < 3 || len(passwd) < 5 {
+	if len(username) == 0 || len(passwd) < 5 {
 		c.Writer.Write([]byte("Invalid Parameter"))
 		return
 	}
@@ -198,11 +198,6 @@ func UpdateUserStatus(c *gin.Context) {
 	dblayer.UpdateUserStatus(username, realStatus)
 }
 
-//新增管理员页面接口
-func AddHandler(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/static/view/AddAdmin.html")
-}
-
 //新增管理员
 func AddAdmin(c *gin.Context) {
 
@@ -211,18 +206,25 @@ func AddAdmin(c *gin.Context) {
 	status := c.Request.FormValue("status")
 	fmt.Println(username + password + status)
 	realStatus, _ := strconv.Atoi(status)
-	if len(username) < 3 || len(password) < 5 {
-		fmt.Println("设置错误")
+	if len(username) == 0 || len(password) < 5 {
+		c.Writer.Write([]byte("invalid parameter"))
 		return
 	}
 
-	//对用户密码进行哈希的加密处理
-	enc_passwd := util.Sha1([]byte(password + config.PwdSalt))
-	suc := dblayer.AddAdmin(username, enc_passwd, realStatus)
-	if suc {
-		c.Writer.Write([]byte("SUCCESS"))
+	//用户名唯一性检验
+	user, _ := dblayer.GetUserInfo(username)
+	fmt.Println(user)
+	if user.Username == "" {
+		//对用户密码进行哈希的加密处理
+		enc_passwd := util.Sha1([]byte(password + config.PwdSalt))
+		suc := dblayer.AddAdmin(username, enc_passwd, realStatus)
+		if suc {
+			c.Writer.Write([]byte("SUCCESS"))
+		} else {
+			c.Writer.Write([]byte("FAILED"))
+		}
 	} else {
-		c.Writer.Write([]byte("FAILED"))
+		c.Writer.Write([]byte("Signined"))
 	}
 
 }

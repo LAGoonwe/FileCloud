@@ -1,76 +1,272 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-          crossorigin="anonymous">
-
-    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-          crossorigin="anonymous">
-
-    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
-
+    <title>宙斯云盘-用户管理</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../css/uikit.min.css" />
+    <script src="../js/uikit.min.js"></script>
+    <script src="../js/uikit-icons.min.js"></script>
     <script src="/static/js/auth.js"></script>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <style type="text/css">
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .header{
+            width: 100%;
+            height: 15%;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #96c2f1;
+        }
+        #warp{
+            height: 85%;
+            width: 100%;
+            display: flex;
+        }
+        .lefter{
+            width: 10%;
+            background-color: #f8f8f8;
+            border-right: 1px solid #96c2f1;
+        }
+        .righter{
+            width: 100%;
+            float: left;
+            background-color: #f8f8f8;
+        }
+        .logo{
+            height: 100%;
+        }
+    </style>
 </head>
+<body>
 
-<body style="width:100%;height:100%">
-<div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
-    <div style="font-size:20px;font-weight:bold;
-                margin:0;background: #fcf8e3;height:32px;">
-        宙斯云盘用户管理后台
+<!--头部logo以及标题div-->
+<nav class="uk-navbar-container uk-margin header" uk-navbar style="margin-bottom: 0px;background-color: #f8f8f8;">
+    <div class="uk-navbar-left">
+        <img class="logo" src="http://img.mp.itc.cn/upload/20170724/cf678e09eb384401aa616ba134126357_th.jpg">
+        <ul class="uk-navbar-nav">
+            <li>
+                <a href="#">
+                    <span class="uk-icon uk-margin-small-right" uk-icon="icon: star"></span>
+                    宙斯云盘-用户管理
+                </a>
+            </li>
+        </ul>
+        <div class="uk-navbar-item">
+            <form action="javascript:void(0)">
+                <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
+                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+            </form>
+        </div>
+        <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-push" style="float: right;margin-right: 30px;">更多操作</button>
+
+        <div class="uk-card-header">
+            <div class="uk-grid-small uk-flex-middle" uk-grid>
+                <div class="uk-width-auto">
+                    <img class="uk-border-circle" width="40" height="40" src="http://b-ssl.duitang.com/uploads/item/201704/10/20170410095843_SEvMy.thumb.700_0.jpeg">
+                </div>
+                <div class="uk-width-expand">
+                    <h3 id="adminname1" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
+                    <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
-        <tbody>
-        <tr style="margin-bottom: 20px;">
-            <td style="width:10%;height: 100%;background: #f5f5f5;">
-                <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
-                    <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
-                    用户名: <p id="username" style="color: seagreen"></p>
-                    注册时间: <p id="regtime" style="color: seagreen"></p>
-                    电话: <p id="phone" style="color: seagreen"></p>
-                    邮箱: <p id="email" style="color: seagreen"></p>
-                    <button class="btn  btn-primary" onclick="toFileMan()">文件内容管理</button><br><br>
-                    <button class="btn  btn-primary" onclick="toFileMetaMan()">文件元数据管理</button><br><br>
-                    <button class="btn  btn-primary" onclick="toIndex()">退出登录</button><br><br>
+</nav>
+<!--搜索结果抽屉 -->
+<div id="offcanvas-usage" uk-offcanvas>
+    <div class="uk-offcanvas-bar">
+
+        <button class="uk-offcanvas-close" type="button" uk-close></button>
+
+        <h3>宙斯SOU</h3>
+
+        <p>抱歉，未找到您想搜索的东西</p>
+
+    </div>
+</div>
+
+<!--更多操作抽屉 -->
+<div id="offcanvas-push" uk-offcanvas="mode: push; overlay: true">
+    <div class="uk-offcanvas-bar">
+
+        <button class="uk-offcanvas-close" type="button" uk-close></button>
+
+        <h3>更多操作</h3>
+
+        <div class="uk-width-expand">
+            <h3 id="adminname2" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
+            <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
+        </div>
+        <button class="uk-button uk-button-primary" href="#modal-add-admin" uk-toggle>添加管理员</button>
+        <br> <br>
+        <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle>文件管理</button>
+        <br> <br>
+        <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle>文件元数据管理</button>
+
+    </div>
+</div>
+
+<!--添加管理员模态框-->
+<div id="modal-add-admin" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <div>
+            <div class="uk-background-muted uk-padding uk-panel">
+                <div class="form">
+                    <h1 class="uk-heading-line uk-text-center"><span style="font-size: 20px;">宙斯云盘-添加管理员</span></h1>
+                    <!--用户名密码框开始-->
+                    <div class="uk-margin">
+                        <div class="uk-inline">
+                            <span class="uk-form-icon" uk-icon="icon: user"></span>
+                            <input class="uk-input" id="add-username" type="text" placeholder="管理员名长度不得为空！">
+                        </div>
+                    </div>
+                    <div class="uk-margin">
+                        <div class="uk-inline">
+                            <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                            <input class="uk-input" id="add-password" type="password" placeholder="密码长度不得小于5！">
+                        </div>
+                    </div>
+                    <div class="uk-margin">
+                        <div class="uk-inline">
+                            <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                            <input class="uk-input" id="add-passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
+                        </div><br>
+                        <span id="msg"></span>
+                    </div>
+                    <!--用户名密码框结束-->
+                    <button style="width: 235px;" id="signup" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignup()">确认添加</button>
                 </div>
-                <div style="height: 80%;"></div>
-            </td>
-            <td style="width: 3px;height:100%;">
-                <div style="width:100%;height: 100%;background:rgb(202, 157, 248);"></div>
-            </td>
-            <td style="text-align: top;">
-                <div>用户列表
-                    <button class="btn btn-success" onclick="toAddAdmin()" style="float: right;margin-right: 30px;">新增管理员
-                    </button>
-                    <div style="width:100%;height: 1px;background:rgb(202, 157, 248);margin-top: 15px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="warp">
+    <!-- 左部昵称信息头像div
+    <div class="lefter">
+        <dl class="uk-description-list uk-description-list-divider">
+
+            <div class="uk-card">
+                <div class="uk-card-header">
+                    <div class="uk-grid-small uk-flex-middle" uk-grid>
+                        <div class="uk-width-expand">
+                            <h3 class="uk-card-title uk-margin-remove-bottom">文琪</h3>
+                            <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
+                        </div>
+                    </div>
                 </div>
-                <div style="height:95%;" style="width:100%;">
-                    <table id="filetbl" style="margin-left:3%;width:96%;">
-                        <thead style="height:50px;border:1px;">
-                        <tr style="height:50px;border:1px;">
-                            <th id="name">系统用户名</th>
-                            <th>邮箱</th>
-                            <th>手机号</th>
-                            <th>注册时间</th>
-                            <th>最近活跃时间</th>
-                            <th>账户状态</th>
-                            <th>操作</th>
-                        </tr>
-                        </thead>
-                    </table>
+                <div class="uk-card-body">
+
                 </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                <div class="uk-card-footer">
+                </div>
+            </div>
+
+
+        </dl>
+    </div> -->
+
+    <!--右部文件信息及操作div-->
+    <div class="righter">
+        <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
+            <thead>
+            <tr>
+                <th>系统用户名</th>
+                <th>邮箱</th>
+                <th>手机号</th>
+                <th>注册时间</th>
+                <th>最近活跃时间</th>
+                <th>账户状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+        </table>
+
+        <!--删除确认模态框-->
+        <div id="modal-delete" uk-modal>
+            <div class="uk-modal-dialog uk-modal-body">
+                <P>确认删除吗？</P>
+                <p class="uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+                    <button id="deleteActionButton" class="uk-button uk-button-primary" type="button">确定</button>
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 
 <script lang="javascript">
+
+    //管理员添加逻辑检验
+    <!-- 密码与确认密码一致性校验 -->
+    function validate() {
+
+        var pwd = $("#add-password").val();
+        var pwd1 = $("#add-passwordc").val();
+        <!-- 对比两次输入的密码 -->
+        if(pwd == pwd1)
+        {
+            $("#msg").html("两次密码相同");
+            $("#msg").css("color","green");
+            $("#signup").removeAttr("disabled");
+        }
+        else {
+            $("#msg").html("两次密码不相同");
+            $("#msg").css("color","red")
+            $("#signup").attr("disabled","disabled");
+        }
+    }
+
+
+    function onSignup() {
+        var username = document.getElementById('add-username');
+        var password = document.getElementById('add-password');
+        var passwordc = document.getElementById('add-passwordc');
+        $.ajax({
+            url: "/user/addAdmin",
+            type: "POST",
+            data: {
+                "username": username.value,
+                "password": password.value,
+                "status":   7,
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (textStatus == "error") {
+                    alert(textStatus + " : " + errorThrown);
+                } else {
+                    alert(textStatus);
+                }
+            },
+            success: function (data, textStatus, jqXHR) {
+                if (data == 'SUCCESS') {
+                    // 成功后跳到登录页
+                    UIkit.notification({message: '添加成功<br>返回至用户管理界面中...', status: 'success'})
+                    setTimeout(() => {
+                        window.location.href = '/static/view/admin.html';
+                    }, 2000);
+
+                }else if (data == "None passwordc"){
+                    UIkit.notification({message: '请确认密码！', status: 'danger'})
+                }else if (data == "invalid parameter"){
+                    UIkit.notification({message: '用户名或密码长度有误！', status: 'danger'})
+                }else if (data == "Signined"){
+                    UIkit.notification({message: '该用户名已被注册！<br>请更换其他用户名！<br>用户名注册后不可修改！', status: 'danger'})
+                }
+                else {
+                    console.log(data)
+                    UIkit.notification({message: '注册失败', status: 'danger'})
+                }
+            }
+        });
+    }
+
 
     function toIndex() {
         // window.location.href = '/file/upload?' + queryParams();
@@ -89,14 +285,6 @@
         window.location.href = "http://localhost:9090/static/view/FileMetaAdmin.html"
     }
 
-    //更新用户信息
-    function update_info()
-    {
-        var form = document.getElementById('updateform');
-        form.submit();
-
-    }
-
     window.onload = function () {
         var username = document.getElementById('username');
         $.ajax({
@@ -112,16 +300,8 @@
             success: function (body, textStatus, jqXHR) {
                 var resp = JSON.parse(body);
                 console.log(resp)
-                document.getElementById("username").innerHTML = resp.data.Username;
-                $("#ModalUsername").attr("value",resp.data.Username)
-                var SignupAt = new Date(resp.data.SignupAt)
-                document.getElementById("regtime").innerHTML = formatDate(SignupAt);
-                $("#ModalRegtime").attr("value",formatDate(SignupAt))
-                document.getElementById("phone").innerHTML = resp.data.Phone;
-                $("#ModalPhone").attr("value",resp.data.Phone)
-                document.getElementById("email").innerHTML = resp.data.Email;
-                $("#ModalEmail").attr("value",resp.data.Email)
-
+                document.getElementById("adminname1").innerHTML = resp.data.Username;
+                document.getElementById("adminname2").innerHTML = resp.data.Username;
                 updateFileList();
             }
         });
@@ -178,19 +358,19 @@
                     }
                 }
 
-                var renameUserHtml = '<button id="{0}_status" class="btn btn-warning" ' +
+                var renameUserHtml = '<button id="{0}_status" class="uk-button uk-button-danger uk-button-small" ' +
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
                     'update?CurlUsername={0}&{2}\')">禁用账户</button>';
 
-                var upUserHtml = '<button id="{0}_up" class="btn btn-warning" ' +
+                var upUserHtml = '<button id="{0}_up" class="uk-button uk-button-primary uk-button-small" ' +
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "upUser(\'{0}\',7,\''+dlHost+'/status/' +
                     'update?CurlUsername={0}&{2}\')">升级为系统管理员</button>';
 
-                var deleteUserHtml = '<button id="{0}_delete" class="btn btn-danger" ' +
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "deleteUser(\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
+                var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
+                    ' style="height:30px;margin:5px 3px;"' +
+                    'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
 
 
 
@@ -201,6 +381,7 @@
                     var x = document.getElementById('filetbl').insertRow();
                     var cell = x.insertCell();
                     cell.innerHTML = data[i].Username;
+                    cell.id = data[i].Username
 
                     cell = x.insertCell();
                     cell.innerHTML = data[i].Email;
@@ -224,7 +405,7 @@
                     cell = x.insertCell();
                     cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams())+
                         upUserHtml.format(data[i].Username, data[i].Status, queryParams())+
-                    deleteUserHtml.format(data[i].Username, queryParams());
+                        deleteUserHtml.format(data[i].Username, queryParams());
 
                     //开始对账户状态值单元格做判断
                     if (data[i].Status == 0){
@@ -244,7 +425,7 @@
                         $('#'+realStatus).text("恢复账户");
 
                         //更改按钮颜色
-                        $('#'+realStatus).attr("class","btn btn-primary");
+                        $('#'+realStatus).attr("class","uk-button uk-button-primary uk-button-small");
 
                     }
 
@@ -289,8 +470,11 @@
             },
             success: function (body) {
                 console.log(body)
-                alert(msg);
-                window.location.href = '/static/view/admin.html';
+                UIkit.notification({message: msg, status: 'success'})
+                setTimeout(function(){
+                    window.location.reload();;
+                }, 1000);
+
             }
         });
     }
@@ -307,14 +491,17 @@
             },
             success: function (body) {
                 console.log(body)
-                alert(msg);
-                window.location.href = '/static/view/admin.html';
+                UIkit.notification({message: msg, status: 'success'})
+                $('#'+username+"_up").remove()
             }
         });
     }
 
     //删除用户
-    function deleteUser(durl) {
+    function deleteUser(username,durl) {
+
+        $('#deleteActionButton').unbind("click").click(function () {
+
         $.ajax({
             url: durl,
             type: "POST",
@@ -326,12 +513,15 @@
                 }
             },
             success: function (body, textStatus, jqXHR) {
-                alert("用户删除成功");
-                window.location.href = '/static/view/admin.html'
+                UIkit.notification({message: "用户删除成功", status: 'success'})
+                $("#"+username).parent().remove();
             }
         });
+            UIkit.modal($('#modal-delete')).hide()
+        })
     }
 
 </script>
+
 
 </html>

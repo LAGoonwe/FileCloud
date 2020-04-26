@@ -37,7 +37,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	passwdc := r.Form.Get("passwordc")
 
 	//用户名密码长度校验
-	if len(username) < 3 || len(passwd) < 5 {
+	if len(username) == 0 || len(passwd) < 5 {
 		w.Write([]byte("invalid parameter"))
 		return
 	}
@@ -244,36 +244,33 @@ func UpdateUserStatus(w http.ResponseWriter, r *http.Request) {
 
 //新增管理员
 func AddAdmin(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		data, err := ioutil.ReadFile("src/FileCloud/static/view/AddAdmin.html")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 
-		w.Write(data)
-		return
-	}
 	r.ParseForm()
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	status := r.Form.Get("status")
 	fmt.Println(username + password + status)
 	realStatus, _ := strconv.Atoi(status)
-	if len(username) < 3 || len(password) < 5 {
+	if len(username) == 0 || len(password) < 5 {
 		w.Write([]byte("invalid parameter"))
 		return
 	}
 
-	//对用户密码进行哈希的加密处理
-	enc_passwd := util.Sha1([]byte(password + pwd_salt))
-	suc := dblayer.AddAdmin(username, enc_passwd, realStatus)
-	if suc {
-		w.Write([]byte("SUCCESS"))
+	//用户名唯一性检验
+	user, _ := dblayer.GetUserInfo(username)
+	fmt.Println(user)
+	if user.Username == "" {
+		//对用户密码进行哈希的加密处理
+		enc_passwd := util.Sha1([]byte(password + pwd_salt))
+		suc := dblayer.AddAdmin(username, enc_passwd, realStatus)
+		if suc {
+			w.Write([]byte("SUCCESS"))
+		} else {
+			w.Write([]byte("FAILED"))
+		}
 	} else {
-		w.Write([]byte("FAILED"))
+		w.Write([]byte("Signined"))
 	}
-
 }
 
 /**
