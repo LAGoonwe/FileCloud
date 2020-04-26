@@ -1,71 +1,162 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-          crossorigin="anonymous">
-
-    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
-          crossorigin="anonymous">
-
-    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-            crossorigin="anonymous"></script>
-
+    <title>宙斯云盘-文件元数据管理</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../css/uikit.min.css" />
+    <script src="../js/uikit.min.js"></script>
+    <script src="../js/uikit-icons.min.js"></script>
     <script src="/static/js/auth.js"></script>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <style type="text/css">
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .header{
+            width: 100%;
+            height: 15%;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #96c2f1;
+        }
+        #warp{
+            height: 85%;
+            width: 100%;
+            display: flex;
+        }
+        .lefter{
+            width: 10%;
+            background-color: #f8f8f8;
+            border-right: 1px solid #96c2f1;
+        }
+        .righter{
+            width: 100%;
+            float: left;
+            background-color: #f8f8f8;
+        }
+        .logo{
+            height: 100%;
+        }
+    </style>
 </head>
+<body>
 
-<body style="width:100%;height:100%">
-<div style="width:100%;height:100%;margin:0 0 10px 0;text-align: center;">
-    <div style="font-size:20px;font-weight:bold;
-                margin:0;background: #5cb85c;height:32px;">
-        宙斯文件元数据管理后台
+<!--头部logo以及标题div-->
+<nav class="uk-navbar-container uk-margin header" uk-navbar style="margin-bottom: 0px;background-color: #f8f8f8;">
+    <div class="uk-navbar-left">
+        <img class="logo" src="http://img.mp.itc.cn/upload/20170724/cf678e09eb384401aa616ba134126357_th.jpg">
+        <ul class="uk-navbar-nav">
+            <li>
+                <a href="#">
+                    <span class="uk-icon uk-margin-small-right" uk-icon="icon: star"></span>
+                    文件元数据管理
+                </a>
+            </li>
+        </ul>
+        <div class="uk-navbar-item">
+            <form action="javascript:void(0)">
+                <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
+                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+            </form>
+        </div>
+        <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-push" style="float: right;margin-right: 30px;">更多操作</button>
+
+        <div class="uk-card-header">
+            <div class="uk-grid-small uk-flex-middle" uk-grid>
+                <div class="uk-width-auto">
+                    <img class="uk-border-circle" width="40" height="40" src="http://b-ssl.duitang.com/uploads/item/201704/10/20170410095843_SEvMy.thumb.700_0.jpeg">
+                </div>
+                <div class="uk-width-expand">
+                    <h3 id="adminname1" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
+                    <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <table style="height:100%;width:100%;text-align: left;border-width: 2px; border-color: lightslategrey;">
-        <tbody>
-        <tr style="margin-bottom: 20px;">
-            <td style="width:10%;height: 100%;background: #fcf8e3;">
-                <div style="text-align: top;height:20%;margin: 10px 0 0 10px;">
-                    <img style="width:80px;height:80px;" src="/static/img/avatar.jpeg"></img><br>
-                    用户名: <p id="username" style="color: seagreen"></p>
-                    注册时间: <p id="regtime" style="color: seagreen"></p>
-                    电话: <p id="phone" style="color: seagreen"></p>
-                    邮箱: <p id="email" style="color: seagreen"></p>
-                    <button class="btn  btn-primary" onclick="toFileMetaMan()">用户管理</button><br><br>
-                    <button class="btn  btn-primary" onclick="toIndex()">退出登录</button><br><br>
-                </div>
+</nav>
+<!--搜索结果抽屉 -->
+<div id="offcanvas-usage" uk-offcanvas>
+    <div class="uk-offcanvas-bar">
 
-                <div style="height: 80%;"></div>
-            </td>
-            <td style="width: 3px;height:100%;">
-                <div style="width:100%;height: 100%;background:rgb(202, 157, 248);"></div>
-            </td>
-            <td style="text-align: top;">
-                <div>文件元数据列表
-                    </button>
-                    <div style="width:100%;height: 1px;background:rgb(202, 157, 248);margin-top: 15px;"></div>
-                </div>
-                <div style="height:95%;" style="width:100%;">
-                    <table id="filetbl" style="margin-left:3%;width:96%;">
-                        <thead style="height:50px;border:1px;">
-                        <tr style="height:50px;border:1px;">
-                            <th>文件hash</th>
-                            <th>文件名</th>
-                            <th>文件大小</th>
-                            <th>上传时间</th>
-                            <th>最近更新</th>
-                            <th>归属用户</th>
-                            <th>操作</th>
-                        </tr>
-                        </thead>
-                    </table>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+        <button class="uk-offcanvas-close" type="button" uk-close></button>
+
+        <h3>宙斯SOU</h3>
+
+        <p>抱歉，未找到您想搜索的东西</p>
+
+    </div>
+</div>
+
+<!--更多操作抽屉 -->
+<div id="offcanvas-push" uk-offcanvas="mode: push; overlay: true">
+    <div class="uk-offcanvas-bar">
+
+        <button class="uk-offcanvas-close" type="button" uk-close></button>
+
+        <h3>更多操作</h3>
+
+        <div class="uk-width-expand">
+            <h3 id="adminname2" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
+            <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
+        </div>
+        <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle>文件管理</button>
+        <br> <br>
+        <button class="uk-button uk-button-primary" onclick="toUserMan()">用户管理</button>
+        <br> <br>
+        <button class="uk-button uk-button-primary" onclick="toIndex()">退出登录</button>
+    </div>
+</div>
+
+<!--下载提示模态框-->
+<div id="modal-download" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <p id="downloadAction">文件即将下载自......</p>
+    </div>
+</div>
+
+<!--删除确认模态框-->
+<div id="modal-delete" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P>确认删除吗？</P>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button id="deleteActionButton" class="uk-button uk-button-primary " type="button">确定</button>
+        </p>
+    </div>
+</div>
+
+<div id="warp">
+    <div class="righter">
+        <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
+            <thead>
+            <tr>
+                <th>文件Hash值</th>
+                <th>文件名</th>
+                <th>文件大小</th>
+                <th>创建时间</th>
+                <th>最近修改时间</th>
+                <th>归属用户</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+        </table>
+
+        <!--删除确认模态框-->
+        <div id="modal-delete" uk-modal>
+            <div class="uk-modal-dialog uk-modal-body">
+                <P>确认删除吗？</P>
+                <p class="uk-text-right">
+                    <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+                    <button id="deleteActionButton" class="uk-button uk-button-primary" type="button">确定</button>
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 
@@ -73,23 +164,20 @@
 
     function toIndex() {
         // window.location.href = '/file/upload?' + queryParams();
+        sessionStorage.clear();
+        localStorage.clear();
         window.location.href = "/static/view/signin.html";
     }
 
 
     //跳转去用户管理页面
-    function toFileMetaMan() {
-        alert("即将跳转至用户管理页面...")
-        window.location.href = "http://localhost:9090/static/view/admin.html"
+    function toUserMan() {
+        UIkit.notification({message: '即将跳转至用户管理页面...！', status: 'success'})
+        setTimeout(function(){
+            window.location.href = "http://localhost:9090/static/view/admin.html";
+        }, 1500);
     }
 
-    //更新用户信息
-    function update_info()
-    {
-        var form = document.getElementById('updateform');
-        form.submit();
-
-    }
 
     window.onload = function () {
         var username = document.getElementById('username');
@@ -98,23 +186,19 @@
             type: "POST",
             error: function (jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
-                    alert(textStatus + " : " + errorThrown);
+                    if (errorThrown == "Forbidden")
+                        UIkit.notification({message: '请先登录本系统！', status: 'danger'})
+                    setTimeout(function(){
+                        window.location.href = "/static/view/signin.html";
+                    }, 1000);
                 } else {
-                    alert(textStatus);
+                    UIkit.notification({message: textStatus, status: 'danger'})
                 }
             },
             success: function (body, textStatus, jqXHR) {
                 var resp = JSON.parse(body);
-                document.getElementById("username").innerHTML = resp.data.Username;
-                $("#ModalUsername").attr("value",resp.data.Username)
-                var SignupAt = new Date(resp.data.SignupAt)
-                document.getElementById("regtime").innerHTML = formatDate(SignupAt);
-                $("#ModalRegtime").attr("value",formatDate(SignupAt))
-                document.getElementById("phone").innerHTML = resp.data.Phone;
-                $("#ModalPhone").attr("value",resp.data.Phone)
-                document.getElementById("email").innerHTML = resp.data.Email;
-                $("#ModalEmail").attr("value",resp.data.Email)
-
+                document.getElementById("adminname1").innerHTML = resp.data.Username;
+                document.getElementById("adminname2").innerHTML = resp.data.Username;
                 updateFileList();
             }
         });
@@ -172,12 +256,12 @@
                     }
                 }
 
-                var downloadHtml = '<button class="btn btn-info" ' +
+                var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
                     'style="height:30px;margin:5px 3px;"' +
                     'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
-                var deleteFileHtml = '<button class="btn btn-danger" ' +
+                var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
                     'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "deleteFile(\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+                    'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
 
 
                 //给模态框表单添加验证
@@ -195,10 +279,10 @@
 
                     cell = x.insertCell();
                     fileShowURL = dlHost+"/static/files/"+data[i].RealName;
-                    cell.innerHTML = "<a target='_blank' href= "+fileShowURL+">"+ data[i].FileName+"</a>";
+                    cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
 
                     cell = x.insertCell();
-                    cell.innerHTML = data[i].FileSize;
+                    cell.innerHTML = data[i].FileSize+" KB";
 
                     cell = x.insertCell();
                     var UploadAt = new Date(data[i].UploadAt)
@@ -220,24 +304,35 @@
         });
     }
 
+    function download(url){
+        try {
+            var elemIF = document.createElement("iframe");
+            elemIF.src = url;
+            elemIF.style.display = "none";
+            document.body.appendChild(elemIF);
+        } catch (e) {
+            alert("下载异常！");
+        }
+    }
+
     function downloadFile(durl) {
         $.ajax({
             url: durl,
             type: "POST",
             error: function (jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
-                    alert(textStatus + " : " + errorThrown);
+                    mes = textStatus + " : " + errorThrown
+                    UIkit.notification({message: mes, status: 'danger'})
                 } else {
-                    alert(textStatus);
+                    UIkit.notification({message: textStatus, status: 'danger'})
                 }
             },
             success: function (body, textStatus, jqXHR) {
                 try {
-                    alert("文件即将下载自: " + body);
-                    var elemIF = document.createElement("iframe");
-                    elemIF.src = body;
-                    elemIF.style.display = "none";
-                    document.body.appendChild(elemIF);
+                    document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
+                    setTimeout(function(){
+                        download(body)
+                    }, 2000);
                 } catch (e) {
                     alert(e);
                 }
@@ -246,22 +341,26 @@
     }
 
 
-    function deleteFile(durl) {
-        $.ajax({
-            url: durl,
-            type: "POST",
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus == "error") {
-                    alert(textStatus + " : " + errorThrown);
-                } else {
-                    alert(textStatus);
+    function deleteFile(filehash,durl) {
+        $('#deleteActionButton').unbind("click").click(function () {
+            $.ajax({
+                url: durl,
+                type: "POST",
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (textStatus == "error") {
+                        mes = textStatus + " : " + errorThrown
+                        UIkit.notification({message: mes, status: 'danger'})
+                    } else {
+                        UIkit.notification({message: textStatus, status: 'danger'})
+                    }
+                },
+                success: function (body, textStatus, jqXHR) {
+                    UIkit.notification({message: '文件删除成功！', status: 'success'})
+                    $("#"+filehash).parent().parent().remove();
                 }
-            },
-            success: function (body, textStatus, jqXHR) {
-                alert("文件删除成功");
-                window.location.href = '/static/view/FileMetaAdmin.html'
-            }
-        });
+            });
+            UIkit.modal($('#modal-delete')).hide()
+        })
     }
 </script>
 

@@ -274,11 +274,6 @@
     });
   }
 
-  function toUploadFile() {
-    // window.location.href = '/file/upload?' + queryParams();
-    window.location.href = "/static/view/upload.html";
-  }
-
   function toIndex() {
     // window.location.href = '/file/upload?' + queryParams();
     sessionStorage.clear();
@@ -409,11 +404,14 @@
 
 
 
-        var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle' +
+        var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
+                'style="height:30px;margin:5px 3px;"'+
                 ' onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
-        var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle' +
+        var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
+                'style="height:30px;margin:5px 3px;"'+
                 ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/file/update?op=2&filehash={2}&{3}\')\">重命名</button>';
-        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle'+
+        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
+                'style="height:30px;margin:5px 3px;"'+
                 ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
 
 
