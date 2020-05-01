@@ -1,5 +1,5 @@
-package main
+package handler
 
 func main() {
-	$END$
+
 }
