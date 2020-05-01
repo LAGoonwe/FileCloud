@@ -9,6 +9,11 @@
     <script src="../js/uikit-icons.min.js"></script>
     <script src="/static/js/auth.js"></script>
     <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+    <!--分页相关-->
+    <link type="text/css" href="../css/style.css" rel="stylesheet" />
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/MyPage.js"></script>
     <style type="text/css">
         html, body {
             width: 100%;
@@ -146,6 +151,9 @@
             </thead>
         </table>
 
+        <!-- 分页插件显示区域 -->
+        <div style="position:absolute;bottom:0;right:0;margin-bottom: 20px" class="page" id="Page"></div>
+
         <!--删除确认模态框-->
         <div id="modal-delete" uk-modal>
             <div class="uk-modal-dialog uk-modal-body">
@@ -197,9 +205,11 @@
             },
             success: function (body, textStatus, jqXHR) {
                 var resp = JSON.parse(body);
+                console.log(resp)
                 document.getElementById("adminname1").innerHTML = resp.data.Username;
                 document.getElementById("adminname2").innerHTML = resp.data.Username;
-                updateFileList();
+                AllFileMetaTotal = resp.all_file_meta_total
+                updateFileList(AllFileMetaTotal);
             }
         });
     }
@@ -226,80 +236,98 @@
             checkTime(minutes)+":"+checkTime(seconds));
     }
 
-    function updateFileList() {
-        $.ajax({
-            url: "/file/all?" + queryParams(),
-            type: "POST",
-            data: {
-                limit: 15
-            },
-            error: function (err) {
-                alert(JSON.stringify(err));
-            },
-            success: function (body) {
-                console.log(body)
-                if (!body) {
-                    return;
-                }
-                var data = body;
-                if (!data || data.length <= 0) {
-                    return;
-                }
+    function updateFileList(AllFileMetaTotal) {
+        var pageIndex
+        // 激活分页插件
+        P.initMathod({
+            params: {elemId: '#Page', total: '10', pageNum: 3, pageSize: 7},
+            requestFunction: function () {
+                //计算所需页码
+                num = Math.ceil(AllFileMetaTotal/7)
+                // console.log(num,FileTotal)
+                P.config.total = AllFileMetaTotal;
+                P.config.pageNum = num
+                console.log(JSON.stringify(P.config));
+                pageIndex = P.config.pageIndex
 
-                var dlHost = 'http://localhost:9090';
-                var dlEntry = localStorage.getItem('downloadEntry');
-                if (dlEntry != null) {
-                    if (dlEntry.indexOf('http:')<0) {
-                        dlHost = 'http://' + dlEntry;
-                    } else {
-                        dlHost = dlEntry;
+                $.ajax({
+                    url: "/file/all?" + queryParams(),
+                    type: "POST",
+                    data: {
+                        PageIndex: pageIndex, // 当前点击的页码
+                        PageSize: 7 //每页显示的条数
+                    },
+                    error: function (err) {
+                        alert(JSON.stringify(err));
+                    },
+                    success: function (body) {
+                        if (!body) {
+                            return;
+                        }
+                        var data = body;
+                        if (!data || data.length <= 0) {
+                            return;
+                        }
+
+                        var dlHost = 'http://localhost:9090';
+                        var dlEntry = localStorage.getItem('downloadEntry');
+                        if (dlEntry != null) {
+                            if (dlEntry.indexOf('http:')<0) {
+                                dlHost = 'http://' + dlEntry;
+                            } else {
+                                dlHost = dlEntry;
+                            }
+                        }
+
+                        var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
+                            'style="height:30px;margin:5px 3px;"' +
+                            'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
+                        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
+                            'style="height:30px;margin:5px 3px;"' +
+                            'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+
+
+                        //给模态框表单添加验证
+                        $("#realusername").attr("value",localStorage.getItem("username"))
+                        console.log(localStorage.getItem("username"))
+                        $("#token").attr("value",localStorage.getItem("token"))
+                        console.log(localStorage.getItem("token"))
+
+                        data = JSON.parse(data)
+                        // console.log(data)
+                        for (var i = 0; i < data.length; i++) {
+                            var x = document.getElementById('filetbl').insertRow();
+                            var cell = x.insertCell();
+                            cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
+
+                            cell = x.insertCell();
+                            fileShowURL = dlHost+"/static/files/"+data[i].RealName;
+                            cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
+
+                            cell = x.insertCell();
+                            cell.innerHTML = data[i].FileSize+" KB";
+
+                            cell = x.insertCell();
+                            var UploadAt = new Date(data[i].UploadAt)
+                            cell.innerHTML = formatDate(UploadAt);
+
+                            cell = x.insertCell();
+                            var LastUpdated = new Date(data[i].LastUpdated);
+                            cell.innerHTML = formatDate(LastUpdated);
+
+                            cell = x.insertCell();
+                            cell.innerHTML = data[i].UserName;
+
+                            cell = x.insertCell();
+                            cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
+                                .format(data[i].FileHash, queryParams());
+                        }
+
                     }
-                }
-
-                var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
-                var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
-
-
-                //给模态框表单添加验证
-                $("#realusername").attr("value",localStorage.getItem("username"))
-                console.log(localStorage.getItem("username"))
-                $("#token").attr("value",localStorage.getItem("token"))
-                console.log(localStorage.getItem("token"))
-
-                data = JSON.parse(data)
-                console.log(data)
-                for (var i = 0; i < data.length; i++) {
-                    var x = document.getElementById('filetbl').insertRow();
-                    var cell = x.insertCell();
-                    cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
-
-                    cell = x.insertCell();
-                    fileShowURL = dlHost+"/static/files/"+data[i].RealName;
-                    cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
-
-                    cell = x.insertCell();
-                    cell.innerHTML = data[i].FileSize+" KB";
-
-                    cell = x.insertCell();
-                    var UploadAt = new Date(data[i].UploadAt)
-                    cell.innerHTML = formatDate(UploadAt);
-
-                    cell = x.insertCell();
-                    var LastUpdated = new Date(data[i].LastUpdated);
-                    cell.innerHTML = formatDate(LastUpdated);
-
-                    cell = x.insertCell();
-                    cell.innerHTML = data[i].UserName;
-
-                    cell = x.insertCell();
-                    cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
-                            .format(data[i].FileHash, queryParams());
-                }
-
+                });
+                // 清除原有页面的表格数据---配合分页使用
+                $("#filetbl tr:gt(0)").empty();
+                $("#filetbl tr").not(':eq(0)').empty()
             }
         });
     }

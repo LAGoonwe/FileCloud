@@ -1,7 +1,6 @@
 package GinHandler
 
 import (
-	"FileCloud/common"
 	"FileCloud/config"
 	dblayer "FileCloud/db"
 	nativeHandler "FileCloud/handler"
@@ -9,7 +8,6 @@ import (
 	"FileCloud/util"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -106,7 +104,7 @@ func DoSignInHandler(c *gin.Context) {
 			Token:    token,
 		},
 	}
-	c.Data(http.StatusOK, "text/plain", resp.JSONBytes())
+	c.Writer.Write(resp.JSONBytes())
 }
 
 //UserInfoHandler: 查询用户信息
@@ -117,21 +115,28 @@ func UserInfoHandler(c *gin.Context) {
 	//3.查询用户信息
 	user, err := dblayer.GetUserInfo(username)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "查询用户信息失败",
-			"code": common.StatusUserNotExists,
-		})
+		c.Writer.WriteHeader(http.StatusForbidden)
 		return
 	}
+	// 获取当前用户属下文件总数
+	fileTotal := dblayer.GetFileNumByUserName(username)
+
+	// 获取系统所有用户数
+	userTotal := dblayer.GetUserNum()
+
+	//获取系统所有文件数
+	allFileMetaTotal := dblayer.GetFileNum()
 
 	//4.组装并响应用户数据
-	resp := util.RespMsg{
-		Code: int(common.StatusOK),
-		Msg:  "查询用户信息成功",
-		Data: user,
+	resp := util.RespMsg2{
+		Code:             0,
+		Msg:              "OK",
+		Data:             user,
+		FileTotal:        fileTotal,
+		UserTotal:        userTotal,
+		AllFileMetaTotal: allFileMetaTotal,
 	}
-	c.Data(http.StatusOK, "text/plain", resp.JSONBytes())
+	c.Writer.Write(resp.JSONBytes2())
 }
 
 //更新用户信息
@@ -174,7 +179,9 @@ func UserQueryHandler(c *gin.Context) {
 		c.Redirect(http.StatusFound, "http://localhost:9090/static/view/admin.html")
 		//data, err := ioutil.ReadFile("src/FileCloud/static/view/admin.html")
 	} else {
-		users, err := dblayer.GetAllUser()
+		pageIndex, _ := strconv.Atoi(c.Request.Form.Get("PageIndex"))
+		pageSize, _ := strconv.Atoi(c.Request.Form.Get("PageSize"))
+		users, err := dblayer.GetAllUser(pageIndex, pageSize)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -186,7 +193,7 @@ func UserQueryHandler(c *gin.Context) {
 		resp := util.RespMsg{
 			Data: users,
 		}
-		c.Data(http.StatusOK, "text/plain", resp.JSONBytes())
+		c.Writer.Write(resp.JSONBytes())
 	}
 }
 

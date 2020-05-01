@@ -35,14 +35,16 @@ func OnUserFileUploadFinished(usename, filehash, filename string, filesize int64
 }
 
 //批量获取用户文件信息
-func QueryUserFileMetas(username string, limit int) ([]UserFile, error) {
-	stmt, err := mydb.DBConn().Prepare("select file_sha1,file_name,file_size,upload_at,last_update from tbl_user_file  where user_name = ? limit ?")
+//改造加入分页
+func QueryUserFileMetas(username string, pageIndex int, pageSize int) ([]UserFile, error) {
+	stmt, err := mydb.DBConn().Prepare("select file_sha1,file_name,file_size,upload_at,last_update from tbl_user_file  where user_name = ? limit ?,?")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(username, limit)
+	rows, err := stmt.Query(username, (pageIndex-1)*pageSize, pageSize)
+	fmt.Println(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +63,15 @@ func QueryUserFileMetas(username string, limit int) ([]UserFile, error) {
 }
 
 //获取所有文件元数据信息
-func GetAllFileMeta(limit int) ([]UserFile, error) {
-	stmt, err := mydb.DBConn().Prepare("select file_sha1,file_name,file_size,upload_at,last_update,user_name from tbl_user_file limit ?")
+//改造加入分页逻辑
+func GetAllFileMeta(pageIndex int, pageSize int) ([]UserFile, error) {
+	stmt, err := mydb.DBConn().Prepare("select file_sha1,file_name,file_size,upload_at,last_update,user_name from tbl_user_file limit ?,?")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(limit)
+	rows, err := stmt.Query((pageIndex-1)*pageSize, pageSize)
 	if err != nil {
 		return nil, err
 	}

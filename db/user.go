@@ -118,6 +118,43 @@ func GetUserInfo(username string) (User, error) {
 		return user, err
 	}
 	return user, nil
+
+}
+
+// 获取用户属下文件总数
+func GetFileNumByUserName(username string) int64 {
+	stmt, err := mydb.DBConn().Prepare(
+		"SELECT COUNT(*) FROM tbl_user_file WHERE user_name = ?;")
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	defer stmt.Close()
+	var count int64
+	err = stmt.QueryRow(username).Scan(&count)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	return count
+}
+
+// 获取系统所有用户数
+func GetUserNum() int64 {
+	stmt, err := mydb.DBConn().Prepare(
+		"SELECT COUNT(*) FROM tbl_user;")
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	defer stmt.Close()
+	var count int64
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	return count
 }
 
 //更新用户信息（包含密码）
@@ -151,14 +188,15 @@ func UpdateUserExceptPWD(username, phone, email string) bool {
 }
 
 //查询所有用户，用于用户管理
-func GetAllUser() ([]User, error) {
-	stmt, err := mydb.DBConn().Prepare("select user_name,user_pwd,email,phone,signup_at,last_active,status from tbl_user")
+//改造加入分页
+func GetAllUser(pageIndex int, pageSize int) ([]User, error) {
+	stmt, err := mydb.DBConn().Prepare("select user_name,user_pwd,email,phone,signup_at,last_active,status from tbl_user limit ?,?")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query((pageIndex-1)*pageSize, pageSize)
 	if err != nil {
 		return nil, err
 	}

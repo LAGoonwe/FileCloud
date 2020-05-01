@@ -157,10 +157,11 @@ func GetFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 func FileQueryHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	limitCnt, _ := strconv.Atoi(r.Form.Get("limit"))
+	// 获取分页信息
+	pageIndex, _ := strconv.Atoi(r.Form.Get("PageIndex"))
+	pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
 	username := r.Form.Get("username")
-	userFiles, err := dblayer.QueryUserFileMetas(username, limitCnt)
-
+	userFiles, err := dblayer.QueryUserFileMetas(username, pageIndex, pageSize)
 	//给文件元信息体传递源文件名去前台
 	for i := 0; i < len(userFiles); i++ {
 		row, _ := dblayer.GetFileMeta(userFiles[i].FileHash)
@@ -330,9 +331,12 @@ func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
 //获取数据库所有文件元数据信息
 func GetAllFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
+	// 获取分页信息
+	pageIndex, _ := strconv.Atoi(r.Form.Get("PageIndex"))
+	pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
+	fmt.Println(pageSize, pageIndex)
 
-	limitCnt, _ := strconv.Atoi(r.Form.Get("limit"))
-	userFiles, err := dblayer.GetAllFileMeta(limitCnt)
+	userFiles, err := dblayer.GetAllFileMeta(pageIndex, pageSize)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

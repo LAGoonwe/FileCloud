@@ -135,18 +135,32 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 3. 查询用户信息
 	user, err := dblayer.GetUserInfo(username)
+	fmt.Println(user)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
+	// 获取当前用户属下文件总数
+	fileTotal := dblayer.GetFileNumByUserName(username)
+
+	// 获取系统所有用户数
+	userTotal := dblayer.GetUserNum()
+
+	//获取系统所有文件数
+	allFileMetaTotal := dblayer.GetFileNum()
+
 	// 4. 组装并且响应用户数据
-	resp := util.RespMsg{
-		Code: 0,
-		Msg:  "OK",
-		Data: user,
+	resp := util.RespMsg2{
+		Code:             0,
+		Msg:              "OK",
+		Data:             user,
+		FileTotal:        fileTotal,
+		UserTotal:        userTotal,
+		AllFileMetaTotal: allFileMetaTotal,
 	}
-	w.Write(resp.JSONBytes())
+
+	w.Write(resp.JSONBytes2())
 }
 
 //更新用户信息
@@ -205,6 +219,7 @@ func IsTokenValid(token string) bool {
 
 //查询所有注册用户
 func UserQueryHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "GET" {
 		//返回上传html页面
 		data, err := ioutil.ReadFile("src/FileCloud/static/view/admin.html")
@@ -214,7 +229,12 @@ func UserQueryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		io.WriteString(w, string(data))
 	} else {
-		users, err := dblayer.GetAllUser()
+		r.ParseForm()
+
+		// 获取分页信息
+		pageIndex, _ := strconv.Atoi(r.Form.Get("PageIndex"))
+		pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
+		users, err := dblayer.GetAllUser(pageIndex, pageSize)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

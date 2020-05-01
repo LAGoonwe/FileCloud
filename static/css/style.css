@@ -1,0 +1,53 @@
+@charset "utf-8";
+.page{
+	 margin: 100px auto;
+	
+	width: 590px;
+
+}
+.page ul{
+	padding:0;
+	min-width: 450px;
+}
+.page ul::after{
+	content: '';
+	display: block;
+	clear: both;
+}
+.page ul li{
+	float: left;
+	width:auto;
+	min-width:32px;
+	height: 30px;
+	line-height:30px;
+	list-style: none;
+}
+.page a{
+	color:#aaa;
+	font-family: "微软雅黑";
+	padding:0 10px;
+	text-decoration: none;
+	display: block;
+	text-align: center;
+	border: 1px solid #ccc;
+	border-left: none;
+}
+.page ul li:first-child a{
+	border-left: 1px solid #ccc;
+}
+
+.page ul li a:hover{
+	background-color: dodgerblue;
+}
+.page ul li a:hover{
+	color: white;
+}
+.page .disabled a:hover{
+	background-color: white;
+	cursor:not-allowed;
+	color: #aaa;
+}
+.page .active a{
+	background-color: dodgerblue;
+	color: white;
+}

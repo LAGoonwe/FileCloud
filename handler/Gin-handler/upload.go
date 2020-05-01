@@ -158,10 +158,12 @@ func GetFileMetaHandler(c *gin.Context) {
 
 // FileQueryHandler: 查询批量的文件元信息
 func FileQueryHandler(c *gin.Context) {
-	limitCnt, _ := strconv.Atoi(c.Request.FormValue("limit"))
+	// 获取分页信息
+	pageIndex, _ := strconv.Atoi(c.Request.Form.Get("PageIndex"))
+	pageSize, _ := strconv.Atoi(c.Request.Form.Get("PageSize"))
 	username := c.Request.FormValue("username")
 
-	userFiles, err := db.QueryUserFileMetas(username, limitCnt)
+	userFiles, err := db.QueryUserFileMetas(username, pageIndex, pageSize)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusOK, gin.H{
@@ -327,9 +329,12 @@ func DownloadURLHandler(c *gin.Context) {
 
 //获取数据库所有文件元数据信息
 func GetAllFileMetaHandler(c *gin.Context) {
-	limitCnt, _ := strconv.Atoi(c.Request.FormValue("limit"))
+	// 获取分页信息
+	pageIndex, _ := strconv.Atoi(c.Request.Form.Get("PageIndex"))
+	pageSize, _ := strconv.Atoi(c.Request.Form.Get("PageSize"))
+	fmt.Println(pageSize, pageIndex)
 
-	userFiles, err := db.GetAllFileMeta(limitCnt)
+	userFiles, err := db.GetAllFileMeta(pageIndex, pageSize)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusOK, gin.H{
