@@ -273,13 +273,26 @@
       processData: false,
       contentType: false,
       error: function (err) {
-        alert('请求报错信息: ' + JSON.stringify(err));
+        alert(err)
+        if (err.statusText == "error"){
+          alert('上传失败！');
+        }
       },
       success: function (res) {
-        UIkit.notification({message: '文件上传成功！', status: 'success'})
-        setTimeout(function(){
-          window.location.href = "/static/view/home.html";
-        }, 2000);
+        if (res == "Fast Upload") {
+          UIkit.notification({message: '文件支持秒传！开启秒传！', status: 'success'})
+          setTimeout(function(){
+            UIkit.notification({message: '文件秒传成功！', status: 'success'})
+          }, 2000);
+          setTimeout(function(){
+            window.location.href = "/static/view/home.html";
+          }, 3000);
+        }else {
+          UIkit.notification({message: '文件上传成功！', status: 'success'})
+          setTimeout(function(){
+            window.location.href = "/static/view/home.html";
+          }, 2000);
+        }
       }
     });
   }

@@ -116,17 +116,26 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// 判断是否符合开启秒传功能
+		fileMeta2, err := meta.GetFileMetaDB(fileMeta.FileSha1)
+		if err != nil {
+			fmt.Println(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		//更改文件保存地址为阿里云的云端存储地址
 		fileMeta.Location = ossPath
-		_ = meta.UpdateFileMetaDB(fileMeta)
-
-		suc := dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
-		if suc {
-			http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
+		if fileMeta2.FileSha1 == "" {
+			w.Write([]byte("Normal Upload"))
+			// 保存信息到文件表
+			_ = meta.UpdateFileMetaDB(fileMeta)
+			// 保存信息到用户文件表
+			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
 		} else {
-			w.Write([]byte("Upload Failed"))
+			w.Write([]byte("Fast Upload"))
+			// 保存信息到用户文件表
+			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
 		}
-
 	}
 }
 

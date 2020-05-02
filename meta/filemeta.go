@@ -40,6 +40,9 @@ func GetFileMetaDB(fileSha1 string) (FileMeta, error) {
 	if err != nil {
 		return FileMeta{}, err
 	}
+	if tfile == nil {
+		return FileMeta{}, err
+	}
 	fmeta := FileMeta{
 		FileSha1: tfile.FileHash,
 		FileName: tfile.FileName.String,
