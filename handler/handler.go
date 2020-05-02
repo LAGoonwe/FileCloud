@@ -88,6 +88,19 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		//}
 		//fileMeta.Location = ossPath
 
+		// 判断用户是否需上传过已有同样hash值的文件
+		UserFiles, err := dblayer.GetAllFileHashByUsername(username)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		for i := 0; i < len(UserFiles); i++ {
+			if fileMeta.FileSha1 == UserFiles[i].FileHash {
+				w.WriteHeader(http.StatusForbidden)
+				//http.Error(w, "File Exc", http.StatusInternalServerError)
+				return
+			}
+		}
+
 		//通过RabbitMQ异步实现
 		// 写入异步转移任务队列
 		if !cfg.AsyncTransferEnable {
@@ -172,6 +185,7 @@ func FileQueryHandler(w http.ResponseWriter, r *http.Request) {
 	pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
 	username := r.Form.Get("username")
 	userFiles, err := dblayer.QueryUserFileMetas(username, pageIndex, pageSize)
+
 	//给文件元信息体传递源文件名去前台
 	for i := 0; i < len(userFiles); i++ {
 		row, _ := dblayer.GetFileMeta(userFiles[i].FileHash)

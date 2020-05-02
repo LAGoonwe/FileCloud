@@ -105,7 +105,7 @@
           </div>
           <button id="uploadBtn" class="uk-button uk-button-default" onclick="onUpload()">上传</button>
         <!-- 文件上传进度条 -->
-        <div class="progress">
+        <div id="progress" class="progress">
           <div></div>
         </div>
       </div>
@@ -335,8 +335,10 @@
           xhr.upload.addEventListener('progress',processAction )
           return xhr;
         },
-        error: function (err) {
-          alert(err)
+        error: function (err,errorCode,xhr) {
+          if (xhr == "Forbidden"){
+            UIkit.notification({message: '文件已存在！<br>请勿重复上传！', status: 'danger'})
+          }
           if (err.statusText == "error"){
             alert('上传失败！');
           }
