@@ -22,6 +22,7 @@ func main() {
 	http.HandleFunc("/file/delete", handler.HTTPInterceptor(handler.FileDeleteHandler))
 	http.HandleFunc("/file/query", handler.HTTPInterceptor(handler.FileQueryHandler))
 	http.HandleFunc("/file/all", handler.HTTPInterceptor(handler.GetAllFileMetaHandler))
+
 	// 秒传接口
 	http.HandleFunc("/file/fastupload", handler.HTTPInterceptor(handler.TryFastUploadHandler))
 

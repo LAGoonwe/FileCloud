@@ -49,6 +49,21 @@
     .uk-table td{
       vertical-align: middle !important;
     }
+    .progress {
+      width: 550px;
+      height: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin: 10px 0px;
+      overflow: hidden;
+    }
+    /* 初始状态设置进度条宽度为0px */
+    .progress > div {
+      width: 0px;
+      height: 100%;
+      background-color: yellowgreen;
+      transition: all .3s ease;
+    }
   </style>
 </head>
 <body>
@@ -88,7 +103,11 @@
             <input id="file" name="file" type="file">
             <input class="uk-input uk-form-width-medium" type="text" placeholder="选择文件" disabled>
           </div>
-          <button class="uk-button uk-button-default" onclick="onUpload()">上传</button>
+          <button id="uploadBtn" class="uk-button uk-button-default" onclick="onUpload()">上传</button>
+        <!-- 文件上传进度条 -->
+        <div class="progress">
+          <div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -252,8 +271,42 @@
 
 <script lang="javascript">
 
+  // 文件上传jquery验证
+  //限制上传文件的类型和大小
+  function validate_img(ele){
+    // 返回 KB，保留小数点后两位
+    //alert((ele.files[0].size/(1024*1024)).toFixed(2));
+    var file = ele.value;
+
+
+    $("#uploadBtn").remove("disabled")
+  }
+
+  // 文件上传进度条喧嚷回调函数
+  function processAction(e) {
+    console.log(e);
+    //loaded代表上传了多少
+    //total代表总数为多少
+    var progressRate = (e.loaded / e.total) * 100 + '%';
+
+    //通过设置进度条的宽度达到效果
+    $('.progress > div').css('width', progressRate);
+  }
+
   //文件上传
   function onUpload() {
+
+    // 设置文件上传大小限制
+    var maxSize = 30000000;//文件上传大小限制
+    var size = document.getElementById('file').files[0].size;
+    var filesize = (size / 1024).toFixed(2);
+
+    // 设置文件上传类型限制
+    var filepath=$("input[id='file']").val();
+    var extStart=filepath.lastIndexOf(".");
+    var ext=filepath.substring(extStart,filepath.length).toUpperCase();
+
+    // 设置文件上传链接路径相关
     var upUrl = "/file/upload?" + queryParams();
     var upEntry = localStorage.getItem("uploadEntry");
     if (upEntry != null ) {
@@ -265,36 +318,48 @@
     }
     var formData = new FormData();
     formData.append("file",$("#file")[0].files[0]);
-    $.ajax({
-      url: upUrl,
-      type: 'POST',
-      cache: false,
-      data: formData,
-      processData: false,
-      contentType: false,
-      error: function (err) {
-        alert(err)
-        if (err.statusText == "error"){
-          alert('上传失败！');
-        }
-      },
-      success: function (res) {
-        if (res == "Fast Upload") {
-          UIkit.notification({message: '文件支持秒传！开启秒传！', status: 'success'})
-          setTimeout(function(){
+
+    console.log(ext)
+
+    if (filesize < maxSize && (ext ==".PPTX" || ext==".PDF" || ext==".TXT" || ext==".PNG" || ext==".JPG" || ext==".JPEG" || ext==".MP4" || ext==".EXE")){
+      $.ajax({
+        url: upUrl,
+        type: 'POST',
+        cache: false,
+        data: formData,
+        processData: false,
+        contentType: false,
+        xhr: function() {
+          var xhr = new XMLHttpRequest();
+          //使用XMLHttpRequest.upload监听上传过程，注册progress事件，打印回调函数中的event事件
+          xhr.upload.addEventListener('progress',processAction )
+          return xhr;
+        },
+        error: function (err) {
+          alert(err)
+          if (err.statusText == "error"){
+            alert('上传失败！');
+          }
+        },
+        success: function (res) {
+          if (res == "Fast Upload") {
             UIkit.notification({message: '文件秒传成功！', status: 'success'})
-          }, 2000);
-          setTimeout(function(){
-            window.location.href = "/static/view/home.html";
-          }, 3000);
-        }else {
-          UIkit.notification({message: '文件上传成功！', status: 'success'})
-          setTimeout(function(){
-            window.location.href = "/static/view/home.html";
-          }, 2000);
+            setTimeout(function(){
+              window.location.href = "/static/view/home.html";
+            }, 2000);
+          }else {
+            UIkit.notification({message: '文件上传成功！', status: 'success'})
+            setTimeout(function(){
+              window.location.href = "/static/view/home.html";
+            }, 2000);
+          }
         }
-      }
-    });
+      });
+    }else if (filesize >= maxSize){
+      alert('上传文件不许大于' + maxSize + 'KB');
+    }else if(ext!=".PPTX"&&ext!=".PDF"&&ext!=".TXT"&&ext!=".PNG"&&ext!=".JPG"&&ext!=".JPEG"){
+      alert("仅支持上传ppt、pdf、txt、和图片"); //检测允许的上传文件类型
+    }
   }
 
   function toIndex() {
@@ -375,9 +440,6 @@
         $("#ModalEmail").attr("value",resp.data.Email)
         FileTotal = resp.file_total
         updateFileList(FileTotal);
-
-        // 复制当前用户所有文件数，辅助分页total展示
-
       }
     });
   }
