@@ -3,7 +3,6 @@ package handler
 import (
 	"FileCloud/util"
 	"net/http"
-	"time"
 )
 
 /**
@@ -30,6 +29,5 @@ func EmailValideHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	time.Sleep(time.Duration(60) * time.Second)
 	w.Write([]byte(CODE))
 }

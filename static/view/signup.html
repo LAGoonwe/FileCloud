@@ -52,7 +52,7 @@
         <div class="uk-margin">
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: lock"></span>
-            <input class="uk-input" id="password" type="password" placeholder="密码长度不得小于5！">
+            <input class="uk-input" id="password" type="password" placeholder="密码长度不得小于5！" onkeyup="validate()">
           </div>
         </div>
 
@@ -61,55 +61,36 @@
             <span class="uk-form-icon" uk-icon="icon: lock"></span>
             <input class="uk-input" id="passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
           </div><br>
-        </div>
-
-        <div class="uk-margin">
-          <div class="uk-inline">
-            <select id="ValSelect">
-              <option value="" selected="selected">选择验证方式</option>
-              <option value="手机验证">手机验证</option>
-              <option value="邮箱验证">邮箱验证</option>
-            </select>
-          </div>
+          <!-- 密码校验信息提示 -->
+          <span id="msg"></span>
         </div>
 
         <div id="PhoneInput" class="uk-margin">
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: phone"></span>
-            <input style="width: 70%" class="uk-input" type="text" placeholder="输入手机号">
-            <button style="width: 30%;float: right" >发送验证码</button>
+            <input class="uk-input" type="text" placeholder="输入手机号">
           </div><br>
         </div>
-        <div id="EmailInput" class="uk-margin">
+        <div id="EmailInput" class="uk-margin" style="margin-bottom: 0 !important;">
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: mail"></span>
-            <input style="width: 70%" id="EmailNumber" class="uk-input" type="text" placeholder="输入邮箱号">
-            <button id="SendEmail" style="width: 30%;float: right" onclick="SendEmailCode()">发送验证码</button>
+            <input id="EmailNumber" class="uk-input" type="text" placeholder="输入邮箱号" onkeyup="Emailvalidate()">
           </div><br>
+          <!-- 邮箱校验信息提示 -->
+          <span id="msg3"></span>
         </div>
+        <button id="SendEmail" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;" onclick="SendEmailCode()">发送验证码</button>
         <input id="CodeFromHandler" type="text" hidden="hidden">
-        <!-- 下拉框选择js相关逻辑 -->
-        <script>
-          $('#PhoneInput').hide();
-          $('#EmailInput').hide();
-          $('#ValSelect').on("change",function(){
-            if ( document.getElementById('ValSelect').value == "手机验证"){
-              $('#PhoneInput').show();
-              $('#EmailInput').hide();
-            }else {
-              $('#EmailInput').show();
-              $('#PhoneInput').hide();
-            }
-          })
-        </script>
+
 
         <!-- 验证码输入框 -->
-        <div class="uk-margin">
+        <div class="uk-margin" style="margin-top: 0 !important;">
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: commenting"></span>
             <input id="CodeFromInput" class="uk-input" type="text" placeholder="输入收到的验证码" onkeyup="validate2()">
           </div><br>
-          <span id="msg"></span>
+          <!-- 验证码校验信息提示 -->
+          <span id="msg2"></span>
         </div>
 
         <!--用户名密码框结束-->
@@ -124,6 +105,19 @@
 </div>
 </body>
 <script lang="javascript">
+  
+  // 邮件格式校验
+  function Emailvalidate() {
+    if (/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test($('#EmailNumber').val()) == false) {
+      $("#msg3").html("邮箱格式错误");
+      $("#msg3").css("color","red")
+      $("#SendEmail").attr("disabled","disabled");
+    } else {
+      $("#msg3").html("邮箱格式正确");
+      $("#msg3").css("color","green");
+      $("#SendEmail").removeAttr("disabled");
+    }
+  }
 
   <!-- 验证码一致性校验 -->
   function validate2() {
@@ -133,13 +127,13 @@
     <!-- 对比两次输入的密码 -->
     if(CodeFromHandler == CodeFromInput)
     {
-      $("#msg").html("验证码正确");
-      $("#msg").css("color","green");
+      $("#msg2").html("验证码正确");
+      $("#msg2").css("color","green");
       $("#signup").removeAttr("disabled");
     }
     else {
-      $("#msg").html("验证码错误");
-      $("#msg").css("color","red")
+      $("#msg2").html("验证码错误");
+      $("#msg2").css("color","red")
       $("#signup").attr("disabled","disabled");
     }
   }
@@ -212,13 +206,23 @@
     var username = document.getElementById('username');
     var password = document.getElementById('password');
     var passwordc = document.getElementById('passwordc');
+    var  emailNumber= document.getElementById('EmailNumber');
+    var  codeFromInput= document.getElementById('CodeFromInput');
+
+    // 表单空验证
+    if (username.value.length==0||password.value.length==0||passwordc.value.length==0||emailNumber.value.length==0||codeFromInput.value.length==0){
+      UIkit.notification({message: '必填字段有空！请检查', status: 'danger'})
+      return false
+    }
+
     $.ajax({
       url: "/user/signup",
       type: "POST",
       data: {
         "username": username.value,
         "password": password.value,
-        "passwordc": passwordc.value
+        "passwordc": passwordc.value,
+        "emailNumber": emailNumber.value
       },
       error: function (jqXHR, textStatus, errorThrown) {
         if (textStatus == "error") {
