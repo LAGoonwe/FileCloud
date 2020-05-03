@@ -24,12 +24,6 @@
       top: 40%; /*偏移*/
       transform: translateY(-50%);
     }
-    .signindiv .logo{
-      width: 200px;
-      height: 200px;
-      margin: 0 auto;
-
-    }
     .signindiv .form{
       margin: 0 auto;
       text-align: center;
@@ -45,11 +39,6 @@
   <!--背景开始-->
   <div>
     <div class="uk-background-muted uk-padding uk-panel">
-      <!--logo开始-->
-      <div class="logo">
-        <img src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3477754960,2654242643&fm=26&gp=0.jpg">
-      </div>
-      <!--logo结束-->
       <div class="form">
         <h1 class="uk-heading-line uk-text-center"><span style="font-size: 20px;">宙斯云盘-注册</span></h1>
         <!--用户名密码框开始-->
@@ -72,6 +61,54 @@
             <span class="uk-form-icon" uk-icon="icon: lock"></span>
             <input class="uk-input" id="passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
           </div><br>
+        </div>
+
+        <div class="uk-margin">
+          <div class="uk-inline">
+            <select id="ValSelect">
+              <option value="" selected="selected">选择验证方式</option>
+              <option value="手机验证">手机验证</option>
+              <option value="邮箱验证">邮箱验证</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="PhoneInput" class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: phone"></span>
+            <input style="width: 70%" class="uk-input" type="text" placeholder="输入手机号">
+            <button style="width: 30%;float: right" >发送验证码</button>
+          </div><br>
+        </div>
+        <div id="EmailInput" class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: mail"></span>
+            <input style="width: 70%" id="EmailNumber" class="uk-input" type="text" placeholder="输入邮箱号">
+            <button id="SendEmail" style="width: 30%;float: right" onclick="SendEmailCode()">发送验证码</button>
+          </div><br>
+        </div>
+        <input id="CodeFromHandler" type="text" hidden="hidden">
+        <!-- 下拉框选择js相关逻辑 -->
+        <script>
+          $('#PhoneInput').hide();
+          $('#EmailInput').hide();
+          $('#ValSelect').on("change",function(){
+            if ( document.getElementById('ValSelect').value == "手机验证"){
+              $('#PhoneInput').show();
+              $('#EmailInput').hide();
+            }else {
+              $('#EmailInput').show();
+              $('#PhoneInput').hide();
+            }
+          })
+        </script>
+
+        <!-- 验证码输入框 -->
+        <div class="uk-margin">
+          <div class="uk-inline">
+            <span class="uk-form-icon" uk-icon="icon: commenting"></span>
+            <input id="CodeFromInput" class="uk-input" type="text" placeholder="输入收到的验证码" onkeyup="validate2()">
+          </div><br>
           <span id="msg"></span>
         </div>
 
@@ -87,6 +124,26 @@
 </div>
 </body>
 <script lang="javascript">
+
+  <!-- 验证码一致性校验 -->
+  function validate2() {
+
+    var CodeFromHandler = $("#CodeFromHandler").val();
+    var CodeFromInput = $("#CodeFromInput").val();
+    <!-- 对比两次输入的密码 -->
+    if(CodeFromHandler == CodeFromInput)
+    {
+      $("#msg").html("验证码正确");
+      $("#msg").css("color","green");
+      $("#signup").removeAttr("disabled");
+    }
+    else {
+      $("#msg").html("验证码错误");
+      $("#msg").css("color","red")
+      $("#signup").attr("disabled","disabled");
+    }
+  }
+
 
   <!-- 密码与确认密码一致性校验 -->
   function validate() {
@@ -105,6 +162,49 @@
       $("#msg").css("color","red")
       $("#signup").attr("disabled","disabled");
     }
+  }
+
+  let countdown=60;
+
+  // 验证码倒计时
+  function settime(obj) { //发送验证码倒计时
+    if (countdown === 0) {
+      obj.attr('disabled',false);
+      //obj.removeattr("disabled");
+      obj.text("发送验证码");
+      countdown = 60;
+      return;
+    } else {
+      obj.attr('disabled',true);
+      obj.text("重新发送(" + countdown + ")");
+      countdown--;
+    }
+    setTimeout(function() {
+              settime(obj) }
+            ,1000)
+  }
+  
+  // 邮箱验证
+  function SendEmailCode() {
+    let obj = $("#SendEmail")
+    settime(obj)
+    UIkit.notification({message: '邮件验证码发送成功！<br>请注意查收邮件！', status: 'success'})
+    setTimeout(() => {
+      $.ajax({
+        url: "/valide/email",
+        type: "POST",
+        data: {
+          "emailVal":$("#EmailNumber").val()
+        },
+        error:function (error) {
+          alert(error)
+        },
+        success:function (data) {
+          alert(data)
+          $("#CodeFromHandler").attr({"value": data});
+        }
+      })
+    }, 2000);
   }
 
 

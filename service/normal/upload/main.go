@@ -48,6 +48,9 @@ func main() {
 	http.HandleFunc("/toLogin", handler.GetAuthCode)
 	http.HandleFunc("/qqLogin", handler.GetToken)
 
+	//手机邮箱验证接口
+	http.HandleFunc("/valide/email", handler.EmailValideHandler)
+
 	fmt.Printf("上传服务启动中，开始监听监听[%s]...\n", config.UploadServiceHost)
 
 	err := http.ListenAndServe(config.UploadServiceHost, nil)
