@@ -43,6 +43,7 @@
         <h1 class="uk-heading-line uk-text-center"><span style="font-size: 20px;">宙斯云盘-注册</span></h1>
         <!--用户名密码框开始-->
         <div class="uk-margin">
+          <span style="color: red">*</span>
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: user"></span>
             <input class="uk-input" id="username" type="text" placeholder="用户名长度不得为空！">
@@ -50,6 +51,7 @@
         </div>
 
         <div class="uk-margin">
+          <span style="color: red">*</span>
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: lock"></span>
             <input class="uk-input" id="password" type="password" placeholder="密码长度不得小于5！" onkeyup="validate()">
@@ -57,6 +59,7 @@
         </div>
 
         <div class="uk-margin">
+          <span style="color: red">*</span>
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: lock"></span>
             <input class="uk-input" id="passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
@@ -68,10 +71,11 @@
         <div id="PhoneInput" class="uk-margin">
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: phone"></span>
-            <input class="uk-input" type="text" placeholder="输入手机号">
+            <input id="PhoneNumber" class="uk-input" type="text" placeholder="输入手机号">
           </div><br>
         </div>
         <div id="EmailInput" class="uk-margin" style="margin-bottom: 0 !important;">
+          <span style="color: red">*</span>
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: mail"></span>
             <input id="EmailNumber" class="uk-input" type="text" placeholder="输入邮箱号" onkeyup="Emailvalidate()">
@@ -85,6 +89,7 @@
 
         <!-- 验证码输入框 -->
         <div class="uk-margin" style="margin-top: 0 !important;">
+          <span style="color: red">*</span>
           <div class="uk-inline">
             <span class="uk-form-icon" uk-icon="icon: commenting"></span>
             <input id="CodeFromInput" class="uk-input" type="text" placeholder="输入收到的验证码" onkeyup="validate2()">
@@ -207,6 +212,7 @@
     var password = document.getElementById('password');
     var passwordc = document.getElementById('passwordc');
     var  emailNumber= document.getElementById('EmailNumber');
+    var  phoneNumber= document.getElementById('PhoneNumber');
     var  codeFromInput= document.getElementById('CodeFromInput');
 
     // 表单空验证
@@ -222,6 +228,7 @@
         "username": username.value,
         "password": password.value,
         "passwordc": passwordc.value,
+        "phoneNumber": phoneNumber.value,
         "emailNumber": emailNumber.value
       },
       error: function (jqXHR, textStatus, errorThrown) {

@@ -17,16 +17,16 @@ type User struct {
 }
 
 // UserSignup : 通过用户名及密码完成user表的注册操作
-func UserSignup(username string, passwd string) bool {
+func UserSignup(username string, passwd string, email string, phone string, EmailValidate int, PhoneValidate int) bool {
 	stmt, err := mydb.DBConn().Prepare(
-		"insert ignore into tbl_user (`user_name`,`user_pwd`) values (?,?)")
+		"insert ignore into tbl_user (`user_name`,`user_pwd`,`email`,`phone`,`email_validated`,`phone_validated`) values (?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println("Failed to insert, err:" + err.Error())
 		return false
 	}
 	defer stmt.Close()
 
-	ret, err := stmt.Exec(username, passwd)
+	ret, err := stmt.Exec(username, passwd, email, phone, EmailValidate, PhoneValidate)
 	if err != nil {
 		fmt.Println("Failed to insert, err:" + err.Error())
 		return false

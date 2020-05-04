@@ -104,7 +104,7 @@ func GetUserInfo(info *PrivateInfo, w http.ResponseWriter, r *http.Request) {
 		//插入新数据
 		//对用户密码进行哈希的加密处理
 		enc_passwd := util.Sha1([]byte(classDetailMap["nickname"] + pwd_salt))
-		_ = db.UserSignup(classDetailMap["nickname"], enc_passwd)
+		_ = db.UserSignup(classDetailMap["nickname"], enc_passwd, "", "", 0, 0)
 	} else {
 		//如果用户表存在该用户名，则代表之前扫码登陆过系统，取出相应的账号密码即可
 		fmt.Println(user.Username)
