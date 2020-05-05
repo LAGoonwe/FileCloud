@@ -297,7 +297,7 @@
   function onUpload() {
 
     // 设置文件上传大小限制
-    var maxSize = 30000000;//文件上传大小限制
+    var maxSize = 300000;//文件上传大小限制
     var size = document.getElementById('file').files[0].size;
     var filesize = (size / 1024).toFixed(2);
 
@@ -321,7 +321,11 @@
 
     console.log(ext)
 
-    if (filesize < maxSize && (ext ==".PPTX" || ext==".PDF" || ext==".TXT" || ext==".PNG" || ext==".JPG" || ext==".JPEG" || ext==".MP4" || ext==".EXE")){
+    // // 设置允许上传通过的文件类型
+    // var Types=new Array(".JPG",".PNG",".JPEG")
+
+    // if (filesize < maxSize && (ext ==".PPTX" || ext==".PDF" || ext==".TXT" || ext==".PNG" || ext==".JPG" || ext==".JPEG" || ext==".MP4" || ext==".EXE")){
+    if (filesize < maxSize){
       $.ajax({
         url: upUrl,
         type: 'POST',
@@ -357,11 +361,13 @@
           }
         }
       });
-    }else if (filesize >= maxSize){
-      alert('上传文件不许大于' + maxSize + 'KB');
-    }else if(ext!=".PPTX"&&ext!=".PDF"&&ext!=".TXT"&&ext!=".PNG"&&ext!=".JPG"&&ext!=".JPEG"){
-      alert("仅支持上传ppt、pdf、txt、和图片"); //检测允许的上传文件类型
+    }else if (filesize >= maxSize) {
+      UIkit.notification({message: '上传文件不允许大于' + maxSize + 'KB', status: 'danger'})
     }
+    // }else if(ext!=".PPTX"&&ext!=".PDF"&&ext!=".TXT"&&ext!=".PNG"&&ext!=".JPG"&&ext!=".JPEG"){
+    //   UIkit.notification({message: '不支持上传该文件类型！', status: 'danger'})
+    //   alert("仅支持上传ppt、pdf、txt、和图片"); //检测允许的上传文件类型
+    // }
   }
 
   function toIndex() {
