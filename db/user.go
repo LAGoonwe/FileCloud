@@ -100,6 +100,24 @@ func UpdateToken(username string, token string) bool {
 	return true
 }
 
+// 查询用户Token
+func GetUserToken(username string) string {
+	stmt, err := mydb.DBConn().Prepare(
+		"select user_token from tbl_user_token where user_name=? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return err.Error()
+	}
+	var token string
+	err = stmt.QueryRow(username).Scan(&token)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err.Error()
+	}
+	fmt.Println("Token查询无差错，已正确返回...")
+	return token
+}
+
 // GetUserInfo : 查询用户信息
 func GetUserInfo(username string) (User, error) {
 	user := User{}

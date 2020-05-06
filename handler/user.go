@@ -1,6 +1,7 @@
 package handler
 
 import (
+	cfg "FileCloud/config"
 	dblayer "FileCloud/db"
 	"FileCloud/store/oss"
 	"FileCloud/util"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 )
 
 const (
@@ -70,6 +70,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 	var location string
+	var token string
 
 	r.ParseForm()
 	username := r.Form.Get("username")
@@ -82,12 +83,6 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := GenToken(username)
-	upRes := dblayer.UpdateToken(username, token)
-	if !upRes {
-		w.Write([]byte("FAILED"))
-		return
-	}
 	//查询用户状态值
 	user, err := dblayer.GetUserStatus(username)
 	if err != nil {
@@ -95,9 +90,32 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//普通用户权限登录跳转
 	if user.Status == 0 {
+		// 调用Token工具类生成带有标识信息的token
+		token, err = util.CreateToken([]byte(cfg.SecretKey), username, false)
+		if err != nil {
+			w.Write([]byte("Token Create Error"))
+		}
+		//token := GenToken(username)
+		upRes := dblayer.UpdateToken(username, token)
+		if !upRes {
+			w.Write([]byte("FAILED"))
+			return
+		}
+
 		location = "http://" + r.Host + "/static/view/home.html"
 		//管理员权限登录跳转
 	} else if user.Status == 7 {
+		// 调用Token工具类生成带有标识信息的token
+		token, err = util.CreateToken([]byte(cfg.SecretKey), username, true)
+		if err != nil {
+			w.Write([]byte("Token Create Error"))
+		}
+		//token := GenToken(username)
+		upRes := dblayer.UpdateToken(username, token)
+		if !upRes {
+			w.Write([]byte("FAILED"))
+			return
+		}
 		location = "http://" + r.Host + "/static/view/admin.html"
 	}
 
@@ -137,7 +155,6 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 3. 查询用户信息
 	user, err := dblayer.GetUserInfo(username)
-	fmt.Println(user)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		return
@@ -174,7 +191,6 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 	phone := r.Form.Get("phone")
 	password := r.Form.Get("password")
 	username := r.Form.Get("username")
-	fmt.Println(username, email, phone, password)
 	//如果密码有改动则调用更新密码的db方法
 	//如果密码无改动则调用不更新密码的db方法
 	if password != "" {
@@ -200,24 +216,24 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GenToken : 生成token
-func GenToken(username string) string {
-	// 40位字符:md5(username+timestamp+token_salt)+timestamp[:8]
-	ts := fmt.Sprintf("%x", time.Now().Unix())
-	tokenPrefix := util.MD5([]byte(username + ts + "_tokensalt"))
-	return tokenPrefix + ts[:8]
-}
-
-// IsTokenValid : token是否有效
-func IsTokenValid(token string) bool {
-	if len(token) != 40 {
-		return false
-	}
-	// TODO: 判断token的时效性，是否过期
-	// TODO: 从数据库表tbl_user_token查询username对应的token信息
-	// TODO: 对比两个token是否一致
-	return true
-}
+//// GenToken : 生成token
+//func GenToken(username string) string {
+//	// 40位字符:md5(username+timestamp+token_salt)+timestamp[:8]
+//	ts := fmt.Sprintf("%x", time.Now().Unix())
+//	tokenPrefix := util.MD5([]byte(username + ts + "_tokensalt"))
+//	return tokenPrefix + ts[:8]
+//}
+//
+//// IsTokenValid : token是否有效
+//func IsTokenValid(token string) bool {
+//	if len(token) != 40 {
+//		return false
+//	}
+//	// TODO: 判断token的时效性，是否过期
+//	// TODO: 从数据库表tbl_user_token查询username对应的token信息
+//	// TODO: 对比两个token是否一致
+//	return true
+//}
 
 //查询所有注册用户
 func UserQueryHandler(w http.ResponseWriter, r *http.Request) {
@@ -271,7 +287,6 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	status := r.Form.Get("status")
-	fmt.Println(username + password + status)
 	realStatus, _ := strconv.Atoi(status)
 	if len(username) == 0 || len(password) < 5 {
 		w.Write([]byte("invalid parameter"))
@@ -280,7 +295,6 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 	//用户名唯一性检验
 	user, _ := dblayer.GetUserInfo(username)
-	fmt.Println(user)
 	if user.Username == "" {
 		//对用户密码进行哈希的加密处理
 		enc_passwd := util.Sha1([]byte(password + pwd_salt))
