@@ -337,7 +337,7 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 
 		//oss云上的删除
 		bucket := oss.Bucket()
-		err = bucket.DeleteObject(filemetas.FileAddr.String)
+		err = bucket.DeleteObject(filemetas.FileRelLocation.String)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}

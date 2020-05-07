@@ -43,13 +43,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 
 		fileMeta := meta.FileMeta{
-			FileName: head.Filename,
-			Location: "src/FileCloud/static/files/" + head.Filename,
-			UploadAt: time.Now().Format("2006-01-02 15:04:05"),
+			FileName:         head.Filename,
+			AbsoluteLocation: cfg.UploadPath + "/" + username + "/" + head.Filename,
+			RelativeLocation: username + "/" + head.Filename,
+			UploadAt:         time.Now().Format("2006-01-02 15:04:05"),
 		}
 
-		//创造一个新文件
-		newFile, err := os.Create(fileMeta.Location)
+		newFile, err := os.Create(fileMeta.AbsoluteLocation)
 		if err != nil {
 			fmt.Printf("Failed to create file,err:%s\n", err.Error())
 			return
@@ -79,7 +79,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		即实行简单的一用户一文件夹策略
 		*/
 		newFile.Seek(0, 0)
-		ossPath := username + "/" + fileMeta.FileName
+		//ossPath := username + "/" + fileMeta.FileName --- 已经重写RelativeLocation
 		//err = oss.Bucket().PutObject(ossPath, fd)
 		//if err != nil {
 		//	fmt.Println(err.Error())
@@ -104,7 +104,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		//通过RabbitMQ异步实现
 		// 写入异步转移任务队列
 		if !cfg.AsyncTransferEnable {
-			err = oss.Bucket().PutObject(ossPath, newFile)
+			err = oss.Bucket().PutObject(fileMeta.RelativeLocation, newFile)
 			if err != nil {
 				fmt.Println(err.Error())
 				w.Write([]byte("Upload failed!"))
@@ -114,8 +114,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			// 写入异步转移任务队列
 			data := mq.TransferData{
 				FileHash:     fileMeta.FileSha1,
-				CurLocation:  fileMeta.Location,
-				DestLocation: ossPath,
+				CurLocation:  fileMeta.AbsoluteLocation,
+				DestLocation: fileMeta.RelativeLocation,
 			}
 			pubData, _ := json.Marshal(data)
 			pubSuc := mq.Publish(
@@ -137,18 +137,18 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		//更改文件保存地址为阿里云的云端存储地址
-		fileMeta.Location = ossPath
+		////更改文件保存地址为阿里云的云端存储地址
+		//fileMeta.Location = ossPath
 		if fileMeta2.FileSha1 == "" {
 			w.Write([]byte("Normal Upload"))
 			// 保存信息到文件表
 			_ = meta.UpdateFileMetaDB(fileMeta)
 			// 保存信息到用户文件表
-			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
+			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize, fileMeta.AbsoluteLocation, fileMeta.RelativeLocation)
 		} else {
 			w.Write([]byte("Fast Upload"))
 			// 保存信息到用户文件表
-			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize)
+			dblayer.OnUserFileUploadFinished(username, fileMeta.FileSha1, fileMeta.FileName, fileMeta.FileSize, fileMeta.AbsoluteLocation, fileMeta.RelativeLocation)
 		}
 	}
 }
@@ -214,8 +214,8 @@ func DownloadHandler(w http.ResponseWriter, r *http.Request) {
 	//根据哈希值得到文件元信息
 	fm := meta.GetFileMeta(fsha1)
 	//根据文件元信息中的定位信息获取文件本体
-	f, err := os.Open(fm.Location)
-	fmt.Println(fm.Location)
+	f, err := os.Open(fm.RelativeLocation)
+	fmt.Println(fm.RelativeLocation)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -284,7 +284,7 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	//oss云上的删除
 	bucket := oss.Bucket()
-	err = bucket.DeleteObject(fMeta.Location)
+	err = bucket.DeleteObject(fMeta.RelativeLocation)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
@@ -325,7 +325,7 @@ func TryFastUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 4. 上传过则将文件信息写入用户文件表， 返回成功
 	suc := dblayer.OnUserFileUploadFinished(
-		username, filehash, filename, int64(filesize))
+		username, filehash, filename, int64(filesize), "", "")
 	if suc {
 		resp := util.RespMsg{
 			Code: 0,
@@ -348,7 +348,7 @@ func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
 	filehash := r.Form.Get("filehash")
 	//从文件表中查找记录
 	row, _ := dblayer.GetFileMeta(filehash)
-	signedURL := oss.DownloadURL(row.FileAddr.String)
+	signedURL := oss.DownloadURL(row.FileRelLocation.String)
 	w.Write([]byte(signedURL))
 }
 

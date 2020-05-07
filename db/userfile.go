@@ -19,15 +19,15 @@ type UserFile struct {
 }
 
 //更新用户文件表
-func OnUserFileUploadFinished(usename, filehash, filename string, filesize int64) bool {
+func OnUserFileUploadFinished(usename, filehash, filename string, filesize int64, fileabslocation, filerellocation string) bool {
 	stmt, err := mydb.DBConn().Prepare(
-		"insert ignore into tbl_user_file (`user_name`,`file_sha1`,`file_name`,`file_size`,`upload_at`) values (?,?,?,?,?)")
+		"insert ignore into tbl_user_file (`user_name`,`file_sha1`,`file_name`,`file_size`,`file_abs_location`,`file_rel_location`,`upload_at`) values (?,?,?,?,?)")
 	if err != nil {
 		return false
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(usename, filehash, filename, filesize, time.Now())
+	_, err = stmt.Exec(usename, filehash, filename, filesize, fileabslocation, filerellocation, time.Now())
 	if err != nil {
 		return false
 	}

@@ -3,7 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	_"github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
 )
@@ -11,20 +11,19 @@ import (
 var db *sql.DB
 
 func init() {
-	db,_ =sql.Open("mysql","root:121797@tcp(127.0.0.1:3306)/fileserver?parseTime=true")
-    db.SetMaxOpenConns(1000)
+	db, _ = sql.Open("mysql", "root:121797@tcp(127.0.0.1:3306)/fileserver?parseTime=true&loc=Local")
+	db.SetMaxOpenConns(1000)
 	err := db.Ping()
 	if err != nil {
-		fmt.Println("Failed to connect to mysql,err:"+err.Error())
+		fmt.Println("Failed to connect to mysql,err:" + err.Error())
 		os.Exit(1)
-	}else {
+	} else {
 		fmt.Println("连接成功")
 	}
 }
 
-
 //返回数据库连接对象
-func DBConn() *sql.DB  {
+func DBConn() *sql.DB {
 	return db
 }
 
@@ -59,4 +58,3 @@ func checkErr(err error) {
 		panic(err)
 	}
 }
-

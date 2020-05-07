@@ -9,8 +9,11 @@ type FileMeta struct {
 	FileSha1 string
 	FileName string
 	FileSize int64
-	Location string
-	UploadAt string
+	// 文件本地绝对路径
+	AbsoluteLocation string
+	// 文件相对位置（同OSS路径）
+	RelativeLocation string
+	UploadAt         string
 }
 
 var fileMetas map[string]FileMeta
@@ -26,7 +29,7 @@ func UpdateFileMeta(fmeta FileMeta) {
 
 //新增更新文件元信息到mysql数据库中
 func UpdateFileMetaDB(fmeta FileMeta) bool {
-	return mydb.OnFileUploadFinished(fmeta.FileSha1, fmeta.FileName, fmeta.FileSize, fmeta.Location)
+	return mydb.OnFileUploadFinished(fmeta.FileSha1, fmeta.FileName, fmeta.FileSize, fmeta.AbsoluteLocation, fmeta.RelativeLocation)
 }
 
 //通过sha1值获取文件的元信息对象
@@ -44,11 +47,12 @@ func GetFileMetaDB(fileSha1 string) (FileMeta, error) {
 		return FileMeta{}, err
 	}
 	fmeta := FileMeta{
-		FileSha1: tfile.FileHash,
-		FileName: tfile.FileName.String,
-		FileSize: tfile.FileSize.Int64,
-		Location: tfile.FileAddr.String,
-		UploadAt: tfile.FileCreateAt.Time.String(),
+		FileSha1:         tfile.FileHash,
+		FileName:         tfile.FileName.String,
+		FileSize:         tfile.FileSize.Int64,
+		AbsoluteLocation: tfile.FileAbsLocation.String,
+		RelativeLocation: tfile.FileRelLocation.String,
+		UploadAt:         tfile.FileCreateAt.Time.String(),
 	}
 	return fmeta, nil
 }

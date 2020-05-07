@@ -138,8 +138,8 @@ func CompleteUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 5. 更新唯一文件表及用户文件表
 	fsize, _ := strconv.Atoi(filesize)
-	dblayer.OnFileUploadFinished(filehash, filename, int64(fsize), "")
-	dblayer.OnUserFileUploadFinished(username, filehash, filename, int64(fsize))
+	dblayer.OnFileUploadFinished(filehash, filename, int64(fsize), "", "")
+	dblayer.OnUserFileUploadFinished(username, filehash, filename, int64(fsize), "", "")
 
 	// 6. 响应处理结果
 	w.Write(util.NewRespMsg(0, "OK", nil).JSONBytes())
