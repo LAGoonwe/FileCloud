@@ -17,16 +17,16 @@ type User struct {
 }
 
 // UserSignup : 通过用户名及密码完成user表的注册操作
-func UserSignup(username string, passwd string) bool {
+func UserSignup(username string, passwd string, email string, phone string, EmailValidate int, PhoneValidate int) bool {
 	stmt, err := mydb.DBConn().Prepare(
-		"insert ignore into tbl_user (`user_name`,`user_pwd`) values (?,?)")
+		"insert ignore into tbl_user (`user_name`,`user_pwd`,`email`,`phone`,`email_validated`,`phone_validated`) values (?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println("Failed to insert, err:" + err.Error())
 		return false
 	}
 	defer stmt.Close()
 
-	ret, err := stmt.Exec(username, passwd)
+	ret, err := stmt.Exec(username, passwd, email, phone, EmailValidate, PhoneValidate)
 	if err != nil {
 		fmt.Println("Failed to insert, err:" + err.Error())
 		return false
@@ -100,6 +100,24 @@ func UpdateToken(username string, token string) bool {
 	return true
 }
 
+// 查询用户Token
+func GetUserToken(username string) string {
+	stmt, err := mydb.DBConn().Prepare(
+		"select user_token from tbl_user_token where user_name=? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return err.Error()
+	}
+	var token string
+	err = stmt.QueryRow(username).Scan(&token)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err.Error()
+	}
+	fmt.Println("Token查询无差错，已正确返回...")
+	return token
+}
+
 // GetUserInfo : 查询用户信息
 func GetUserInfo(username string) (User, error) {
 	user := User{}
@@ -118,6 +136,43 @@ func GetUserInfo(username string) (User, error) {
 		return user, err
 	}
 	return user, nil
+
+}
+
+// 获取用户属下文件总数
+func GetFileNumByUserName(username string) int64 {
+	stmt, err := mydb.DBConn().Prepare(
+		"SELECT COUNT(*) FROM tbl_user_file WHERE user_name = ?;")
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	defer stmt.Close()
+	var count int64
+	err = stmt.QueryRow(username).Scan(&count)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	return count
+}
+
+// 获取系统所有用户数
+func GetUserNum() int64 {
+	stmt, err := mydb.DBConn().Prepare(
+		"SELECT COUNT(*) FROM tbl_user;")
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	defer stmt.Close()
+	var count int64
+	err = stmt.QueryRow().Scan(&count)
+	if err != nil {
+		fmt.Println(err.Error())
+		return 0
+	}
+	return count
 }
 
 //更新用户信息（包含密码）
@@ -151,14 +206,15 @@ func UpdateUserExceptPWD(username, phone, email string) bool {
 }
 
 //查询所有用户，用于用户管理
-func GetAllUser() ([]User, error) {
-	stmt, err := mydb.DBConn().Prepare("select user_name,user_pwd,email,phone,signup_at,last_active,status from tbl_user")
+//改造加入分页
+func GetAllUser(pageIndex int, pageSize int) ([]User, error) {
+	stmt, err := mydb.DBConn().Prepare("select user_name,user_pwd,email,phone,signup_at,last_active,status from tbl_user limit ?,?")
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query((pageIndex-1)*pageSize, pageSize)
 	if err != nil {
 		return nil, err
 	}
