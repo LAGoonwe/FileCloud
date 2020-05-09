@@ -92,10 +92,15 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err.Error())
 	}
 	//普通用户权限登录跳转
-	if user.Status == 0 {
+	/**
+	status 为 -1代表普通用户
+	status 为 1 代表管理员
+	status 为 0 代表账号已封禁
+	*/
+	if user.Status == -1 {
 		location = "http://" + r.Host + "/static/view/home.html"
 		//管理员权限登录跳转
-	} else if user.Status == 7 {
+	} else if user.Status == 1 {
 		location = "http://" + r.Host + "/static/view/admin.html"
 	}
 
@@ -317,4 +322,3 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("用户删除失败！"))
 	}
 }
-
