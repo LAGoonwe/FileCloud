@@ -189,7 +189,12 @@
       $("#msg2").html("验证码正确");
       $("#msg2").css("color","green");
       $("#signup").removeAttr("disabled");
-    } else {
+    }else if (CodeFromHandler=="" && CodeFromInput== ""){
+      $("#msg2").html("请输入验证码");
+      $("#msg2").css("color","red")
+      $("#signup").attr("disabled","disabled");
+    }
+    else {
       $("#msg2").html("验证码错误");
       $("#msg2").css("color","red")
       $("#signup").attr("disabled","disabled");
@@ -270,8 +275,7 @@
 
     // 表单空验证
     if (username.value.length==0||password.value.length==0
-            ||passwordc.value.length==0||emailNumber.value.length==0
-            ||phoneNumber.value.length==0||codeFromInput.value.length==0){
+            ||passwordc.value.length==0||codeFromInput.value.length==0){
       UIkit.notification({message: '必填字段有空！请检查', status: 'danger'})
       return false
     }

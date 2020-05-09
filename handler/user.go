@@ -88,8 +88,15 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
+	/**
+	status=-1  普通用户
+	status=1   管理员
+	status=0   被禁账户
+	*/
+
 	//普通用户权限登录跳转
-	if user.Status == 0 {
+	if user.Status == -1 {
 		// 调用Token工具类生成带有标识信息的token
 		token, err = util.CreateToken([]byte(cfg.SecretKey), username, false)
 		if err != nil {
@@ -104,7 +111,7 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 		location = "http://" + r.Host + "/static/view/home.html"
 		//管理员权限登录跳转
-	} else if user.Status == 7 {
+	} else if user.Status == 1 {
 		// 调用Token工具类生成带有标识信息的token
 		token, err = util.CreateToken([]byte(cfg.SecretKey), username, true)
 		if err != nil {
