@@ -11,7 +11,7 @@ import (
 var db *sql.DB
 
 func init() {
-	db,_ =sql.Open("mysql","root:121797@tcp(127.0.0.1:3306)/fileserver?parseTime=true")
+	db,_ =sql.Open("mysql","root:123456@tcp(127.0.0.1:3306)/fileserver?parseTime=true&loc=Local")
     db.SetMaxOpenConns(1000)
 	err := db.Ping()
 	if err != nil {

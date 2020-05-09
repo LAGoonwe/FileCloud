@@ -24,12 +24,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		//返回上传html页面
-		data, err := ioutil.ReadFile("src/FileCloud/static/view/upload.html")
-		if err != nil {
-			io.WriteString(w, "internal ser ver error")
-			return
-		}
-		io.WriteString(w, string(data))
+		//data, err := ioutil.ReadFile("src/FileCloud/static/view/upload.html")
+		//if err != nil {
+		//	io.WriteString(w, "internal ser ver error")
+		//	return
+		//}
+		//io.WriteString(w, string(data))
+		w.Write([]byte("FAILED"))
 	} else if r.Method == "POST" {
 		//接收文件流存储到本地目录
 		//Form方法返回文件本体，文件头部信息，以及错误信息
@@ -43,7 +44,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		fileMeta := meta.FileMeta{
 			FileName: head.Filename,
-			Location: "src/FileCloud/static/files/" + head.Filename,
+			Location: cfg.StaticPath + head.Filename,
 			UploadAt: time.Now().Format("2006-01-02 15:04:05"),
 		}
 
@@ -92,6 +93,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		if !cfg.AsyncTransferEnable {
 			err = oss.Bucket().PutObject(ossPath, newFile)
 			if err != nil {
+				fmt.Println("err")
+				fmt.Println(ossPath)
 				fmt.Println(err.Error())
 				w.Write([]byte("Upload failed!"))
 				return
@@ -327,7 +330,7 @@ func DownloadURLHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(signedURL))
 }
 
-//获取数据库所有文件元数据信息
+// 获取数据库所有文件信息（系统管理员接口）
 func GetAllFileMetaHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 

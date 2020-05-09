@@ -3,8 +3,7 @@ package oss
 import (
 	cfg "FileCloud/config"
 	"fmt"
-
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/aliyun-oss-go-sdk/oss"
 )
 
 var ossCli *oss.Client

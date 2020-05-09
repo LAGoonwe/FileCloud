@@ -1,2 +1,0 @@
-github Personal access tokens：
-920f93b387c89b3666b9aeb23339d1186101acce

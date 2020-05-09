@@ -244,13 +244,13 @@
 
   //文件上传
   function onUpload() {
-    var upUrl = "/file/upload?" + queryParams();
+    var upUrl = "/filebackend/upload?" + queryParams();
     var upEntry = localStorage.getItem("uploadEntry");
     if (upEntry != null ) {
       if (upEntry.indexOf("http:")>=0) {
-        upUrl = upEntry + "/file/upload?" + queryParams();
+        upUrl = upEntry + "/filebackend/upload?" + queryParams();
       } else {
-        upUrl = "http://" + upEntry + "/file/upload?" + queryParams();
+        upUrl = "http://" + upEntry + "/filebackend/upload?" + queryParams();
       }
     }
     var formData = new FormData();
@@ -375,7 +375,7 @@
 
   function updateFileList() {
     $.ajax({
-      url: "/file/query?" + queryParams(),
+      url: "/filebackend/query?" + queryParams(),
       type: "POST",
       data: {
         limit: 15
@@ -406,13 +406,13 @@
 
         var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
                 'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
+                ' onClick = "downloadFile(\'' + dlHost + '/filebackend/downloadurl?filehash={0}&{1}\')">下载</button>';
         var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
                 'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/file/update?op=2&filehash={2}&{3}\')\">重命名</button>';
+                ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?op=2&filehash={2}&{3}\')\">重命名</button>';
         var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
                 'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+                ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
 
 
         //给模态框表单添加验证
