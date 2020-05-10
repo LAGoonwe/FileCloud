@@ -4,26 +4,22 @@ import (
 	mydb "FileCloud/db/mysql"
 	"database/sql"
 	"errors"
-	"log"
 	"fmt"
+	"log"
 )
-
-
 
 // 用户文件结构体 tbl_user_file
 type BackendUserFile struct {
-	UserName    string
-	FileSha1    string
-	FileName    string
-	FileSize    int64
+	UserName        string
+	FileSha1        string
+	FileName        string
+	FileSize        int64
 	FileAbsLocation string
 	FileRelLocation string
-	UploadAt    string
-	LastUpdate  string
-	Status int
+	UploadAt        string
+	LastUpdate      string
+	Status          int
 }
-
-
 
 // 获取系统中所有用户的文件
 func GetAllUserFiles(limit int) ([]BackendUserFile, error) {
@@ -68,11 +64,9 @@ func GetAllUserFiles(limit int) ([]BackendUserFile, error) {
 	return backendUserFiles, nil
 }
 
-
-
 // 根据用户名检索文件
 func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
-	username = fmt.Sprintf("%x", "%" + username + "%")
+	username = fmt.Sprintf("%x", "%"+username+"%")
 	fmt.Println(username)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
@@ -113,11 +107,9 @@ func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
 	return backendUserFiles, nil
 }
 
-
-
 // 根据文件名检索文件
 func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
-	filename = fmt.Sprintf("%x", "%" + filename + "%")
+	filename = fmt.Sprintf("%x", "%"+filename+"%")
 	fmt.Println(filename)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
@@ -158,8 +150,6 @@ func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
 	return backendUserFiles, nil
 }
 
-
-
 // 获取文件重要信息（通用）
 func GetLocalFile(filesha1 string) (BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -187,8 +177,6 @@ func GetLocalFile(filesha1 string) (BackendUserFile, error) {
 
 	return backendUserFile, nil
 }
-
-
 
 // 修改文件状态
 func UpdateFileStatus(filehash string) (BackendUserFile, error) {
@@ -248,8 +236,6 @@ func UpdateFileStatus(filehash string) (BackendUserFile, error) {
 	}
 	return BackendUserFile{}, errors.New("数据更新异常")
 }
-
-
 
 // 判断数据库中是否存在同名文件
 func IsExistSameNameFile(username string, filename string) (bool, error) {
@@ -378,9 +364,9 @@ func UpdateFileName(filesha1, newFileName, fileAbsLocation, fileRelLocation stri
 
 // 批量获取用户文件信息（这里不展示filesha1，绝对路径）
 // filesha1这种值不应该暴露给用户吗，本地服务器的绝对路径也是，存在安全风险
-func QueryBackendUserFiles(username string, limit int) ([]BackendUserFile, error) {
+func QueryBackendUserFiles(username string, pageIndex, pageSize int) ([]BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select file_name,file_size,file_rel_location,status from tbl_user_file where user_name = ? limit ?")
+		"select file_sha1,file_name,file_size,file_rel_location,status,upload_at,last_update from tbl_user_file where user_name = ? limit ?,?")
 	if err != nil {
 		log.Println("QueryBackendUserFiles DB Failed")
 		log.Println(err.Error())
@@ -388,7 +374,7 @@ func QueryBackendUserFiles(username string, limit int) ([]BackendUserFile, error
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(username, limit)
+	rows, err := stmt.Query(username, (pageIndex-1)*pageSize, pageSize)
 	if err != nil {
 		log.Println("QueryBackendUserFiles Query Failed")
 		log.Println(err.Error())
@@ -399,7 +385,8 @@ func QueryBackendUserFiles(username string, limit int) ([]BackendUserFile, error
 	for rows.Next() {
 		backendUserFile := BackendUserFile{}
 		err = rows.Scan(
-			&backendUserFile.FileName, &backendUserFile.FileSize, &backendUserFile.FileRelLocation, &backendUserFile.Status)
+			&backendUserFile.FileSha1, &backendUserFile.FileName, &backendUserFile.FileSize,
+			&backendUserFile.FileRelLocation, &backendUserFile.Status, &backendUserFile.UploadAt, &backendUserFile.LastUpdate)
 		if err != nil {
 			log.Println("QueryBackendUserFiles Scan Failed")
 			log.Println(err.Error())
@@ -409,8 +396,6 @@ func QueryBackendUserFiles(username string, limit int) ([]BackendUserFile, error
 	}
 	return backendUserFiles, nil
 }
-
-
 
 // 删除数据库中的文件记录
 func DeleteFile(filesha1 string) (bool, error) {
@@ -431,8 +416,6 @@ func DeleteFile(filesha1 string) (bool, error) {
 	return true, nil
 }
 
-
-
 // 根据用户名和文件名找到文件
 func GetFileByUserNameAndFileName(username, filename string) (bool, BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -451,12 +434,10 @@ func GetFileByUserNameAndFileName(username, filename string) (bool, BackendUserF
 		return false, BackendUserFile{}, nil
 	} else if err != nil {
 		log.Println(err)
-		return false, BackendUserFile{} ,err
+		return false, BackendUserFile{}, err
 	}
 	return true, BackendUserFile{}, nil
 }
-
-
 
 // 更新追加上传后的文件大小和文件hash
 func UpdateFileSizeAndFileHash(username, filename, filesha1 string, filesize int64) (bool, error) {
@@ -482,8 +463,6 @@ func UpdateFileSizeAndFileHash(username, filename, filesha1 string, filesize int
 	}
 	return true, nil
 }
-
-
 
 // 查询当前用户下的Object是否存在
 func IsExistObjectName(username, objectName string) (bool, error) {

@@ -38,6 +38,13 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	phoneNumber := r.Form.Get("phoneNumber")
 	emailNumber := r.Form.Get("emailNumber")
 
+	// 创建本地属于该用户的文件文件夹，包括本地文件夹和临时存放地
+	err := os.MkdirAll(cfg.UploadPath+username, os.ModePerm)
+	err = os.MkdirAll(cfg.PreUploadPath+username, os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	//用户名密码长度校验
 	if len(username) == 0 || len(passwd) < 5 {
 		w.Write([]byte("invalid parameter"))

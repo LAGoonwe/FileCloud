@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,8 +8,13 @@
   <link rel="stylesheet" href="../css/uikit.min.css" />
   <script src="../js/uikit.min.js"></script>
   <script src="../js/uikit-icons.min.js"></script>
-  <script src="/static/js/auth.js"></script>
+  <script src="../js/auth.js"></script>
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+
+  <!--分页相关-->
+  <link type="text/css" href="../css/style.css" rel="stylesheet" />
+  <script type="text/javascript" src="../js/jquery.min.js"></script>
+  <script type="text/javascript" src="../js/MyPage.js"></script>
   <style type="text/css">
     html, body {
       width: 100%;
@@ -36,12 +42,28 @@
       width: 85%;
       float: left;
       background-color: #f8f8f8;
+      position: relative;
     }
     .logo{
       height: 100%;
     }
     .uk-table td{
       vertical-align: middle !important;
+    }
+    .progress {
+      width: 550px;
+      height: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin: 10px 0px;
+      overflow: hidden;
+    }
+    /* 初始状态设置进度条宽度为0px */
+    .progress > div {
+      width: 0px;
+      height: 100%;
+      background-color: yellowgreen;
+      transition: all .3s ease;
     }
   </style>
 </head>
@@ -78,11 +100,15 @@
         文件上传
       </div>
       <div class="uk-margin" uk-margin>
-          <div uk-form-custom="target: true">
-            <input id="file" name="file" type="file">
-            <input class="uk-input uk-form-width-medium" type="text" placeholder="选择文件" disabled>
-          </div>
-          <button class="uk-button uk-button-default" onclick="onUpload()">上传</button>
+        <div uk-form-custom="target: true">
+          <input id="file" name="file" type="file">
+          <input class="uk-input uk-form-width-medium" type="text" placeholder="选择文件" disabled>
+        </div>
+        <button id="uploadBtn" class="uk-button uk-button-default" onclick="onUpload()">上传</button>
+        <!-- 文件上传进度条 -->
+        <div id="progress" class="progress">
+          <div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -131,6 +157,7 @@
         <div class="uk-card-footer">
           <button class="uk-button uk-button-primary uk-margin-small-bottom" href="#modal-change" uk-toggle>修改信息</button>
           <button class="uk-button uk-button-primary uk-margin-small-bottom" onclick="toIndex()">退出登录</button>
+          <ul class="uk-pagination" data-uk-pagination="{items:100, itemsOnPage:10}"></ul>
         </div>
       </div>
 
@@ -152,13 +179,9 @@
       </thead>
     </table>
 
-    <!--下载提示模态框-->
-    <div id="modal-download" uk-modal>
-      <div class="uk-modal-dialog uk-modal-body">
-        <button class="uk-modal-close-default" type="button" uk-close></button>
-        <p id="downloadAction">文件即将下载自......</p>
-      </div>
-    </div>
+    <!-- 分页插件显示区域 -->
+    <div style="position:absolute;bottom:0;right:0;margin-bottom: 20px" class="page" id="Page"></div>
+
 
     <!--重命名模态框-->
     <div id="modal-newname" uk-modal>
@@ -242,36 +265,103 @@
 
 <script lang="javascript">
 
+  // 文件上传jquery验证
+  //限制上传文件的类型和大小
+  function validate_img(ele){
+    // 返回 KB，保留小数点后两位
+    //alert((ele.files[0].size/(1024*1024)).toFixed(2));
+    var file = ele.value;
+
+
+    $("#uploadBtn").remove("disabled")
+  }
+
+  // 文件上传进度条喧嚷回调函数
+  function processAction(e) {
+    console.log(e);
+    //loaded代表上传了多少
+    //total代表总数为多少
+    var progressRate = (e.loaded / e.total) * 100 + '%';
+
+    //通过设置进度条的宽度达到效果
+    $('.progress > div').css('width', progressRate);
+  }
+
   //文件上传
   function onUpload() {
-    var upUrl = "/filebackend/upload?" + queryParams();
+
+    // 设置文件上传大小限制
+    var maxSize = 300000;//文件上传大小限制
+    var size = document.getElementById('file').files[0].size;
+    var filesize = (size / 1024).toFixed(2);
+
+    // 设置文件上传类型限制
+    var filepath=$("input[id='file']").val();
+    var extStart=filepath.lastIndexOf(".");
+    var ext=filepath.substring(extStart,filepath.length).toUpperCase();
+
+    // 设置文件上传链接路径相关
+    var upUrl = "/file/upload?" + queryParams();
     var upEntry = localStorage.getItem("uploadEntry");
     if (upEntry != null ) {
       if (upEntry.indexOf("http:")>=0) {
-        upUrl = upEntry + "/filebackend/upload?" + queryParams();
+        upUrl = upEntry + "/file/upload?" + queryParams();
       } else {
-        upUrl = "http://" + upEntry + "/filebackend/upload?" + queryParams();
+        upUrl = "http://" + upEntry + "/file/upload?" + queryParams();
       }
     }
     var formData = new FormData();
     formData.append("file",$("#file")[0].files[0]);
-    $.ajax({
-      url: upUrl,
-      type: 'POST',
-      cache: false,
-      data: formData,
-      processData: false,
-      contentType: false,
-      error: function (err) {
-        alert('请求报错信息: ' + JSON.stringify(err));
-      },
-      success: function (res) {
-        UIkit.notification({message: '文件上传成功！', status: 'success'})
-        setTimeout(function(){
-          window.location.href = "/static/view/home.html";
-        }, 2000);
-      }
-    });
+
+    console.log(ext)
+
+    // // 设置允许上传通过的文件类型
+    // var Types=new Array(".JPG",".PNG",".JPEG")
+
+    // if (filesize < maxSize && (ext ==".PPTX" || ext==".PDF" || ext==".TXT" || ext==".PNG" || ext==".JPG" || ext==".JPEG" || ext==".MP4" || ext==".EXE")){
+    if (filesize < maxSize){
+      $.ajax({
+        url: upUrl,
+        type: 'POST',
+        cache: false,
+        data: formData,
+        processData: false,
+        contentType: false,
+        xhr: function() {
+          var xhr = new XMLHttpRequest();
+          //使用XMLHttpRequest.upload监听上传过程，注册progress事件，打印回调函数中的event事件
+          xhr.upload.addEventListener('progress',processAction )
+          return xhr;
+        },
+        error: function (err,errorCode,xhr) {
+          if (xhr == "Forbidden"){
+            UIkit.notification({message: '文件已存在！<br>请勿重复上传！', status: 'danger'})
+          }
+          if (err.statusText == "error"){
+            alert('上传失败！');
+          }
+        },
+        success: function (res) {
+          if (res == "Fast Upload") {
+            UIkit.notification({message: '文件秒传成功！', status: 'success'})
+            setTimeout(function(){
+              window.location.href = "/static/view/home.html";
+            }, 2000);
+          }else {
+            UIkit.notification({message: '文件上传成功！', status: 'success'})
+            setTimeout(function(){
+              window.location.href = "/static/view/home.html";
+            }, 2000);
+          }
+        }
+      });
+    }else if (filesize >= maxSize) {
+      UIkit.notification({message: '上传文件不允许大于' + maxSize + 'KB', status: 'danger'})
+    }
+    // }else if(ext!=".PPTX"&&ext!=".PDF"&&ext!=".TXT"&&ext!=".PNG"&&ext!=".JPG"&&ext!=".JPEG"){
+    //   UIkit.notification({message: '不支持上传该文件类型！', status: 'danger'})
+    //   alert("仅支持上传ppt、pdf、txt、和图片"); //检测允许的上传文件类型
+    // }
   }
 
   function toIndex() {
@@ -318,24 +408,30 @@
     });
   });
 
+  // 设置当前用户文件总数全局变量---辅助分页
+  var FileTotal
+
   window.onload = function () {
     var username = document.getElementById('username');
     $.ajax({
       url: "/user/info?" + queryParams(),
       type: "POST",
       error: function (jqXHR, textStatus, errorThrown) {
+        console.log(errorThrown)
         if (textStatus == "error") {
           if (errorThrown == "Forbidden")
-            UIkit.notification({message: '请先登录本系统！', status: 'danger'})
-            setTimeout(function(){
-              window.location.href = "/static/view/signin.html";
-            }, 1000);
+            UIkit.notification({message:
+                      '登录失效！请重新登录网站！', status: 'danger'})
+          setTimeout(function(){
+            window.location.href = "/static/view/signin.html";
+          }, 3000);
         } else {
           UIkit.notification({message: textStatus, status: 'danger'})
         }
       },
       success: function (body, textStatus, jqXHR) {
         var resp = JSON.parse(body);
+        console.log(body)
         document.getElementById("username").innerHTML = resp.data.Username;
         $("#ModalUsername").attr("value",resp.data.Username)
         var SignupAt = new Date(resp.data.SignupAt)
@@ -345,8 +441,8 @@
         $("#ModalPhone").attr("value",resp.data.Phone)
         document.getElementById("email").innerHTML = resp.data.Email;
         $("#ModalEmail").attr("value",resp.data.Email)
-
-        updateFileList();
+        FileTotal = resp.file_total
+        updateFileList(FileTotal);
       }
     });
   }
@@ -373,85 +469,106 @@
             checkTime(minutes)+":"+checkTime(seconds));
   }
 
-  function updateFileList() {
-    $.ajax({
-      url: "/filebackend/query?" + queryParams(),
-      type: "POST",
-      data: {
-        limit: 15
-      },
-      error: function (err) {
-        alert(JSON.stringify(err));
-      },
-      success: function (body) {
-        if (!body) {
-          return;
-        }
-        var data = body;
-        if (!data || data.length <= 0) {
-          return;
-        }
+  function updateFileList(FileTotal) {
 
-        var dlHost = 'http://localhost:9090';
-        var dlEntry = localStorage.getItem('downloadEntry');
-        if (dlEntry != null) {
-          if (dlEntry.indexOf('http:')<0) {
-            dlHost = 'http://' + dlEntry;
-          } else {
-            dlHost = dlEntry;
+    var pageIndex
+
+    // 激活分页插件
+    P.initMathod({
+      params: {elemId: '#Page',total:'10',pageNum:3,pageSize:7},
+      requestFunction: function () {
+        //计算所需页码
+        num = Math.ceil(FileTotal/7)
+        // console.log(num,FileTotal)
+        P.config.total = FileTotal;
+        P.config.pageNum = num
+        console.log(JSON.stringify(P.config));
+        pageIndex = P.config.pageIndex
+
+        // ajax异步请求过程,异步获取到的数据总条数赋值给 P.config.total
+
+        $.ajax({
+          url: "/filebackend/query?" + queryParams(),
+          type: "POST",
+          data: {
+            PageIndex: pageIndex, // 当前点击的页码
+            PageSize: 7 //每页显示的条数
+          },
+          error: function (err) {
+            alert(JSON.stringify(err));
+          },
+          success: function (response) {
+
+            // 设置相关值
+            var dlHost = 'http://localhost:9090';
+            var dlEntry = localStorage.getItem('downloadEntry');
+            if (dlEntry != null) {
+              if (dlEntry.indexOf('http:')<0) {
+                dlHost = 'http://' + dlEntry;
+              } else {
+                dlHost = dlEntry;
+              }
+            }
+
+            // 设置操作按钮
+
+            var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small"' +
+                    'style="height:30px;margin:5px 3px;"'+
+                    ' onClick = "downloadFile(\'{1}\',\'' + dlHost + '/filebackend/download?filehash={0}&{2}\')">下载</button>';
+            var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
+                    'style="height:30px;margin:5px 3px;"'+
+                    ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?op=2&filehash={2}&{3}\')\">重命名</button>';
+            var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
+                    'style="height:30px;margin:5px 3px;"'+
+                    ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
+
+
+            //给模态框表单添加验证
+            $("#realusername").attr("value",localStorage.getItem("username"))
+            console.log(localStorage.getItem("username"))
+            $("#token").attr("value",localStorage.getItem("token"))
+            console.log(localStorage.getItem("token"))
+
+            // 序列化返回内容，转化为json数据
+            response = JSON.parse(response)
+
+            // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
+            if (response.code == -1){
+              UIkit.notification({message: response.msg, status: 'danger'})
+            }else {
+              console.log(response)
+              alert(response.msg)
+              for (var i = 0; i < response.data.length; i++) {
+                var x = document.getElementById('filetbl').insertRow();
+
+                cell = x.insertCell();
+                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileHash+"' target='_blank' href= "+"#"+">"+ response.data[i].FileName.substring(0,50)+"</a>";
+
+                cell = x.insertCell();
+                cell.innerHTML = response.data[i].FileSize+" KB";
+
+
+                cell = x.insertCell();
+                var UploadAt = new Date(response.data[i].UploadAt)
+                cell.innerHTML = formatDate(UploadAt);
+
+                cell = x.insertCell();
+                var LastUpdated = new Date(response.data[i].LastUpdate);
+                cell.innerHTML = formatDate(LastUpdated);
+
+                cell = x.insertCell();
+                cell.innerHTML = downloadHtml.format(response.data[i].FileSha1,response.data[i].FileName,queryParams())  +
+                        renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName,response.data[i].FileSha1,
+                                queryParams())
+                        + deleteFileHtml
+                                .format(response.data[i].FileSha1, queryParams());
+              }
+            }
           }
-        }
-
-
-
-        var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
-                'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "downloadFile(\'' + dlHost + '/filebackend/downloadurl?filehash={0}&{1}\')">下载</button>';
-        var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
-                'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?op=2&filehash={2}&{3}\')\">重命名</button>';
-        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
-                'style="height:30px;margin:5px 3px;"'+
-                ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
-
-
-        //给模态框表单添加验证
-        $("#realusername").attr("value",localStorage.getItem("username"))
-        console.log(localStorage.getItem("username"))
-        $("#token").attr("value",localStorage.getItem("token"))
-        console.log(localStorage.getItem("token"))
-
-        data = JSON.parse(data)
-        console.log(data)
-        for (var i = 0; i < data.length; i++) {
-          var x = document.getElementById('filetbl').insertRow();
-          // var cell = x.insertCell();
-          // cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
-
-          cell = x.insertCell();
-          fileShowURL = dlHost+"/static/files/"+data[i].RealName;
-          cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
-
-          cell = x.insertCell();
-          cell.innerHTML = data[i].FileSize+" KB";
-
-
-          cell = x.insertCell();
-          var UploadAt = new Date(data[i].UploadAt)
-          cell.innerHTML = formatDate(UploadAt);
-
-          cell = x.insertCell();
-          var LastUpdated = new Date(data[i].LastUpdated);
-          cell.innerHTML = formatDate(LastUpdated);
-
-          cell = x.insertCell();
-          cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams())  +
-                  renameFileHtml.format(data[i].FileHash, data[i].FileName, data[i].FileHash,
-                          queryParams())
-                  + deleteFileHtml
-                          .format(data[i].FileHash, queryParams());
-        }
-
+        });
+        // 清除原有页面的表格数据---配合分页使用
+        $("#filetbl tr:gt(0)").empty();
+        $("#filetbl tr").not(':eq(0)').empty()
       }
     });
   }
@@ -488,38 +605,47 @@
     })
   }
 
-  function download(url){
-    try {
-      var elemIF = document.createElement("iframe");
-      elemIF.src = url;
-      elemIF.style.display = "none";
-      document.body.appendChild(elemIF);
-    } catch (e) {
-      alert("下载异常！");
-    }
+  function download(filename,url){
+      var xmlResquest = new XMLHttpRequest();
+      xmlResquest.open("POST", url, true);
+      xmlResquest.setRequestHeader("Content-type", "application/json");
+      // xmlResquest.setRequestHeader("Authorization", "Bearer 6cda86e3-ba1c-4737-972c-f815304932ee");
+      xmlResquest.responseType = "blob";
+      xmlResquest.onload = function (oEvent) {
+        var content = xmlResquest.response;
+        var elink = document.createElement('a');
+        elink.download = filename;
+        elink.style.display = 'none';
+        var blob = new Blob([content]);
+        elink.href = URL.createObjectURL(blob);
+        document.body.appendChild(elink);
+        elink.click();
+        document.body.removeChild(elink);
+      };
+      xmlResquest.send();
   }
 
-  function downloadFile(durl) {
+  function downloadFile(filename,durl) {
     $.ajax({
       url: durl,
       type: "POST",
-      error: function (jqXHR, textStatus, errorThrown) {
-        if (textStatus == "error") {
-          mes = textStatus + " : " + errorThrown
-          UIkit.notification({message: mes, status: 'danger'})
-        } else {
-          UIkit.notification({message: textStatus, status: 'danger'})
-        }
+      error: function (error) {
+        UIkit.notification({message: error, status: 'danger'})
       },
-      success: function (body, textStatus, jqXHR) {
-        try {
-          document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
-          setTimeout(function(){
-            download(body)
-          }, 2000);
-        } catch (e) {
-          alert(e);
-        }
+      success: function (response) {
+        // if (response.code == -1){
+        //   UIkit.notification({message: response.data.msg, status: 'danger'})
+        // }else {
+        //   try {
+        //     document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
+        //     setTimeout(function(){
+        //       download(body)
+        //     }, 2000);
+        //   } catch (e) {
+        //     alert(e);
+        //   }
+        // }
+        download(filename,durl)
       }
     });
   }

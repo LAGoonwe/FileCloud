@@ -103,19 +103,19 @@ func GetUserInfo(info *PrivateInfo, w http.ResponseWriter, r *http.Request) {
 	if user.Username == "" {
 		//插入新数据
 		//对用户密码进行哈希的加密处理
-		enc_passwd := util.Sha1([]byte(classDetailMap["nickname"] + pwd_salt))
-		_ = db.UserSignup(classDetailMap["nickname"], enc_passwd)
+		//enc_passwd := util.Sha1([]byte(classDetailMap["nickname"] + pwd_salt))
+		//_ = db.UserSignup(classDetailMap["nickname"], enc_passwd)
 	} else {
 		//如果用户表存在该用户名，则代表之前扫码登陆过系统，取出相应的账号密码即可
 		fmt.Println(user.Username)
 	}
 
-	token := GenToken(classDetailMap["nickname"])
-	upRes := db.UpdateToken(classDetailMap["nickname"], token)
-	if !upRes {
-		w.Write([]byte("FAILED"))
-		return
-	}
+	//token := GenToken(classDetailMap["nickname"])
+	//upRes := db.UpdateToken(classDetailMap["nickname"], token)
+	//if !upRes {
+	//	w.Write([]byte("FAILED"))
+	//	return
+	//}
 
 	resp2 := util.RespMsg{
 		Code: 0,
@@ -129,7 +129,7 @@ func GetUserInfo(info *PrivateInfo, w http.ResponseWriter, r *http.Request) {
 			Location: "http://" + r.Host + "/static/view/home.html",
 			Username: classDetailMap["nickname"],
 			Status:   user.Status,
-			Token:    token,
+			//Token:    token,
 		},
 	}
 	w.Write(resp2.JSONBytes())

@@ -11,8 +11,6 @@ import (
 	"strconv"
 )
 
-
-
 // 批量查询对应用户的文件信息
 // 这种大数据量的接口不用系统的全局内存变量
 func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
@@ -22,10 +20,12 @@ func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	limit, _ := strconv.Atoi(r.Form.Get("limit"))
-	username := r.Form.Get("username")
 
-	backendUserFiles, err := dblayer.QueryBackendUserFiles(username, limit)
+	username := r.Form.Get("username")
+	pageIndex, _ := strconv.Atoi(r.Form.Get("PageIndex"))
+	pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
+
+	backendUserFiles, err := dblayer.QueryBackendUserFiles(username, pageIndex, pageSize)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -44,8 +44,6 @@ func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 重命名文件
 // 重命名文件的操作跟移动文件相类似
@@ -98,32 +96,32 @@ func UpdateBackendUserFilesName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	 // OSS移动文件
-	 // 首先需要查找原来的objectName，同时要限制住目的objectName的命名
-	 fileMeta, err := dblayer.GetFileByFileSha1(filesha1, username)
-	 if err != nil {
-		 resp := util.RespMsg{
-			 Code: -1,
-			 Msg:  "重命名文件失败！",
-			 Data: "",
-		 }
-		 w.Write(resp.JSONBytes())
-		 return
-	 }
-	 oldObjectName := fileMeta.FileRelLocation
-	 newObjectName := username + "/" + newFileName
-	 // oss先复制，后删除，这两步理应也是原子性操作
-	 // 这里假设能够完成
-	 _, err = oss.CopyFiles(oldObjectName, newObjectName)
-	 if err != nil {
-		 resp := util.RespMsg{
-			 Code: -1,
-			 Msg:  "重命名文件失败！",
-			 Data: "",
-		 }
-		 w.Write(resp.JSONBytes())
-		 return
-	 }
+	// OSS移动文件
+	// 首先需要查找原来的objectName，同时要限制住目的objectName的命名
+	fileMeta, err := dblayer.GetFileByFileSha1(filesha1, username)
+	if err != nil {
+		resp := util.RespMsg{
+			Code: -1,
+			Msg:  "重命名文件失败！",
+			Data: "",
+		}
+		w.Write(resp.JSONBytes())
+		return
+	}
+	oldObjectName := fileMeta.FileRelLocation
+	newObjectName := username + "/" + newFileName
+	// oss先复制，后删除，这两步理应也是原子性操作
+	// 这里假设能够完成
+	_, err = oss.CopyFiles(oldObjectName, newObjectName)
+	if err != nil {
+		resp := util.RespMsg{
+			Code: -1,
+			Msg:  "重命名文件失败！",
+			Data: "",
+		}
+		w.Write(resp.JSONBytes())
+		return
+	}
 	_, err = oss.DeleteOneFile(oldObjectName)
 	if err != nil {
 		resp := util.RespMsg{
@@ -166,8 +164,6 @@ func UpdateBackendUserFilesName(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 管理员接口
 // 获取系统中的所有用户的文件（还没增加拦截器进行身份校验）
@@ -228,8 +224,6 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
-
-
 // 根据用户名模糊检索文件（暂时没考虑传入多个用户名的情况）
 // 这种大数据量的接口不用系统的全局内存变量
 func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
@@ -288,8 +282,6 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 根据文件名模糊检索文件（暂时没考虑传入多个文件名的情况）
 // 这种大数据量的接口不用系统的全局内存变量
@@ -351,8 +343,6 @@ func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
-
-
 // 返回所选文件的外链
 func GetDownLoadFileURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -402,14 +392,12 @@ func GetDownLoadFileURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := util.RespMsg{
-		Code: -1,
+		Code: 1,
 		Msg:  "返回所选文件的外链成功！",
 		Data: downloadURL,
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 系统管理员列举OSS的所有文件
 func ListAllOSSFiles(w http.ResponseWriter, r *http.Request) {
@@ -451,8 +439,6 @@ func ListAllOSSFiles(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 }
-
-
 
 // 系统管理员获取文件权限
 func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
@@ -512,8 +498,6 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // 系统管理员设置文件权限
 func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -572,8 +556,6 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 }
-
-
 
 // 判断OSS文件是否存在
 func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {
