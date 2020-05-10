@@ -2,11 +2,11 @@ package config
 
 const (
 	// 前端静态资源路径
-	StaticPath = ""
+	StaticPath = "src/FileCloud/static"
 
 	// 上传文件本地存放路径
-	UploadPath = ""
+	UploadPath = "C:/FileCloud/Files/"
 
 	// 临时上传文件本地存放路径
-	PreUploadPath = ""
+	PreUploadPath = "C:/FileCloud/ShortTimeFiles/"
 )

@@ -83,11 +83,9 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\"" +  filename +"\"")
+	w.Header().Set("content-disposition", "attachment; filename=\""+filename+"\"")
 	w.Write(data)
 }
-
-
 
 // 阿里云范围下载
 func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
@@ -155,11 +153,9 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\"" +  fileName +"\"")
+	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
 	w.Write(data)
 }
-
-
 
 // 阿里云断点续传下载
 // 下载到服务器本地文件
@@ -257,11 +253,9 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 
 	// TODO 前端需要解决如何处理下载方式（当前前端是点击下载后直接触发下载到浏览器指定路径）
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\"" +  fileName +"\"")
+	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
 	w.Write(data)
 }
-
-
 
 // 本地下载方式
 // 通用接口
@@ -331,11 +325,9 @@ func LocalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\"" +  fileName +"\"")
+	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
 	w.Write(data)
 }
-
-
 
 // 压缩下载
 // 暂时没必要实现，性能不是特别好，而且麻烦

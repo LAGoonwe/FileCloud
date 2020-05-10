@@ -188,7 +188,8 @@
       <div class="uk-modal-dialog uk-modal-body">
         <div class="uk-margin">
           <p id="FileName">当前文件名</p>
-          <input id="renameAction" class="uk-input" type="text" placeholder="请输入新的文件名">
+          <input style="width: 70%;" id="renameAction" class="uk-input" type="text" placeholder="请输入新的文件名">
+          <p id="fileType" style="float: right;width: 30%;margin-right: -10px;"></p>
         </div>
         <p class="uk-text-right">
           <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
@@ -287,11 +288,32 @@
     $('.progress > div').css('width', progressRate);
   }
 
+  // 判断对象是否为json
+  function isJSON(str) {
+    if (typeof str == 'string') {
+      try {
+        var obj=JSON.parse(str);
+        if(typeof obj == 'object' && obj ){
+          return true;
+        }else{
+          return false;
+        }
+
+      } catch(e) {
+        console.log('error：'+str+'!!!'+e);
+        return false;
+      }
+    }
+    console.log('It is not a string!')
+  }
+
+  var resp
+
   //文件上传
   function onUpload() {
 
     // 设置文件上传大小限制
-    var maxSize = 300000;//文件上传大小限制
+    var maxSize = 100000;//文件上传大小限制，单位kb
     var size = document.getElementById('file').files[0].size;
     var filesize = (size / 1024).toFixed(2);
 
@@ -301,13 +323,13 @@
     var ext=filepath.substring(extStart,filepath.length).toUpperCase();
 
     // 设置文件上传链接路径相关
-    var upUrl = "/file/upload?" + queryParams();
+    var upUrl = "/filebackend/upload?" + queryParams();
     var upEntry = localStorage.getItem("uploadEntry");
     if (upEntry != null ) {
       if (upEntry.indexOf("http:")>=0) {
-        upUrl = upEntry + "/file/upload?" + queryParams();
+        upUrl = upEntry + "/filebackend/upload?" + queryParams();
       } else {
-        upUrl = "http://" + upEntry + "/file/upload?" + queryParams();
+        upUrl = "http://" + upEntry + "/filebackend/upload?" + queryParams();
       }
     }
     var formData = new FormData();
@@ -333,25 +355,20 @@
           xhr.upload.addEventListener('progress',processAction )
           return xhr;
         },
-        error: function (err,errorCode,xhr) {
-          if (xhr == "Forbidden"){
-            UIkit.notification({message: '文件已存在！<br>请勿重复上传！', status: 'danger'})
-          }
-          if (err.statusText == "error"){
-            alert('上传失败！');
-          }
+        error: function (error) {
+         alert(error)
         },
-        success: function (res) {
-          if (res == "Fast Upload") {
-            UIkit.notification({message: '文件秒传成功！', status: 'success'})
-            setTimeout(function(){
-              window.location.href = "/static/view/home.html";
-            }, 2000);
+        success: function (response) {
+          if (isJSON(response)){
+            resp = JSON.parse(response)
+            if (resp.code == -1){
+              UIkit.notification({message: response.msg, status: 'danger'})
+            }
           }else {
             UIkit.notification({message: '文件上传成功！', status: 'success'})
             setTimeout(function(){
-              window.location.href = "/static/view/home.html";
-            }, 2000);
+              window.location.reload()
+            }, 1000);
           }
         }
       });
@@ -517,7 +534,7 @@
                     ' onClick = "downloadFile(\'{1}\',\'' + dlHost + '/filebackend/download?filehash={0}&{2}\')">下载</button>';
             var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
                     'style="height:30px;margin:5px 3px;"'+
-                    ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?op=2&filehash={2}&{3}\')\">重命名</button>';
+                    ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?filehash={0}&{2}\')\">重命名</button>';
             var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
                     'style="height:30px;margin:5px 3px;"'+
                     ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
@@ -537,12 +554,11 @@
               UIkit.notification({message: response.msg, status: 'danger'})
             }else {
               console.log(response)
-              alert(response.msg)
               for (var i = 0; i < response.data.length; i++) {
                 var x = document.getElementById('filetbl').insertRow();
 
                 cell = x.insertCell();
-                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileHash+"' target='_blank' href= "+"#"+">"+ response.data[i].FileName.substring(0,50)+"</a>";
+                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"' target='_blank' href= "+"#"+">"+ response.data[i].FileName.substring(0,50)+"</a>";
 
                 cell = x.insertCell();
                 cell.innerHTML = response.data[i].FileSize+" KB";
@@ -558,7 +574,7 @@
 
                 cell = x.insertCell();
                 cell.innerHTML = downloadHtml.format(response.data[i].FileSha1,response.data[i].FileName,queryParams())  +
-                        renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName,response.data[i].FileSha1,
+                        renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName,
                                 queryParams())
                         + deleteFileHtml
                                 .format(response.data[i].FileSha1, queryParams());
@@ -574,6 +590,11 @@
   }
 
   function renameFile(filehash, filename, renameUrl) {
+
+    // 根据当前文件名设置文件类型--免输入
+    fileType = filename.substr(filename.indexOf("."),filename.length)
+    $('#fileType').text(fileType)
+
     $("#FileName").text("当前文件名:"+filename);
     $("#renameActionButton").unbind("click").click(function () {
       newFileName=$('#renameAction').val()
@@ -583,21 +604,31 @@
         UIkit.notification({message: '文件名不能为空！', status: 'danger'})
         return;
       }
-      if (newFileName.indexOf(" ") >= 0) {
-        UIkit.notification({message: '文件名不能包含空格！', status: 'danger'})
+      if (newFileName.indexOf(" ") >= 0 || newFileName.indexOf(".") >= 0) {
+        UIkit.notification({message: '文件名不能包含非法字符<br>（例如空格 . 等）！', status: 'danger'})
         return;
       }
+
+      // filename输入判别
+      if (newFileName.indexOf("."))
+
+
+
       $.ajax({
-        url: renameUrl + "&filename=" + newFileName,
+        url: renameUrl + "&filename=" + newFileName+fileType,
         type: "POST",
-        error: function (msg) {
-          alert(JSON.stringify(msg));
+        error: function (error) {
+          alert(error);
         },
-        success: function (body) {
-          console.log(body)
-          UIkit.notification({message: '文件名修改成功！', status: 'success'})
-          filenameID= filehash
-          $('#'+filenameID).text(newFileName)
+        success: function (response) {
+          response = JSON.parse(response)
+          if (response.code == -1){
+            UIkit.notification({message: response.msg, status: 'danger'})
+          }else {
+            UIkit.notification({message: '文件名修改成功！', status: 'success'})
+            filenameID= filehash
+            $('#'+filenameID).text(newFileName+fileType)
+          }
         }
       });
       UIkit.modal($('#modal-newname')).hide()
@@ -657,17 +688,18 @@
       $.ajax({
         url: durl,
         type: "POST",
-        error: function (jqXHR, textStatus, errorThrown) {
-          if (textStatus == "error") {
-            mes = textStatus + " : " + errorThrown
-            UIkit.notification({message: mes, status: 'danger'})
-          } else {
-            UIkit.notification({message: textStatus, status: 'danger'})
-          }
+        error: function (error) {
+          alert(error)
         },
-        success: function (body, textStatus, jqXHR) {
-          UIkit.notification({message: '文件删除成功！', status: 'success'})
-          $("#"+filehash).parent().parent().remove();
+
+        success: function (response) {
+          response =JSON.parse(response)
+          if (response.code == -1){
+            UIkit.notification({message: response.msg, status: 'danger'})
+          }else {
+            UIkit.notification({message: '文件删除成功！', status: 'success'})
+            $("#"+filehash).parent().parent().remove();
+          }
         }
       });
       UIkit.modal($('#modal-delete')).hide()

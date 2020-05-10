@@ -135,7 +135,7 @@ func UpdateBackendUserFilesName(w http.ResponseWriter, r *http.Request) {
 
 	// 本地服务器端移动文件
 	oldLocalFileName := fileMeta.FileAbsLocation
-	newLocalFileName := cfg.UploadPath + newFileName
+	newLocalFileName := cfg.UploadPath + username + "/" + newFileName
 	os.Rename(oldLocalFileName, newLocalFileName)
 
 	// 更新数据库中的记录
