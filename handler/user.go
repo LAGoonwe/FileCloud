@@ -1,6 +1,7 @@
 package handler
 
 import (
+	cfg "FileCloud/config"
 	dblayer "FileCloud/db"
 	"FileCloud/store/oss"
 	"FileCloud/util"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 )
 
 const (
@@ -35,6 +35,8 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	passwd := r.Form.Get("password")
 	passwdc := r.Form.Get("passwordc")
+	phoneNumber := r.Form.Get("phoneNumber")
+	emailNumber := r.Form.Get("emailNumber")
 
 	//用户名密码长度校验
 	if len(username) == 0 || len(passwd) < 5 {
@@ -52,12 +54,22 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if user.Username == "" {
 		//对用户密码进行哈希的加密处理
 		enc_passwd := util.Sha1([]byte(passwd + pwd_salt))
-		suc := dblayer.UserSignup(username, enc_passwd)
-		if suc {
-			w.Write([]byte("SUCCESS"))
+		if phoneNumber == "" {
+			suc := dblayer.UserSignup(username, enc_passwd, emailNumber, phoneNumber, 1, 0)
+			if suc {
+				w.Write([]byte("SUCCESS"))
+			} else {
+				w.Write([]byte("FAILED"))
+			}
 		} else {
-			w.Write([]byte("FAILED"))
+			suc := dblayer.UserSignup(username, enc_passwd, emailNumber, phoneNumber, 0, 1)
+			if suc {
+				w.Write([]byte("SUCCESS"))
+			} else {
+				w.Write([]byte("FAILED"))
+			}
 		}
+
 	} else {
 		w.Write([]byte("Signined"))
 	}
@@ -68,6 +80,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 	var location string
+	var token string
 
 	r.ParseForm()
 	username := r.Form.Get("username")
@@ -80,22 +93,46 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := GenToken(username)
-	upRes := dblayer.UpdateToken(username, token)
-	if !upRes {
-		w.Write([]byte("FAILED"))
-		return
-	}
 	//查询用户状态值
 	user, err := dblayer.GetUserStatus(username)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
+	/**
+	status=-1  普通用户
+	status=1   管理员
+	status=0   被禁账户
+	*/
+
 	//普通用户权限登录跳转
-	if user.Status == 0 {
+	if user.Status == -1 {
+		// 调用Token工具类生成带有标识信息的token
+		token, err = util.CreateToken([]byte(cfg.SecretKey), username, false)
+		if err != nil {
+			w.Write([]byte("Token Create Error"))
+		}
+		//token := GenToken(username)
+		upRes := dblayer.UpdateToken(username, token)
+		if !upRes {
+			w.Write([]byte("FAILED"))
+			return
+		}
+
 		location = "http://" + r.Host + "/static/view/home.html"
 		//管理员权限登录跳转
-	} else if user.Status == 7 {
+	} else if user.Status == 1 {
+		// 调用Token工具类生成带有标识信息的token
+		token, err = util.CreateToken([]byte(cfg.SecretKey), username, true)
+		if err != nil {
+			w.Write([]byte("Token Create Error"))
+		}
+		//token := GenToken(username)
+		upRes := dblayer.UpdateToken(username, token)
+		if !upRes {
+			w.Write([]byte("FAILED"))
+			return
+		}
 		location = "http://" + r.Host + "/static/view/admin.html"
 	}
 
@@ -116,6 +153,41 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 
+}
+
+/**
+返回用户密码重置验证方式，若是以邮箱验证注册，则返回邮箱号
+若是以手机验证注册侧，则返回手机号
+*/
+func CheckAuthHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. 解析请求参数
+	r.ParseForm()
+	username := r.Form.Get("fpusername")
+	user, err := dblayer.GetUsercheck(username)
+	if err != nil {
+		w.Write([]byte("None User"))
+	}
+	if user.Phone != "" { // 用户可以以手机号重置密码
+		w.Write([]byte(user.Phone))
+	} else {
+		w.Write([]byte(user.Email))
+	}
+}
+
+// 用户密码重置接口
+func ResetUserPwd(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.Form.Get("fpusername")
+	newpwd := r.Form.Get("newPWD")
+
+	enc_passwd := util.Sha1([]byte(newpwd + pwd_salt))
+
+	suc := dblayer.ResetPwd(username, enc_passwd)
+	if suc {
+		w.Write([]byte("SUCCESS"))
+	} else {
+		w.Write([]byte("FAILED"))
+	}
 }
 
 // UserInfoHandler ： 查询用户信息
@@ -140,13 +212,26 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 获取当前用户属下文件总数
+	fileTotal := dblayer.GetFileNumByUserName(username)
+
+	// 获取系统所有用户数
+	userTotal := dblayer.GetUserNum()
+
+	//获取系统所有文件数
+	allFileMetaTotal := dblayer.GetFileNum()
+
 	// 4. 组装并且响应用户数据
-	resp := util.RespMsg{
-		Code: 0,
-		Msg:  "OK",
-		Data: user,
+	resp := util.RespMsg2{
+		Code:             0,
+		Msg:              "OK",
+		Data:             user,
+		FileTotal:        fileTotal,
+		UserTotal:        userTotal,
+		AllFileMetaTotal: allFileMetaTotal,
 	}
-	w.Write(resp.JSONBytes())
+
+	w.Write(resp.JSONBytes2())
 }
 
 //更新用户信息
@@ -158,7 +243,6 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 	phone := r.Form.Get("phone")
 	password := r.Form.Get("password")
 	username := r.Form.Get("username")
-	fmt.Println(username, email, phone, password)
 	//如果密码有改动则调用更新密码的db方法
 	//如果密码无改动则调用不更新密码的db方法
 	if password != "" {
@@ -184,27 +268,28 @@ func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GenToken : 生成token
-func GenToken(username string) string {
-	// 40位字符:md5(username+timestamp+token_salt)+timestamp[:8]
-	ts := fmt.Sprintf("%x", time.Now().Unix())
-	tokenPrefix := util.MD5([]byte(username + ts + "_tokensalt"))
-	return tokenPrefix + ts[:8]
-}
-
-// IsTokenValid : token是否有效
-func IsTokenValid(token string) bool {
-	if len(token) != 40 {
-		return false
-	}
-	// TODO: 判断token的时效性，是否过期
-	// TODO: 从数据库表tbl_user_token查询username对应的token信息
-	// TODO: 对比两个token是否一致
-	return true
-}
+//// GenToken : 生成token
+//func GenToken(username string) string {
+//	// 40位字符:md5(username+timestamp+token_salt)+timestamp[:8]
+//	ts := fmt.Sprintf("%x", time.Now().Unix())
+//	tokenPrefix := util.MD5([]byte(username + ts + "_tokensalt"))
+//	return tokenPrefix + ts[:8]
+//}
+//
+//// IsTokenValid : token是否有效
+//func IsTokenValid(token string) bool {
+//	if len(token) != 40 {
+//		return false
+//	}
+//	// TODO: 判断token的时效性，是否过期
+//	// TODO: 从数据库表tbl_user_token查询username对应的token信息
+//	// TODO: 对比两个token是否一致
+//	return true
+//}
 
 //查询所有注册用户
 func UserQueryHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "GET" {
 		//返回上传html页面
 		data, err := ioutil.ReadFile("src/FileCloud/static/view/admin.html")
@@ -214,7 +299,12 @@ func UserQueryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		io.WriteString(w, string(data))
 	} else {
-		users, err := dblayer.GetAllUser()
+		r.ParseForm()
+
+		// 获取分页信息
+		pageIndex, _ := strconv.Atoi(r.Form.Get("PageIndex"))
+		pageSize, _ := strconv.Atoi(r.Form.Get("PageSize"))
+		users, err := dblayer.GetAllUser(pageIndex, pageSize)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -249,7 +339,6 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	status := r.Form.Get("status")
-	fmt.Println(username + password + status)
 	realStatus, _ := strconv.Atoi(status)
 	if len(username) == 0 || len(password) < 5 {
 		w.Write([]byte("invalid parameter"))
@@ -258,7 +347,6 @@ func AddAdmin(w http.ResponseWriter, r *http.Request) {
 
 	//用户名唯一性检验
 	user, _ := dblayer.GetUserInfo(username)
-	fmt.Println(user)
 	if user.Username == "" {
 		//对用户密码进行哈希的加密处理
 		enc_passwd := util.Sha1([]byte(password + pwd_salt))
@@ -317,4 +405,3 @@ func DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("用户删除失败！"))
 	}
 }
-

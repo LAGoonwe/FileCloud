@@ -14,7 +14,7 @@ func main() {
 	// 设置静态资源目录
 	//fsh := http.FileServer(http.Dir("src/FileCloud/static"))
 	//http.Handle("/static/", http.StripPrefix("/static/", fsh))
-	http.Handle("/static/", http.FileServer(http.Dir(staticdir())))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticdir()))))
 
 	// 文件相关
 	http.HandleFunc("/file/upload", handler.HTTPInterceptor(handler.UploadHandler))
@@ -46,10 +46,16 @@ func main() {
 	http.HandleFunc("/user/addAdmin", handler.AddAdmin)
 	http.HandleFunc("/user/delete", handler.HTTPInterceptor(handler.DeleteUserHandler))
 
+	// 重置密码相关
+	http.HandleFunc("/user/checkauth", handler.CheckAuthHandler)
+	http.HandleFunc("/user/resetpwd", handler.ResetUserPwd)
+	//手机邮箱验证接口
+	http.HandleFunc("/valide/email", handler.EmailValideHandler)
+	http.HandleFunc("/valide/phone", handler.PhoneValideHandler)
+
 	//第三方控制器
 	http.HandleFunc("/toLogin", handler.GetAuthCode)
 	http.HandleFunc("/qqLogin", handler.GetToken)
-
 
 	/**
 	= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -57,8 +63,9 @@ func main() {
 	/filebackend 为文件模块接口
 	/filemetabackend 为文件元数据模块接口
 	= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-	 */
-	// 文件上传（用户简单上传）√
+	*/
+	
+	// 文件上传（用户简单上传）
 	http.HandleFunc("/filebackend/upload", handler.HTTPInterceptor(backendhandler.BackendUploadHandler))
 	// 文件重命名√
 	http.HandleFunc("/filebackend/update", handler.HTTPInterceptor(backendhandler.UpdateBackendUserFilesName))
@@ -127,6 +134,8 @@ func main() {
 
 	// Bucket管理（SDK已实现，考虑到安全性问题，暂时不实现）
 
+
+	// Bucket管理（暂时不实现）
 
 	fmt.Printf("上传服务启动中，开始监听监听[%s]...\n", config.UploadServiceHost)
 

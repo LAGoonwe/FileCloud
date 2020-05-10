@@ -1,6 +1,8 @@
 package handler
 
 import (
+	cfg "FileCloud/config"
+	"FileCloud/util"
 	"fmt"
 	"net/http"
 )
@@ -14,8 +16,12 @@ func HTTPInterceptor(h http.HandlerFunc) http.HandlerFunc {
 			token := r.Form.Get("token")
 
 			fmt.Println("{username:" + username + "\ttoken:" + token + "}")
+			tokenVali, err := util.ParseToken(username, token, []byte(cfg.SecretKey))
+			if err != nil {
+				fmt.Println(err)
+			}
 
-			if len(username) < 3 || !IsTokenValid(token) {
+			if len(username) <= 0 || !tokenVali {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
