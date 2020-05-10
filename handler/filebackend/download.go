@@ -1,6 +1,7 @@
 package backendhandler
 
 import (
+	cfg "FileCloud/config"
 	"FileCloud/store/oss"
 	"FileCloud/util"
 	"io/ioutil"
@@ -30,6 +31,7 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -44,6 +46,7 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	fileMeta, err := CheckGlobalFileMeta(filehash)
@@ -54,6 +57,7 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	objectname := fileMeta.FileRelLocation
@@ -66,6 +70,7 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	data, err := ioutil.ReadAll(body)
@@ -107,6 +112,7 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -121,6 +127,7 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	fileMeta, err := CheckGlobalFileMeta(filehash)
@@ -145,6 +152,7 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("content-disposition", "attachment; filename=\"" +  fileName +"\"")
@@ -164,8 +172,6 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	username := r.Form.Get("username")
 	filehash := r.Form.Get("filehash")
-	// 断点续传临时文件位置，这个后面其实应该要定时清理的，提供下载完以后
-	filepath := r.Form.Get("filepath")
 
 	// 判断请求接口的用户是否是系统管理员
 	_, err := CheckUserStatus(username)
@@ -176,6 +182,7 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -190,6 +197,7 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	fileMeta, err := CheckGlobalFileMeta(filehash)
@@ -200,11 +208,13 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	objectName := fileMeta.FileRelLocation
 	fileName := fileMeta.FileName
-	_, err = oss.DownLoadPartsFile(objectName, filepath, 3)
+	preFilePath := cfg.PreUploadPath + username + objectName
+	_, err = oss.DownLoadPartsFile(objectName, preFilePath, 3)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -212,8 +222,9 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
-	localFile, err := os.Open(objectName)
+	preLocalFile, err := os.Open(preFilePath)
 	if err != nil {
 		log.Println("PartDownLoadFile Error")
 		resp := util.RespMsg{
@@ -222,10 +233,12 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
-	defer localFile.Close()
+	defer preLocalFile.Close()
 
-	data, err := ioutil.ReadAll(localFile)
+	data, err := ioutil.ReadAll(preLocalFile)
+	// 读取完文件后删除临时文件
 	if err != nil {
 		log.Println("DownLocalFile ReadAll Error")
 		resp := util.RespMsg{
@@ -234,6 +247,12 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
+	}
+	err = os.Remove(preFilePath)
+	if err != nil {
+		log.Println("OS Remove Error")
+		log.Println(err.Error())
 	}
 
 	// TODO 前端需要解决如何处理下载方式（当前前端是点击下载后直接触发下载到浏览器指定路径）
@@ -317,3 +336,6 @@ func LocalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 
+
+// 压缩下载
+// 暂时没必要实现，性能不是特别好，而且麻烦

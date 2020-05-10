@@ -332,3 +332,7 @@ func UpdateFileACL(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
+
+
+
+// 更改文件存储类型

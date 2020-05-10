@@ -190,6 +190,7 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -204,6 +205,7 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	limit, _ := strconv.Atoi(limitp)
@@ -211,15 +213,16 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
-			Msg:  "获取用户所有文件时发生错误！",
+			Msg:  "获取用户所有文件失败！",
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	resp := util.RespMsg{
 		Code: 1,
-		Msg:  "success",
+		Msg:  "获取用户所有文件时成功！",
 		Data: allUserFiles,
 	}
 	w.Write(resp.JSONBytes())
@@ -247,6 +250,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -261,6 +265,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	limit, _ := strconv.Atoi(limitp)
@@ -272,11 +277,13 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
+	// 为空的话直接返回空
 	resp := util.RespMsg{
 		Code: 1,
-		Msg:  "success",
+		Msg:  "根据用户名模糊查询文件成功！",
 		Data: matchFiles,
 	}
 	w.Write(resp.JSONBytes())
@@ -305,10 +312,12 @@ func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
 	params := make(map[string]string)
+	params["username"] = username
 	params["filename"] = filename
 	params["limit"] = limitp
 	_, err = CheckParams(params)
@@ -319,6 +328,7 @@ func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	limit, _ := strconv.Atoi(limitp)
@@ -330,11 +340,12 @@ func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	resp := util.RespMsg{
 		Code: 1,
-		Msg:  "success",
+		Msg:  "根据文件名模糊查询文件成功！",
 		Data: matchFiles,
 	}
 	w.Write(resp.JSONBytes())
@@ -396,4 +407,227 @@ func GetDownLoadFileURL(w http.ResponseWriter, r *http.Request) {
 		Data: downloadURL,
 	}
 	w.Write(resp.JSONBytes())
+}
+
+
+
+// 系统管理员列举OSS的所有文件
+func ListAllOSSFiles(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		w.Write([]byte("Forbidden"))
+		return
+	} else if r.Method == http.MethodPost {
+		r.ParseForm()
+		username := r.Form.Get("username")
+
+		// 判断请求接口的用户是否是系统管理员
+		_, err := CheckUserStatus(username)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "没有权限访问该接口",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		allOSSFiles, err := oss.ListFiles()
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "列举所有OSS文件失败！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "列举所有OSS文件成功！",
+			Data: allOSSFiles,
+		}
+		w.Write(resp.JSONBytes())
+	}
+}
+
+
+
+// 系统管理员获取文件权限
+func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		w.Write([]byte("Forbidden"))
+		return
+	} else if r.Method == http.MethodPost {
+		r.ParseForm()
+		username := r.Form.Get("username")
+		filename := r.Form.Get("filename")
+
+		// 判断请求接口的用户是否是系统管理员
+		_, err := CheckUserStatus(username)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "没有权限访问该接口",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		// 判断参数是否合法
+		params := make(map[string]string)
+		params["username"] = username
+		params["filename"] = filename
+		_, err = CheckParams(params)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "传入的参数不合法！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		objectName := username + "/" + filename
+		acl, err := oss.GetFileACL(objectName)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "获取文件权限失败！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "获取文件权限成功！",
+			Data: acl,
+		}
+		w.Write(resp.JSONBytes())
+	}
+}
+
+
+
+// 系统管理员设置文件权限
+func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		w.Write([]byte("Forbidden"))
+		return
+	} else if r.Method == http.MethodPost {
+		username := r.Form.Get("username")
+		filename := r.Form.Get("filename")
+		// 这里原则需要校验
+		acl := r.Form.Get("acl")
+
+		// 判断请求接口的用户是否是系统管理员
+		_, err := CheckUserStatus(username)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "没有权限访问该接口",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		// 判断参数是否合法
+		params := make(map[string]string)
+		params["username"] = username
+		params["filename"] = filename
+		_, err = CheckParams(params)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "传入的参数不合法！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		objectName := username + "/" + filename
+		_, err = oss.SetFileACL(objectName, acl)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "设置文件权限失败！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "设置文件权限成功！",
+			Data: acl,
+		}
+		w.Write(resp.JSONBytes())
+	}
+}
+
+
+
+// 判断OSS文件是否存在
+func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		w.Write([]byte("Forbidden"))
+		return
+	} else if r.Method == http.MethodPost {
+		username := r.Form.Get("username")
+		filename := r.Form.Get("filename")
+
+		// 判断请求接口的用户是否是系统管理员
+		_, err := CheckUserStatus(username)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "没有权限访问该接口",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		// 判断参数是否合法
+		params := make(map[string]string)
+		params["username"] = username
+		params["filename"] = filename
+		_, err = CheckParams(params)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "传入的参数不合法！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		objectName := username + "/" + filename
+		result, err := oss.IsExistFile(objectName)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "判断OSS文件是否存在失败！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "判断OSS文件是否存在成功！",
+			Data: result,
+		}
+		w.Write(resp.JSONBytes())
+	}
 }

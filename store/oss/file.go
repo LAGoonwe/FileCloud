@@ -51,6 +51,8 @@ func SetFileACL(objectName string, acl string) (bool, error) {
 		err = bucket.SetObjectACL(objectName, oss.ACLPublicRead)
 	} else if acl == "publicreadwrite" {
 		err = bucket.SetObjectACL(objectName, oss.ACLPublicReadWrite)
+	} else {
+		return false, errors.New("传入的权限码不正确！")
 	}
 
 	if err != nil {
@@ -137,11 +139,11 @@ func ModifyFileMeta(objectName string, props map[string]string) (bool, error) {
 
 // 简单列举所有文件
 // 还有更多的列举方式
-func ListFiles(objectName string) (bool, error) {
+func ListFiles() ([]string, error) {
 	bucket := Bucket()
 	if bucket == nil {
 		log.Println("获取Bucket失败")
-		return false, errors.New("获取Bucket失败")
+		return nil, errors.New("获取Bucket失败")
 	}
 
 	// 列举所有文件
@@ -152,7 +154,7 @@ func ListFiles(objectName string) (bool, error) {
 		if err != nil {
 			log.Println("ListObjects Failed")
 			log.Println(err.Error())
-			return false, err
+			return nil, err
 		}
 
 		// 默认情况下一次返回100条记录
@@ -166,7 +168,7 @@ func ListFiles(objectName string) (bool, error) {
 			break
 		}
 	}
-	return true, nil
+	return allFileKeys, nil
 }
 
 

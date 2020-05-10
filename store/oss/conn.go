@@ -38,7 +38,7 @@ func Bucket() *oss.Bucket {
 	return nil
 }
 
-//DownloadUrl:临时授权下载
+// DownloadUrl:临时授权下载
 func DownloadURL(objName string) string {
 	signedUrl, err := Bucket().SignURL(objName, oss.HTTPGet, 3600)
 	if err != nil {

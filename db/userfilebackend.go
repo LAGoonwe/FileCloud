@@ -73,6 +73,7 @@ func GetAllUserFiles(limit int) ([]BackendUserFile, error) {
 // 根据用户名检索文件
 func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
 	username = fmt.Sprintf("%x", "%" + username + "%")
+	fmt.Println(username)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
 		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where user_name = ? limit ?")
@@ -117,6 +118,7 @@ func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
 // 根据文件名检索文件
 func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
 	filename = fmt.Sprintf("%x", "%" + filename + "%")
+	fmt.Println(filename)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
 		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where user_name = ? limit ?")
@@ -424,6 +426,82 @@ func DeleteFile(filesha1 string) (bool, error) {
 	if err != nil {
 		log.Println("DeleteFile EXEC Failed")
 		log.Println(err.Error())
+		return false, err
+	}
+	return true, nil
+}
+
+
+
+// 根据用户名和文件名找到文件
+func GetFileByUserNameAndFileName(username, filename string) (bool, BackendUserFile, error) {
+	stmt, err := mydb.DBConn().Prepare(
+		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,status from tbl_user_file where user_name = ? and file_name = ?")
+	if err != nil {
+		log.Println("GetFileByUserNameAndFileName DB Failed")
+		log.Println(err.Error())
+		return false, BackendUserFile{}, err
+	}
+	defer stmt.Close()
+
+	backendFile := BackendUserFile{}
+	err = stmt.QueryRow(username, filename).Scan(
+		&backendFile.UserName, &backendFile.FileSha1, &backendFile.FileName, &backendFile.FileSize, &backendFile.FileAbsLocation, &backendFile.FileRelLocation, &backendFile.Status)
+	if err == sql.ErrNoRows {
+		return false, BackendUserFile{}, nil
+	} else if err != nil {
+		log.Println(err)
+		return false, BackendUserFile{} ,err
+	}
+	return true, BackendUserFile{}, nil
+}
+
+
+
+// 更新追加上传后的文件大小和文件hash
+func UpdateFileSizeAndFileHash(username, filename, filesha1 string, filesize int64) (bool, error) {
+	stmt, err := mydb.DBConn().Prepare(
+		"update tbl_user_file set file_size = ? and file_sha1 = ? where user_name = ? and file_name = ?")
+	if err != nil {
+		log.Println("UpdateFileSizeAndFileHash DB Failed")
+		log.Println(err.Error())
+		return false, err
+	}
+
+	result, err := stmt.Exec(filesize, filesha1, username, filename)
+	if err != nil {
+		log.Println("UpdateFileSizeAndFileHash EXEC Failed")
+		log.Println(err.Error())
+		return false, err
+	}
+	if rf, err := result.RowsAffected(); err == nil {
+		if rf < 0 {
+			log.Println("DB UpdateFileStatus No Data Update")
+			return false, errors.New("数据更新异常")
+		}
+	}
+	return true, nil
+}
+
+
+
+// 查询当前用户下的Object是否存在
+func IsExistObjectName(username, objectName string) (bool, error) {
+	stmt, err := mydb.DBConn().Prepare(
+		"select id from tbl_user_file where user_name = ? and file_rel_location = ?")
+	if err != nil {
+		log.Println("IsExistObjectName DB Failed")
+		log.Println(err.Error())
+		return false, err
+	}
+	var id int
+	defer stmt.Close()
+
+	err = stmt.QueryRow(username, objectName).Scan(&id)
+	if err == sql.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		log.Println(err)
 		return false, err
 	}
 	return true, nil

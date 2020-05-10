@@ -6,4 +6,7 @@ const (
 
 	// 上传文件本地存放路径
 	UploadPath = ""
+
+	// 临时上传文件本地存放路径
+	PreUploadPath = ""
 )

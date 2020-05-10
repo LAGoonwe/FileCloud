@@ -167,6 +167,7 @@ func PartUpload(objectName string, filePath string, routineNum int) (bool, error
 
 
 // 分片上传
+// 分片上传和断点续传的区别：前者是一块块上传上去，后者是上传上去后再合并
 func ComplexPartUpload(objectName string, filePath string, partNum int) (bool, error) {
 	bucket := Bucket()
 	if bucket == nil {
