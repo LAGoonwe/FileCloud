@@ -125,7 +125,7 @@
           <span id="msg3"></span>
         </div>
         <button id="SendEmail" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;margin-left: 12px" onclick="SendEmailCode()">发送邮件验证码</button>
-        <button id="SendPhone" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;margin-left: 12px" onclick="SendEmailCode()">发送手机验证码</button>
+        <button id="SendPhone" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;margin-left: 12px" onclick="SendPhoneCode()">发送手机验证码</button>
         <input id="CodeFromHandler" type="text" hidden="hidden">
 
 
@@ -252,6 +252,29 @@
         type: "POST",
         data: {
           "emailVal":$("#EmailNumber").val()
+        },
+        error:function (error) {
+          alert(error)
+        },
+        success:function (data) {
+          alert(data)
+          $("#CodeFromHandler").attr({"value": data});
+        }
+      })
+    }, 2000);
+  }
+
+  // 手机验证
+  function SendPhoneCode() {
+    let obj = $("#SendPhone")
+    settime(obj)
+    UIkit.notification({message: '手机验证码发送成功！<br>请注意查收短信！', status: 'success'})
+    setTimeout(() => {
+      $.ajax({
+        url: "/valide/phone",
+        type: "POST",
+        data: {
+          "phoneVal":$("#PhoneNumber").val()
         },
         error:function (error) {
           alert(error)

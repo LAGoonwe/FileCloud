@@ -11,6 +11,9 @@ import (
 
 var CODE string
 
+/**
+邮件验证处理器
+*/
 func EmailValideHandler(w http.ResponseWriter, r *http.Request) {
 	// 设定邮件头和邮件体
 
@@ -25,6 +28,24 @@ func EmailValideHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	emailVal := r.Form.Get("emailVal")
 	err := util.SendGoMail([]string{emailVal}, EmailTitle, EmailBody)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(CODE))
+}
+
+/**
+手机验证处理器
+*/
+
+func PhoneValideHandler(w http.ResponseWriter, r *http.Request) {
+	CODE = util.CreateCaptcha()
+
+	// 接收手机号参数
+	r.ParseForm()
+	phoneVal := r.Form.Get("phoneVal")
+	err := util.SendPhoneCode(util.CreateCaptcha(), phoneVal)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

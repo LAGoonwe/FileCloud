@@ -47,6 +47,7 @@ func main() {
 
 	//手机邮箱验证接口
 	http.HandleFunc("/valide/email", handler.EmailValideHandler)
+	http.HandleFunc("/valide/phone", handler.PhoneValideHandler)
 
 	//第三方控制器
 	http.HandleFunc("/toLogin", handler.GetAuthCode)
