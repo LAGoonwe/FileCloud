@@ -3,6 +3,7 @@ package handler
 import (
 	"FileCloud/util"
 	"net/http"
+	"strings"
 )
 
 /**
@@ -40,12 +41,18 @@ func EmailValideHandler(w http.ResponseWriter, r *http.Request) {
 */
 
 func PhoneValideHandler(w http.ResponseWriter, r *http.Request) {
-	CODE = util.CreateCaptcha()
+	var CODE = util.CreateCaptcha()
 
 	// 接收手机号参数
 	r.ParseForm()
 	phoneVal := r.Form.Get("phoneVal")
-	err := util.SendPhoneCode(util.CreateCaptcha(), phoneVal)
+
+	// 解决阿里云短信发送验证码开头为0时不显示的问题
+	if strings.HasPrefix(CODE, "0") {
+		CODE = "7" + CODE[1:5]
+	}
+
+	err := util.SendPhoneCode(CODE, phoneVal)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

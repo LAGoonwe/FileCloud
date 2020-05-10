@@ -70,14 +70,293 @@
 
         <button style="width: 235px;" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignin()">登录</button>
         <button style="width: 235px;" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignup()">注册</button>
+        <button style="width: 235px;" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" href="#modal-FindPwd" uk-toggle>密码重置</button>
       </div>
 
+    </div>
+  </div>
+
+  <!--密码找回模态框-->
+  <div id="modal-FindPwd" uk-modal style="text-align: center">
+    <div class="uk-modal-dialog uk-modal-body">
+      <div class="uk-margin" style="margin-bottom: 0 !important;">
+        <span style="color: red">*</span>
+        <div class="uk-inline">
+          <span class="uk-form-icon" uk-icon="icon: user"></span>
+          <input id="fpusername" class="uk-input" type="text" placeholder="请输入用户名">
+        </div>
+      </div>
+
+      <!-- 验证方式检测按钮 -->
+      <button style="width: 235px;margin-left: 12px;margin-top: 0 !important;" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="CheckAuth()">检测验证方式</button>
+      <script>
+        // 初始化隐藏
+        window.onload=function () {
+          $('#EmailInput').hide()
+          $('#PhoneInput').hide()
+          $('#SendEmail').hide()
+          $('#SendPhone').hide()
+          $('#NewPWDInput').hide()
+          $('#TIPCom').hide()
+        }
+
+      </script>
+
+
+      <p id="TIPCom"></p>
+      <div id="PhoneInput" class="uk-margin" style="margin-bottom: 0 !important;">
+        <span style="color: red">*</span>
+        <div class="uk-inline">
+          <span class="uk-form-icon" uk-icon="icon: phone"></span>
+          <input id="PhoneNumber" class="uk-input" type="text" placeholder="请输入手机号" onkeyup="Phonevalidate()">
+        </div><br>
+        <!-- 手机号校验信息提示 -->
+        <span id="msg4"></span>
+      </div>
+      <div id="EmailInput" class="uk-margin" style="margin-bottom: 0 !important;">
+        <span style="color: red">*</span>
+        <div class="uk-inline">
+          <span class="uk-form-icon" uk-icon="icon: mail"></span>
+          <input id="EmailNumber" class="uk-input" type="text" placeholder="请输入邮箱号" onkeyup="Emailvalidate()">
+        </div><br>
+        <!-- 邮箱校验信息提示 -->
+        <span id="msg3"></span>
+      </div>
+      <button id="SendEmail" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;margin-left: 12px" onclick="SendEmailCode()">发送邮件验证码</button>
+      <button id="SendPhone" disabled="disabled" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" style="width: 235px;margin-left: 12px" onclick="SendPhoneCode()">发送手机验证码</button>
+      <input id="CodeFromHandler" type="text" hidden="hidden">
+
+
+      <!-- 验证码输入框 -->
+      <div class="uk-margin" style="margin-top: 0 !important;">
+        <span style="color: red">*</span>
+        <div class="uk-inline">
+          <span class="uk-form-icon" uk-icon="icon: commenting"></span>
+          <input id="CodeFromInput" class="uk-input" type="text" placeholder="输入收到的验证码" onkeyup="validate2()">
+        </div><br>
+        <!-- 验证码校验信息提示 -->
+        <span id="msg2"></span>
+      </div>
+
+      <!-- 密码重置输入框 -->
+      <div  id="NewPWDInput" class="uk-margin" style="margin-top: 0 !important;">
+        <span style="color: red">*</span>
+        <div class="uk-inline">
+          <span class="uk-form-icon" uk-icon="icon: lock"></span>
+          <input id="NewPWDFromInput" class="uk-input" type="text" placeholder="输入新密码" >
+        </div><br>
+        <!-- 验证码校验信息提示 -->
+        <span id="msg2"></span>
+      </div>
+      <p class="uk-text-right">
+        <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+        <button id="SetNewPWD" class="uk-button uk-button-primary " type="button" onclick="FindPWD()">确定</button>
+      </p>
     </div>
   </div>
   <!--背景结束-->
 </div>
 </body>
 <script lang="javascript">
+
+  // 获取账户注册时的验证方式，注册时是哪一种验证方式，密码重置时就只能以该验证方式重置密码
+  function CheckAuth() {
+    var fpusername = document.getElementById('fpusername');
+
+    // 表单空验证
+    if (fpusername.value.length==0){
+      UIkit.notification({message: '请输入用户名', status: 'danger'})
+      return false
+    }
+    $.ajax({
+      url: "/user/checkauth",
+      type: "POST",
+      data: {
+        fpusername: fpusername.value
+      },
+      error: function (error) {
+        alert(error)
+      },
+      success: function (data) {
+        if (data == "None User"){
+          UIkit.notification({message: '该用户不存在！', status: 'danger'})
+        } else if (data.indexOf("@")>=0){
+          data = data.substring(0,3)+"********"+data.substring(data.indexOf("@"),data.length)
+          UIkit.notification({message: '支持以邮箱重置密码！', status: 'success'})
+          $('#PhoneInput').hide()
+          $('#SendPhone').hide()
+          $('#EmailInput').show()
+          $('#SendEmail').show()
+          // 邮箱提示
+          $('#TIPCom').text("请补全邮箱号"+data+"以进行密码重置验证")
+          $('#TIPCom').show()
+        }else {
+          data = data.substring(0,3)+"****"+data.substring(7,11)
+          UIkit.notification({message: '支持以手机号重置密码！', status: 'success'})
+          $('#EmailInput').hide()
+          $('#SendEmail').hide()
+          $('#PhoneInput').show()
+          $('#SendPhone').show()
+          // 手机号提示
+          $('#TIPCom').text("请补全手机号"+data+"以进行密码重置验证")
+          $('#TIPCom').show()
+        }
+      }
+    })
+  }
+
+  // 手机号格式校验
+  function Phonevalidate() {
+    if($("#PhoneNumber").val().match(/^1[34578]\d{9}$/)){
+      $("#msg4").html("手机号格式正确");
+      $("#msg4").css("color","green");
+      $("#SendPhone").removeAttr("disabled");
+    }else {
+      $("#msg4").html("手机号格式错误");
+      $("#msg4").css("color","red")
+      $("#SendPhone").attr("disabled","disabled");
+    }
+  }
+
+  // 邮件格式校验
+  function Emailvalidate() {
+    if (/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.test($('#EmailNumber').val()) == false) {
+      $("#msg3").html("邮箱格式错误");
+      $("#msg3").css("color","red")
+      $("#SendEmail").attr("disabled","disabled");
+    } else {
+      $("#msg3").html("邮箱格式正确");
+      $("#msg3").css("color","green");
+      $("#SendEmail").removeAttr("disabled");
+    }
+  }
+
+  <!-- 验证码一致性校验 -->
+  function validate2() {
+
+    var CodeFromHandler = $("#CodeFromHandler").val();
+    var CodeFromInput = $("#CodeFromInput").val();
+    <!-- 对比两次输入的密码 -->
+    if(CodeFromHandler == CodeFromInput && CodeFromHandler!="" && CodeFromInput!= "")
+    {
+      $("#msg2").html("验证码正确");
+      $("#msg2").css("color","green");
+      $("#SetNewPWD").removeAttr("disabled");
+
+      // 验证码正确才出现密码重置框
+      $('#NewPWDInput').show()
+    }else if (CodeFromHandler=="" && CodeFromInput== ""){
+      $("#msg2").html("请输入验证码");
+      $("#msg2").css("color","red")
+      $("#SetNewPWD").attr("disabled","disabled");
+    }
+    else {
+      $("#msg2").html("验证码错误");
+      $("#msg2").css("color","red")
+      $("#SetNewPWD").attr("disabled","disabled");
+    }
+  }
+
+  let countdown=60;
+
+  // 验证码倒计时
+  function settime(obj) { //发送验证码倒计时
+    if (countdown === 0) {
+      obj.attr('disabled',false);
+      //obj.removeattr("disabled");
+      obj.text("发送验证码");
+      countdown = 60;
+      return;
+    } else {
+      obj.attr('disabled',true);
+      obj.text("重新发送(" + countdown + ")");
+      countdown--;
+    }
+    setTimeout(function() {
+              settime(obj) }
+            ,1000)
+  }
+
+  // 邮箱验证
+  function SendEmailCode() {
+    let obj = $("#SendEmail")
+    settime(obj)
+    UIkit.notification({message: '邮件验证码发送成功！<br>请注意查收邮件！', status: 'success'})
+    setTimeout(() => {
+      $.ajax({
+        url: "/valide/email",
+        type: "POST",
+        data: {
+          "emailVal":$("#EmailNumber").val()
+        },
+        error:function (error) {
+          alert(error)
+        },
+        success:function (data) {
+          $("#CodeFromHandler").attr({"value": data});
+        }
+      })
+    }, 2000);
+  }
+
+  // 手机验证
+  function SendPhoneCode() {
+    let obj = $("#SendPhone")
+    settime(obj)
+    UIkit.notification({message: '手机验证码发送成功！<br>请注意查收短信！', status: 'success'})
+    setTimeout(() => {
+      $.ajax({
+        url: "/valide/phone",
+        type: "POST",
+        data: {
+          "phoneVal":$("#PhoneNumber").val()
+        },
+        error:function (error) {
+          alert(error)
+        },
+        success:function (data) {
+          $("#CodeFromHandler").attr({"value": data});
+        }
+      })
+    }, 2000);
+  }
+
+  // 密码找回
+  function FindPWD() {
+    var  codeFromInput= document.getElementById('CodeFromInput');
+    var newPWDFromInput = document.getElementById('NewPWDFromInput');
+    var fpusername = document.getElementById('fpusername');
+
+    // 表单空验证
+    if (codeFromInput.value.length==0 || newPWDFromInput.value.length==0 || fpusername.value.length==0){
+      UIkit.notification({message: '必填字段有空！请检查', status: 'danger'})
+      return false
+    }
+    $.ajax({
+      url: "/user/resetpwd",
+      type: "POST",
+      data: {
+        fpusername: fpusername.value,
+        newPWD: newPWDFromInput.value
+      },
+      error:function (error) {
+        alert(error)
+      },
+      success:function (data) {
+        if (data == "SUCCESS"){
+          UIkit.notification({message: '密码重置成功！<br>请记好您的新密码', status: 'success'})
+          setTimeout(function(){
+            window.location.reload();
+          }, 2000);
+        }else {
+          UIkit.notification({message: '密码重置失败！', status: 'danger'})
+        }
+      }
+    })
+
+  }
+
+  // 登录
   function onSignin() {
     var username = document.getElementById('username');
     var password = document.getElementById('password');

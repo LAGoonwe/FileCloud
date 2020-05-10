@@ -54,12 +54,22 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if user.Username == "" {
 		//对用户密码进行哈希的加密处理
 		enc_passwd := util.Sha1([]byte(passwd + pwd_salt))
-		suc := dblayer.UserSignup(username, enc_passwd, emailNumber, phoneNumber, 1, 0)
-		if suc {
-			w.Write([]byte("SUCCESS"))
+		if phoneNumber == "" {
+			suc := dblayer.UserSignup(username, enc_passwd, emailNumber, phoneNumber, 1, 0)
+			if suc {
+				w.Write([]byte("SUCCESS"))
+			} else {
+				w.Write([]byte("FAILED"))
+			}
 		} else {
-			w.Write([]byte("FAILED"))
+			suc := dblayer.UserSignup(username, enc_passwd, emailNumber, phoneNumber, 0, 1)
+			if suc {
+				w.Write([]byte("SUCCESS"))
+			} else {
+				w.Write([]byte("FAILED"))
+			}
 		}
+
 	} else {
 		w.Write([]byte("Signined"))
 	}
@@ -143,6 +153,41 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 
+}
+
+/**
+返回用户密码重置验证方式，若是以邮箱验证注册，则返回邮箱号
+若是以手机验证注册侧，则返回手机号
+*/
+func CheckAuthHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. 解析请求参数
+	r.ParseForm()
+	username := r.Form.Get("fpusername")
+	user, err := dblayer.GetUsercheck(username)
+	if err != nil {
+		w.Write([]byte("None User"))
+	}
+	if user.Phone != "" { // 用户可以以手机号重置密码
+		w.Write([]byte(user.Phone))
+	} else {
+		w.Write([]byte(user.Email))
+	}
+}
+
+// 用户密码重置接口
+func ResetUserPwd(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.Form.Get("fpusername")
+	newpwd := r.Form.Get("newPWD")
+
+	enc_passwd := util.Sha1([]byte(newpwd + pwd_salt))
+
+	suc := dblayer.ResetPwd(username, enc_passwd)
+	if suc {
+		w.Write([]byte("SUCCESS"))
+	} else {
+		w.Write([]byte("FAILED"))
+	}
 }
 
 // UserInfoHandler ： 查询用户信息

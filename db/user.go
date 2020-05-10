@@ -62,6 +62,41 @@ func UserSignin(username string, encpwd string) bool {
 	return false
 }
 
+// 返回用户验证方式（密码重置使用）
+func GetUsercheck(username string) (User, error) {
+	user := User{}
+
+	stmt, err := mydb.DBConn().Prepare(
+		"select email,phone from tbl_user where user_name=? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return user, err
+	}
+	defer stmt.Close()
+
+	// 执行查询的操作
+	err = stmt.QueryRow(username).Scan(&user.Email, &user.Phone)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+// 密码重置
+func ResetPwd(username, userpwd string) bool {
+	stmt, err := mydb.DBConn().Prepare("update tbl_user set user_pwd=? where user_name= ? limit 1")
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	_, err = stmt.Exec(userpwd, username)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	return true
+}
+
 //查询用户状态值
 func GetUserStatus(username string) (User, error) {
 	user := User{}

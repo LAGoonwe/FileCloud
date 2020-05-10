@@ -45,6 +45,9 @@ func main() {
 	http.HandleFunc("/user/addAdmin", handler.AddAdmin)
 	http.HandleFunc("/user/delete", handler.HTTPInterceptor(handler.DeleteUserHandler))
 
+	// 重置密码相关
+	http.HandleFunc("/user/checkauth", handler.CheckAuthHandler)
+	http.HandleFunc("/user/resetpwd", handler.ResetUserPwd)
 	//手机邮箱验证接口
 	http.HandleFunc("/valide/email", handler.EmailValideHandler)
 	http.HandleFunc("/valide/phone", handler.PhoneValideHandler)
