@@ -21,7 +21,7 @@ func HTTPInterceptor(h http.HandlerFunc) http.HandlerFunc {
 				fmt.Println(err)
 			}
 
-			if len(username) <= 0 || !tokenVali {
+			if len(username) <= 0 || !tokenVali || token == "" {
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}

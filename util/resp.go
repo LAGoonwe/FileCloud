@@ -21,6 +21,8 @@ type RespMsg2 struct {
 	FileTotal        int64       `json:"file_total"`
 	UserTotal        int64       `json:"user_total"`
 	AllFileMetaTotal int64       `json:"all_file_meta_total"`
+	AllUsers         interface{} `json:"all_users"`
+	AllFiles         interface{} `json:"all_files"`
 }
 
 func (resp *RespMsg2) JSONBytes2() []byte {

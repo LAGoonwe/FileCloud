@@ -3,7 +3,6 @@ package handler
 import (
 	"FileCloud/util"
 	"net/http"
-	"strings"
 )
 
 /**
@@ -46,11 +45,6 @@ func PhoneValideHandler(w http.ResponseWriter, r *http.Request) {
 	// 接收手机号参数
 	r.ParseForm()
 	phoneVal := r.Form.Get("phoneVal")
-
-	// 解决阿里云短信发送验证码开头为0时不显示的问题
-	if strings.HasPrefix(CODE, "0") {
-		CODE = "7" + CODE[1:5]
-	}
 
 	err := util.SendPhoneCode(CODE, phoneVal)
 	if err != nil {

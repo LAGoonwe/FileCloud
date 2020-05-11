@@ -58,7 +58,8 @@ func ParseToken(username, tokenSrt string, SecretKey []byte) (bool bool, err err
 
 	// 验证token中的sub值是否与登录进的用户名一致
 	claims := token.Claims
-	if claims.(jwt.MapClaims)["sub"] != username {
+	fmt.Println(claims)
+	if claims.(jwt.MapClaims)["sub"] != username || claims == nil {
 		fmt.Println("Token对象错误")
 		err = errors.New("Token对象错误")
 		return false, err

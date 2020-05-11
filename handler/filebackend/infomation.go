@@ -11,8 +11,6 @@ import (
 	"strconv"
 )
 
-
-
 // 批量查询对应用户的文件信息
 // 这种大数据量的接口不用系统的全局内存变量
 func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
@@ -46,8 +44,6 @@ func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 重命名文件
 // 重命名文件的操作跟移动文件相类似
@@ -169,8 +165,6 @@ func UpdateBackendUserFilesName(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
-
-
 // 管理员接口
 // 获取系统中的所有用户的文件（还没增加拦截器进行身份校验）
 // 这种大数据量的接口不用系统的全局内存变量
@@ -233,19 +227,17 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
-
-
-// 根据用户名模糊检索文件（暂时没考虑传入多个用户名的情况）
+// 根据名称模糊检索文件
 // 这种大数据量的接口不用系统的全局内存变量
-func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
+func GetBackendUserFilesByName(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Write([]byte("Forbidden"))
 	}
 
 	r.ParseForm()
 	username := r.Form.Get("username")
-	checkUsername := r.Form.Get("checkusername")
-	limitp := r.Form.Get("limit")
+	checkname := r.Form.Get("checkname")
+	//limitp := r.Form.Get("limit")
 
 	// 判断请求接口的用户是否是系统管理员
 	_, err := CheckUserStatus(username)
@@ -262,7 +254,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 	// 判断参数是否合法
 	params := make(map[string]string)
 	params["username"] = username
-	params["limit"] = limitp
+	//params["limit"] = limitp
 	_, err = CheckParams(params)
 	if err != nil {
 		resp := util.RespMsg{
@@ -274,12 +266,12 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, _ := strconv.Atoi(limitp)
-	matchFiles, err := dblayer.GetFilesByUserName(checkUsername, limit)
+	//limit, _ := strconv.Atoi(limitp)
+	matchFiles, err := dblayer.GetFilesByName(checkname)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
-			Msg:  "根据用户名模糊查询文件失败！",
+			Msg:  "根据名称模糊查询文件失败！",
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
@@ -289,67 +281,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 	// 为空的话直接返回空
 	resp := util.RespMsg{
 		Code: 1,
-		Msg:  "根据用户名模糊查询文件成功！",
-		Data: matchFiles,
-	}
-	w.Write(resp.JSONBytes())
-}
-
-// 根据文件名模糊检索文件（暂时没考虑传入多个文件名的情况）
-// 这种大数据量的接口不用系统的全局内存变量
-func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		w.Write([]byte("Forbidden"))
-	}
-
-	r.ParseForm()
-	username := r.Form.Get("username")
-	filename := r.Form.Get("filename")
-	limitp := r.Form.Get("limit")
-
-	// 判断请求接口的用户是否是系统管理员
-	_, err := CheckUserStatus(username)
-	if err != nil {
-		resp := util.RespMsg{
-			Code: -1,
-			Msg:  "没有权限访问该接口",
-			Data: "",
-		}
-		w.Write(resp.JSONBytes())
-		return
-	}
-
-	// 判断参数是否合法
-	params := make(map[string]string)
-	params["username"] = username
-	params["filename"] = filename
-	params["limit"] = limitp
-	_, err = CheckParams(params)
-	if err != nil {
-		resp := util.RespMsg{
-			Code: -1,
-			Msg:  "传入的参数不合法！",
-			Data: "",
-		}
-		w.Write(resp.JSONBytes())
-		return
-	}
-
-	limit, _ := strconv.Atoi(limitp)
-	matchFiles, err := dblayer.GetFilesByFileName(filename, limit)
-	if err != nil {
-		resp := util.RespMsg{
-			Code: -1,
-			Msg:  "根据文件名模糊查询文件失败！",
-			Data: "",
-		}
-		w.Write(resp.JSONBytes())
-		return
-	}
-
-	resp := util.RespMsg{
-		Code: 1,
-		Msg:  "根据文件名模糊查询文件成功！",
+		Msg:  "根据名称模糊查询文件成功！",
 		Data: matchFiles,
 	}
 	w.Write(resp.JSONBytes())
@@ -568,8 +500,6 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 }
-
-
 
 // 判断OSS文件是否存在
 func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {

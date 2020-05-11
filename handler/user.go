@@ -228,6 +228,12 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	//获取系统所有文件数
 	allFileMetaTotal := dblayer.GetFileNum()
 
+	// 加载系统所有用户--辅助搜索提示
+	allUsers, _ := dblayer.GetAllUserExcPage()
+
+	// 加载系统所有文件名--辅助搜索提示
+	allFiles, _ := dblayer.GetAllFilesExcPage()
+
 	// 4. 组装并且响应用户数据
 	resp := util.RespMsg2{
 		Code:             0,
@@ -236,6 +242,8 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 		FileTotal:        fileTotal,
 		UserTotal:        userTotal,
 		AllFileMetaTotal: allFileMetaTotal,
+		AllUsers:         allUsers,
+		AllFiles:         allFiles,
 	}
 
 	w.Write(resp.JSONBytes2())

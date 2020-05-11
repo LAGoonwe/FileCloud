@@ -267,6 +267,32 @@ func GetAllUser(pageIndex int, pageSize int) ([]User, error) {
 	return users, nil
 }
 
+// 查询所有用户-非分页-辅助提示面板
+func GetAllUserExcPage() ([]User, error) {
+	stmt, err := mydb.DBConn().Prepare("select user_name from tbl_user")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []User
+	for rows.Next() {
+		user := User{}
+		err = rows.Scan(&user.Username)
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
 //更新用户账户状态
 func UpdateUserStatus(username string, status int) bool {
 	stmt, err := mydb.DBConn().Prepare("update tbl_user set status= ? where user_name= ? limit 1")

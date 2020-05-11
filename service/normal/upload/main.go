@@ -95,10 +95,8 @@ func main() {
 	// 查看分块上传状态√---
 	http.HandleFunc("/filebackend/mpupload/uppartstatus", handler.HTTPInterceptor(backendhandler.MultipartUploadStatus))
 
-	// 系统管理员通过用户名模糊查询文件信息√---
-	http.HandleFunc("/filebackend/querybyusername", handler.HTTPInterceptor(backendhandler.GetBackendUserFilesByUserName))
-	// 系统管理员通过文件名模糊查询文件信息√---
-	http.HandleFunc("/filebackend/querybyfilename", handler.HTTPInterceptor(backendhandler.GetBackendUserFileByFileName))
+	// 系统管理员通过名称模糊查询文件信息√---
+	http.HandleFunc("/filebackend/querybyname", handler.HTTPInterceptor(backendhandler.GetBackendUserFilesByName))
 	// 系统管理员阿里云范围下载√---
 	http.HandleFunc("/filebackend/downloadrange", handler.HTTPInterceptor(backendhandler.RangeDownLoadFile))
 	// 系统管理员阿里云本地下载√---

@@ -128,7 +128,7 @@ func UpdateFileLocation(filehash string, fileaddr string) bool {
 	return false
 }
 
-// 获取系统所有文件数
+// 获取系统所有文件数--辅助分页
 func GetFileNum() int64 {
 	stmt, err := mydb.DBConn().Prepare(
 		"SELECT COUNT(*) FROM tbl_user_file;")

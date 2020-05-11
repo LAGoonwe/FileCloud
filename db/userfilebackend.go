@@ -64,23 +64,20 @@ func GetAllUserFiles(pageIndex, pageSize int) ([]BackendUserFile, error) {
 	return backendUserFiles, nil
 }
 
-// 根据用户名检索文件
-func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
-	username = fmt.Sprintf("%x", "%"+username+"%")
-	fmt.Println(username)
-	// 分页限制返回数量
+// 返回系统所有文件名--辅助搜索提示
+func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where user_name = ? limit ?")
+		"select file_name from tbl_user_file")
 	if err != nil {
-		log.Println("GetFilesByUserName DB Failed")
+		log.Println("GetAllFilesExcPage DB Failed")
 		log.Println(err.Error())
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(username, limit)
+	rows, err := stmt.Query()
 	if err != nil {
-		log.Println("GetFilesByUserName Query Failed")
+		log.Println("GetAllFilesExcPage QUERY Failed")
 		log.Println(err.Error())
 		return nil, err
 	}
@@ -88,42 +85,36 @@ func GetFilesByUserName(username string, limit int) ([]BackendUserFile, error) {
 	var backendUserFiles []BackendUserFile
 	for rows.Next() {
 		backendUserFile := BackendUserFile{}
-		err := rows.Scan(&backendUserFile.UserName, &backendUserFile.FileSha1, &backendUserFile.FileName, &backendUserFile.FileSize, &backendUserFile.FileAbsLocation, &backendUserFile.FileRelLocation, &backendUserFile.UploadAt, &backendUserFile.LastUpdate, &backendUserFile.Status)
+		err := rows.Scan(&backendUserFile.FileName)
 		if err != nil {
-			log.Println("GetFilesByUserName Scan Failed")
+			log.Println("GetAllFilesExcPage Scan Failed")
 			log.Println(err.Error())
 			continue
 		}
 		backendUserFiles = append(backendUserFiles, backendUserFile)
 	}
-
-	// 判断 backendUserFiles 是否为空
-	// 当前策略是没有数据直接返回空即可
-	//if (len(backendUserFiles) == 0) {
-	//	err = errors.New("系统中没有用户文件或发生错误。")
-	//	log.Println(err.Error())
-	//	return nil, err
-	//}
 	return backendUserFiles, nil
 }
 
-// 根据文件名检索文件
-func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
-	filename = fmt.Sprintf("%x", "%"+filename+"%")
-	fmt.Println(filename)
+// 根据名称检索文件
+func GetFilesByName(name string) ([]BackendUserFile, error) {
+	name = fmt.Sprintf("%s", "%"+name+"%")
+	fmt.Println(name)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where file_name = ? limit ?")
+		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where CONCAT(`user_name`,`file_name`)  like ?")
 	if err != nil {
-		log.Println("GetFilesByFileName DB Failed")
+		log.Println("GetFilesByName DB Failed")
 		log.Println(err.Error())
 		return nil, err
 	}
+	fmt.Println(stmt)
 	defer stmt.Close()
 
-	rows, err := stmt.Query(filename, limit)
+	rows, err := stmt.Query(name)
+	fmt.Println(rows)
 	if err != nil {
-		log.Println("GetFilesByFileName QUERY Failed")
+		log.Println("GetFilesByrName Query Failed")
 		log.Println(err.Error())
 		return nil, err
 	}
@@ -133,7 +124,7 @@ func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
 		backendUserFile := BackendUserFile{}
 		err := rows.Scan(&backendUserFile.UserName, &backendUserFile.FileSha1, &backendUserFile.FileName, &backendUserFile.FileSize, &backendUserFile.FileAbsLocation, &backendUserFile.FileRelLocation, &backendUserFile.UploadAt, &backendUserFile.LastUpdate, &backendUserFile.Status)
 		if err != nil {
-			log.Println("GetFilesByFileName Scan Failed")
+			log.Println("GetFilesByName Scan Failed")
 			log.Println(err.Error())
 			continue
 		}
@@ -147,6 +138,7 @@ func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
 	//	log.Println(err.Error())
 	//	return nil, err
 	//}
+	fmt.Println(backendUserFiles)
 	return backendUserFiles, nil
 }
 

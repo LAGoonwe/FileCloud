@@ -15,7 +15,7 @@ func SendPhoneCode(code, phoneNumber string) error {
 	request.SignName = "宙斯云盘"
 	request.TemplateCode = "SMS_189763409"
 
-	request.TemplateParam = "{\"code\":" + code + "}"
+	request.TemplateParam = "{\"code\":\"" + code + "\"}"
 
 	response, err := client.SendSms(request)
 	if err != nil {

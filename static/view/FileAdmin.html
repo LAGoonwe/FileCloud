@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>宙斯云盘-用户管理</title>
+    <title>宙斯云盘-文件管理</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../css/uikit.min.css" />
@@ -72,18 +72,23 @@
             <form action="javascript:void(0)">
                 <input id="searchInput" class="uk-input uk-form-width-large" type="text" placeholder="宙斯文件搜索--可根据用户名和文件名搜索">
                 <ul class="searchResult hide">ww</ul>
-                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage" >宙斯sou一下~</button>
+                <button class="uk-button uk-button-primary" href="#modal-full" uk-toggle onclick="SearchFilesByUserNmae()" >宙斯sou一下~</button>
             </form>
         </div>
 
         <!-- 搜索js逻辑 -->
         <script>
-            var arry = ["12", "2", "3", "4"];
-            function searchBtn() {
+            var arry = new Array()
+            function searchBtn(allusers,allfiles) {
+                for (i=0;i<allusers.length;i++){
+                    arry.push( allusers[i].Username)
+                }
+                for (j=0;j<allfiles.length;j++){
+                    arry.push( allfiles[j].FileName)
+                }
                 var searchInput = $.trim($("#searchInput").val());
                 // $(".searchResult").html(" ");
-                if (searchInput == "")
-                { alert("请输入搜索关键字");}
+                if (searchInput == "") {}
                 else {
                     if ($.inArray(searchInput, arry)>0) {   //如果input中的内容在数组中，
                         $(".searchResult").addClass("hide");
@@ -139,18 +144,31 @@
 
     </div>
 </nav>
-<!--搜索结果抽屉 -->
-<div id="offcanvas-usage" uk-offcanvas>
-    <div class="uk-offcanvas-bar">
-
-        <button class="uk-offcanvas-close" type="button" uk-close></button>
-
-        <h3>宙斯SOU</h3>
-
-        <div style=" overflow:scroll; width:100%; height:150%;">
-        <p>抱歉，未找到您想搜索的东西</p>
+<!--搜索结果全屏模态框 -->
+<div id="modal-full" class="uk-modal-full" uk-modal>
+    <div class="uk-modal-dialog">
+        <button class="uk-modal-close-full uk-close-large" type="button" uk-close></button>
+        <div class="uk-grid-collapse uk-child-width-1-2@s uk-flex-middle" uk-grid>
+            <div class="uk-background-cover" uk-height-viewport style="width: 100%">
+               <br>
+               <h2 style="text-align: center;">搜索结果</h2>
+                <hr class="uk-divider-icon">
+                <!-- 搜索结果展示tb-->
+                <table id="filetbBySearch" class="uk-table uk-table-hover uk-table-divider">
+                    <thead>
+                    <tr>
+                        <th>文件Hash值</th>
+                        <th>文件名</th>
+                        <th>文件大小</th>
+                        <th>创建时间</th>
+                        <th>最近修改时间</th>
+                        <th>归属用户</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
-
     </div>
 </div>
 
@@ -351,11 +369,13 @@
                 console.log(resp)
                 document.getElementById("adminname1").innerHTML = resp.data.Username;
                 document.getElementById("adminname2").innerHTML = resp.data.Username;
-                UserTotal = resp.user_total
-                updateFileList(UserTotal);
+                FileTotal = resp.all_file_meta_total
+                updateFileList(FileTotal)
 
-                // 注入获取所有文件名的方法
-                GetAllFileNames()
+                searchBtn(resp.all_users,resp.all_files)
+
+
+
             }
         });
     }
@@ -392,16 +412,16 @@
         //设置全局变量，需要更改发送的账户状态值
     var sendStatus
 
-    function updateFileList(UserTotal) {
+    function updateFileList(FileTotal) {
         var pageIndex
         // 激活分页插件
         P.initMathod({
             params: {elemId: '#Page',total:'10',pageNum:3,pageSize:7},
             requestFunction: function () {
                 //计算所需页码
-                num = Math.ceil(UserTotal/7)
+                num = Math.ceil(FileTotal/7)
                 P.config.pageNum = num
-                P.config.total = UserTotal
+                P.config.total = FileTotal
 
                 console.log(P.config)
                 pageIndex = P.config.pageIndex
@@ -430,16 +450,16 @@
                         var renameUserHtml = '<button id="{0}_status" class="uk-button uk-button-danger uk-button-small" ' +
                             'style="height:30px;margin:5px 3px;"' +
                             'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
-                            'update?CurlUsername={0}&{2}\')">禁用账户</button>';
+                            'update?CurlUsername={0}&{2}\')">权限设置</button>';
 
                         var upUserHtml = '<button id="{0}_up" class="uk-button uk-button-primary uk-button-small" ' +
                             'style="height:30px;margin:5px 3px;"' +
                             'onClick = "upUser(\'{0}\',1,\''+dlHost+'/status/' +
-                            'update?CurlUsername={0}&{2}\')">升级为系统管理员</button>';
+                            'update?CurlUsername={0}&{2}\')">本地下载</button>';
 
                         var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
                             ' style="height:30px;margin:5px 3px;"' +
-                            'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
+                            'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">文件冻结</button>';
 
 
                         // 序列化返回内容，转化为json数据
@@ -505,20 +525,101 @@
      * 根据用户名搜索文件js
      */
     function SearchFilesByUserNmae() {
+
+        if ( $('#searchInput').val() == ""){
+            $("#filetbBySearch").hide()
+        }
+
         $.ajax({
-            url: "/filebackend/querybyusername",
+            url: "/filebackend/querybyname?"+queryParams(),
             type: "POST",
             data: {
-                username:guest,
-               limit:15
+                checkname:$('#searchInput').val(),
             },
-            error: function (err) {
-                alert(JSON.stringify(err));
+            error: function (error) {
+                alert(error);
             },
-            success: function (data) {
-                alert(data)
+            success: function (response) {
+                var dlHost = 'http://localhost:9090';
+                var dlEntry = localStorage.getItem('downloadEntry');
+                if (dlEntry != null) {
+                    if (dlEntry.indexOf('http:')<0) {
+                        dlHost = 'http://' + dlEntry;
+                    } else {
+                        dlHost = dlEntry;
+                    }
+                }
+
+                var renameUserHtml = '<button id="{0}_status" class="uk-button uk-button-danger uk-button-small" ' +
+                    'style="height:30px;margin:5px 3px;"' +
+                    'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
+                    'update?CurlUsername={0}&{2}\')">权限设置</button>';
+
+                var upUserHtml = '<button id="{0}_up" class="uk-button uk-button-primary uk-button-small" ' +
+                    'style="height:30px;margin:5px 3px;"' +
+                    'onClick = "upUser(\'{0}\',1,\''+dlHost+'/status/' +
+                    'update?CurlUsername={0}&{2}\')">范围下载</button>';
+
+                var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
+                    ' style="height:30px;margin:5px 3px;"' +
+                    'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">文件冻结</button>';
+
+
+                // 序列化返回内容，转化为json数据
+                response = JSON.parse(response)
+
+                // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    console.log(response.data)
+                    for (var i = 0; i < response.data.length; i++) {
+                        var x = document.getElementById('filetbBySearch').insertRow();
+                        var cell = x.insertCell();
+                        cell.innerHTML = response.data[i].FileSha1.substr(0, 20) + "...";
+
+
+                        cell = x.insertCell();
+                        // 截取盘符
+                        Disk = response.data[i].FileAbsLocation.substring(0,response.data[i].FileAbsLocation.indexOf(":"))
+                        // 截取路径
+                        Path = response.data[i].FileAbsLocation.substring(response.data[i].FileAbsLocation.indexOf(":")+1,response.data[i].FileAbsLocation.length)
+                        cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"'" +
+                            " target='_blank' href= '"+dlHost+"/"+Disk+Path+"'>"
+                            + response.data[i].FileName.substring(0,50)+"</a>";
+
+                        cell = x.insertCell();
+                        cell.innerHTML = response.data[i].FileSize;
+
+                        cell = x.insertCell();
+                        var UploadAt = new Date(response.data[i].UploadAt)
+                        cell.innerHTML = formatDate(UploadAt);
+
+                        cell = x.insertCell();
+                        var LastUpdate = new Date(response.data[i].LastUpdate)
+                        cell.innerHTML = formatDate(LastUpdate);
+
+                        cell = x.insertCell();
+                        cell.innerHTML = response.data[i].UserName;
+
+                        cell = x.insertCell();
+                        cell.innerHTML = renameUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                            upUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                            deleteUserHtml.format(response.data[i].Username, queryParams());
+
+
+                        // if(data[i].Username == localStorage.getItem("username")){
+                        //     realStatus = data[i].Username+"_status"
+                        //     $("#"+realStatus).attr('disabled',true);
+                        //     $("#"+data[i].Username+"_delete").attr('disabled',true);
+                        // }
+                    }
+                }
             }
         });
+        // 清除原有页面的表格数据
+        $("#filetbBySearch tr:gt(0)").empty();
+        $("#filetbBySearch tr").not(':eq(0)').empty()
     }
 
     function toAddAdmin() {
