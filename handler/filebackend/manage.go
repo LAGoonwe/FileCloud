@@ -287,6 +287,7 @@ func UpdateFileACL(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	// 判断参数是否合法
@@ -301,6 +302,7 @@ func UpdateFileACL(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	fileMeta, err := CheckGlobalFileMeta(filehash)
@@ -311,6 +313,7 @@ func UpdateFileACL(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	objectName := fileMeta.FileRelLocation
@@ -323,6 +326,7 @@ func UpdateFileACL(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 
 	resp := util.RespMsg{
