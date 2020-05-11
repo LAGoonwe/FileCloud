@@ -9,4 +9,7 @@ const (
 
 	// 临时上传文件本地存放路径
 	PreUploadPath = ""
+
+	// 原生实现的分块上传路径
+	MultipartPath = ""
 )

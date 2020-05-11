@@ -80,16 +80,15 @@ func main() {
 	// 秒传√---
 	http.HandleFunc("/filebackend/fastupload", handler.HTTPInterceptor(backendhandler.BackendTryFastUpload))
 
-	// TODO 分块上传
-	// 初始化分块×
+	// 初始化分块√---
 	http.HandleFunc("/filebackend/mpupload/init", handler.HTTPInterceptor(backendhandler.InitialMultipartUpload))
-	// 上传文件分块×
+	// 上传文件分块√---
 	http.HandleFunc("/filebackend/mpupload/uppart", handler.HTTPInterceptor(backendhandler.UploadPart))
-	// 通知上传并合并×
+	// 通知上传并合并√---
 	http.HandleFunc("/filebackend/mpupload/complete", handler.HTTPInterceptor(backendhandler.CompleteUpload))
-	// 通知取消上传×
+	// 通知取消上传√---
 	http.HandleFunc("/filebackend/mpupload/canceluppart", handler.HTTPInterceptor(backendhandler.CancelUploadPart))
-	// 查看分块上传状态×
+	// 查看分块上传状态√---
 	http.HandleFunc("/filebackend/mpupload/uppartstatus", handler.HTTPInterceptor(backendhandler.MultipartUploadStatus))
 
 	// 系统管理员通过用户名模糊查询文件信息√---
@@ -105,15 +104,15 @@ func main() {
 
 	// 系统管理员获取全部文件信息√---
 	http.HandleFunc("/filebackend/all", handler.HTTPInterceptor(backendhandler.GetAllBackendUserFiles))
-	// 系统管理员上传字符串×
+	// 系统管理员上传字符√---
 	http.HandleFunc("/filebackend/uploadstring", handler.HTTPInterceptor(backendhandler.BackendUploadStringHandler))
-	// 系统管理员上传文件流（同上传本地文件实现原理）×
+	// 系统管理员上传文件流（同上传本地文件实现原理）√---
 	http.HandleFunc("/filebackend/uploadfile", handler.HTTPInterceptor(backendhandler.BackendUploadFileHandler))
-	// 系统管理员追加上传×
+	// 系统管理员追加上传√---
 	http.HandleFunc("/filebackend/uploadappend", handler.HTTPInterceptor(backendhandler.BackendAppendUpload))
-	// 系统管理员断点续传上传×
+	// 系统管理员断点续传上传√---
 	http.HandleFunc("/filebackend/uploadpart", handler.HTTPInterceptor(backendhandler.BackendPartUploadHandler))
-	// 系统管理员分片上传×
+	// 系统管理员分片上传√---
 	http.HandleFunc("/filebackend/uploadcomplexpart", handler.HTTPInterceptor(backendhandler.ComplexBackendPartUploadHandler))
 	// 系统管理员列举OSS的所有文件√---
 	http.HandleFunc("/filebackend/listallossfiles", handler.HTTPInterceptor(backendhandler.ListAllOSSFiles))
