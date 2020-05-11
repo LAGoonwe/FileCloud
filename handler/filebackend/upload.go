@@ -454,7 +454,6 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp.JSONBytes())
 			return
 		}
-
 		// 存在内容相同的文件
 		if result {
 			log.Println("重复上传同内容文件！")
@@ -525,6 +524,14 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	resp := util.RespMsg{
+		Code: 1,
+		Msg:  "上传阿里云字符串文件成功！",
+		Data: "",
+	}
+	w.Write(resp.JSONBytes())
+	return
 }
 
 // 阿里云上传文件流
@@ -610,7 +617,7 @@ func BackendUploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			resp := util.RespMsg{
 				Code: -1,
-				Msg:  "上传文件失败！",
+				Msg:  "上传阿里云文件流失败！",
 				Data: "",
 			}
 			w.Write(resp.JSONBytes())
@@ -668,12 +675,20 @@ func BackendUploadFileHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
-				Msg:  "上传文件失败！",
+				Msg:  "上传阿里云文件流失败！",
 				Data: "",
 			}
 			w.Write(resp.JSONBytes())
 			return
 		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "上传阿里云文件流成功！",
+			Data: "",
+		}
+		w.Write(resp.JSONBytes())
+		return
 	}
 }
 
@@ -692,12 +707,12 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		// 现在默认只支持内容追加到末尾
 		// 追加到指定位置的操作还需要自行实现，同时对性能影响较大
 		//startPos := r.Form.Get("start")
-		appendValue := r.Form.Get("append")
+		appendValue := r.Form.Get("appendvalue")
 
 		// 判断参数是否合法
 		params := make(map[string]string)
 		params["username"] = username
-		params["filehash"] = filename
+		params["filename"] = filename
 		_, err := CheckParams(params)
 		if err != nil {
 			resp := util.RespMsg{
@@ -719,7 +734,7 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// 判断该文件是否已存在
+		// 判断该文件是否存在
 		result, err := dblayer.IsExistSameNameFile(username, filename)
 		if err != nil {
 			resp := util.RespMsg{
@@ -855,6 +870,13 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp.JSONBytes())
 			return
 		}
+
+		resp := util.RespMsg{
+			Code: 1,
+			Msg:  "阿里云分片上传文件成功！",
+			Data: "",
+		}
+		w.Write(resp.JSONBytes())
 	}
 }
 
@@ -1006,7 +1028,7 @@ func BackendPartUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resp := util.RespMsg{
-			Code: -1,
+			Code: 1,
 			Msg:  "阿里云断点续传上传文件成功！",
 			Data: "",
 		}
@@ -1162,7 +1184,7 @@ func ComplexBackendPartUploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resp := util.RespMsg{
-			Code: -1,
+			Code: 1,
 			Msg:  "阿里云分片上传文件成功！",
 			Data: "",
 		}

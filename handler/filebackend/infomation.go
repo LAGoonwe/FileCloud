@@ -11,6 +11,8 @@ import (
 	"strconv"
 )
 
+
+
 // 批量查询对应用户的文件信息
 // 这种大数据量的接口不用系统的全局内存变量
 func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +46,8 @@ func QueryBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
+
+
 
 // 重命名文件
 // 重命名文件的操作跟移动文件相类似
@@ -165,6 +169,8 @@ func UpdateBackendUserFilesName(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+
+
 // 管理员接口
 // 获取系统中的所有用户的文件（还没增加拦截器进行身份校验）
 // 这种大数据量的接口不用系统的全局内存变量
@@ -227,6 +233,8 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+
+
 // 根据用户名模糊检索文件（暂时没考虑传入多个用户名的情况）
 // 这种大数据量的接口不用系统的全局内存变量
 func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
@@ -236,6 +244,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	username := r.Form.Get("username")
+	checkUsername := r.Form.Get("checkusername")
 	limitp := r.Form.Get("limit")
 
 	// 判断请求接口的用户是否是系统管理员
@@ -266,7 +275,7 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit, _ := strconv.Atoi(limitp)
-	matchFiles, err := dblayer.GetFilesByUserName(username, limit)
+	matchFiles, err := dblayer.GetFilesByUserName(checkUsername, limit)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -559,6 +568,8 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 }
+
+
 
 // 判断OSS文件是否存在
 func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {
