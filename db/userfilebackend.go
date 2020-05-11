@@ -22,12 +22,12 @@ type BackendUserFile struct {
 }
 
 // 获取系统中所有用户的文件
-func GetAllUserFiles(limit int) ([]BackendUserFile, error) {
+func GetAllUserFiles(pageIndex, pageSize int) ([]BackendUserFile, error) {
 	// 分页限制返回数量
 	// 返回用户文件的所有信息：
 	// 用户名，文件hash值，文件名，文件大小，文件绝对路径，文件相对路径（OSS），上传时间，最近更新时间，文件状态
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file limit ?")
+		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file limit ?,?")
 	if err != nil {
 		log.Println("GetAllUserFiles DB Failed")
 		log.Println(err.Error())
@@ -35,7 +35,7 @@ func GetAllUserFiles(limit int) ([]BackendUserFile, error) {
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(limit)
+	rows, err := stmt.Query((pageIndex-1)*pageSize, pageSize)
 	if err != nil {
 		log.Println("GetAllUserFiles QUERY Failed")
 		log.Println(err.Error())
@@ -113,7 +113,7 @@ func GetFilesByFileName(filename string, limit int) ([]BackendUserFile, error) {
 	fmt.Println(filename)
 	// 分页限制返回数量
 	stmt, err := mydb.DBConn().Prepare(
-		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where user_name = ? limit ?")
+		"select user_name,file_sha1,file_name,file_size,file_abs_location,file_rel_location,upload_at,last_update,status from tbl_user_file where file_name = ? limit ?")
 	if err != nil {
 		log.Println("GetFilesByFileName DB Failed")
 		log.Println(err.Error())
@@ -366,7 +366,7 @@ func UpdateFileName(filesha1, newFileName, fileAbsLocation, fileRelLocation stri
 // filesha1这种值不应该暴露给用户吗，本地服务器的绝对路径也是，存在安全风险
 func QueryBackendUserFiles(username string, pageIndex, pageSize int) ([]BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select file_sha1,file_name,file_size,file_rel_location,status,upload_at,last_update from tbl_user_file where user_name = ? limit ?,?")
+		"select file_sha1,file_name,file_size,file_abs_location,file_rel_location,status,upload_at,last_update from tbl_user_file where user_name = ? limit ?,?")
 	if err != nil {
 		log.Println("QueryBackendUserFiles DB Failed")
 		log.Println(err.Error())
@@ -385,7 +385,7 @@ func QueryBackendUserFiles(username string, pageIndex, pageSize int) ([]BackendU
 	for rows.Next() {
 		backendUserFile := BackendUserFile{}
 		err = rows.Scan(
-			&backendUserFile.FileSha1, &backendUserFile.FileName, &backendUserFile.FileSize,
+			&backendUserFile.FileSha1, &backendUserFile.FileName, &backendUserFile.FileSize, &backendUserFile.FileAbsLocation,
 			&backendUserFile.FileRelLocation, &backendUserFile.Status, &backendUserFile.UploadAt, &backendUserFile.LastUpdate)
 		if err != nil {
 			log.Println("QueryBackendUserFiles Scan Failed")

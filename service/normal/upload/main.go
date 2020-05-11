@@ -5,6 +5,7 @@ import (
 	"FileCloud/handler"
 	backendhandler "FileCloud/handler/filebackend"
 	"FileCloud/handler/filemetabackend"
+	"FileCloud/util"
 	"fmt"
 	"net/http"
 )
@@ -15,6 +16,9 @@ func main() {
 	//fsh := http.FileServer(http.Dir("src/FileCloud/static"))
 	//http.Handle("/static/", http.StripPrefix("/static/", fsh))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticdir()))))
+
+	// 搭建指定目录的本地服务器【指定目录即为config里的UploadPath】
+	util.LocalFileServerWithUploadPath()
 
 	// 文件相关
 	http.HandleFunc("/file/upload", handler.HTTPInterceptor(handler.UploadHandler))
@@ -133,7 +137,6 @@ func main() {
 	http.HandleFunc("/filebackend/getobjectrecord", handler.HTTPInterceptor(filemetabackend.GetObjectMetaRecord))
 
 	// Bucket管理（SDK已实现，考虑到安全性问题，暂时不实现）
-
 
 	// Bucket管理（暂时不实现）
 

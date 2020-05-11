@@ -46,6 +46,12 @@
         .logo{
             height: 100%;
         }
+
+         .searchResult{width: 500px;position: absolute; background-color: #fff;
+            border: 1px solid #bbb; overflow: hidden; padding: 3px 5px;box-sizing: border-box;max-height:280px;overflow-y:auto;margin-top: 0!important;}
+         .hide{display: none}
+        .searchResult li{padding:3px 0;}
+        .searchResult li:hover{cursor:pointer;}
     </style>
 </head>
 <body>
@@ -58,16 +64,65 @@
             <li>
                 <a href="#">
                     <span class="uk-icon uk-margin-small-right" uk-icon="icon: star"></span>
-                    宙斯云盘-用户管理
+                    宙斯云盘-文件管理
                 </a>
             </li>
         </ul>
         <div class="uk-navbar-item">
             <form action="javascript:void(0)">
-                <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
-                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+                <input id="searchInput" class="uk-input uk-form-width-large" type="text" placeholder="宙斯文件搜索--可根据用户名和文件名搜索">
+                <ul class="searchResult hide">ww</ul>
+                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage" >宙斯sou一下~</button>
             </form>
         </div>
+
+        <!-- 搜索js逻辑 -->
+        <script>
+            var arry = ["12", "2", "3", "4"];
+            function searchBtn() {
+                var searchInput = $.trim($("#searchInput").val());
+                // $(".searchResult").html(" ");
+                if (searchInput == "")
+                { alert("请输入搜索关键字");}
+                else {
+                    if ($.inArray(searchInput, arry)>0) {   //如果input中的内容在数组中，
+                        $(".searchResult").addClass("hide");
+                    }
+                    else {
+                        $(".searchResult").addClass("hide");
+                        alert("请输入正确的名称");
+                    }
+                }
+            }
+            $(function () {
+                //input框输入内容时
+                $("#searchInput").keyup(function () {
+                    $(".searchResult").html("");
+                    var searchInput = $.trim($(this).val().toString());
+                    if (searchInput != "") {
+                        $.each(arry, function (index, val) {
+                            //如果输入的内容包括在数据中，就将其加入ul li中
+                            if (val.indexOf(searchInput) != -1) {
+                                $(".searchResult").append("<li>" + val + "</li>");
+                            }
+                            //如果ul中有子元素，则ul显示出来
+                            if ($(".searchResult").html()!="") {
+                                $(".searchResult").removeClass("hide");
+                            }
+                        })
+                    }
+                    //点击ul li中的数据，将其写入input中并清空ul中数据，隐藏ul。
+                    $(".searchResult li").click(function () {
+                        $("#searchInput").val($(this).html());
+                        $(this).parent().html();
+                        $(".searchResult").addClass("hide");
+                    })
+                    return false;
+                })
+
+            })
+        </script>
+
         <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-push" style="float: right;margin-right: 30px;">更多操作</button>
 
         <div class="uk-card-header">
@@ -92,7 +147,9 @@
 
         <h3>宙斯SOU</h3>
 
+        <div style=" overflow:scroll; width:100%; height:150%;">
         <p>抱歉，未找到您想搜索的东西</p>
+        </div>
 
     </div>
 </div>
@@ -109,7 +166,6 @@
             <h3 id="adminname2" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
             <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
         </div>
-        <button class="uk-button uk-button-primary" href="#modal-add-admin" uk-toggle>添加管理员</button>
         <br> <br>
         <button class="uk-button uk-button-primary" onclick="toFileMan()">文件管理</button>
         <br> <br>
@@ -155,41 +211,17 @@
 </div>
 
 <div id="warp">
-    <!-- 左部昵称信息头像div
-    <div class="lefter">
-        <dl class="uk-description-list uk-description-list-divider">
-
-            <div class="uk-card">
-                <div class="uk-card-header">
-                    <div class="uk-grid-small uk-flex-middle" uk-grid>
-                        <div class="uk-width-expand">
-                            <h3 class="uk-card-title uk-margin-remove-bottom">文琪</h3>
-                            <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="uk-card-body">
-
-                </div>
-                <div class="uk-card-footer">
-                </div>
-            </div>
-
-
-        </dl>
-    </div> -->
-
     <!--右部文件信息及操作div-->
     <div class="righter">
         <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
             <thead>
             <tr>
-                <th>系统用户名</th>
-                <th>邮箱</th>
-                <th>手机号</th>
-                <th>注册时间</th>
-                <th>最近活跃时间</th>
-                <th>账户状态</th>
+                <th>文件Hash值</th>
+                <th>文件名</th>
+                <th>文件大小</th>
+                <th>创建时间</th>
+                <th>最近修改时间</th>
+                <th>归属用户</th>
                 <th>操作</th>
             </tr>
             </thead>
@@ -321,6 +353,9 @@
                 document.getElementById("adminname2").innerHTML = resp.data.Username;
                 UserTotal = resp.user_total
                 updateFileList(UserTotal);
+
+                // 注入获取所有文件名的方法
+                GetAllFileNames()
             }
         });
     }
@@ -347,7 +382,14 @@
             checkTime(minutes)+":"+checkTime(seconds));
     }
 
-    //设置全局变量，需要更改发送的账户状态值
+    /**
+     * 获取所有的文件名，辅助搜索
+     */
+    function GetAllFileNames() {
+
+    }
+
+        //设置全局变量，需要更改发送的账户状态值
     var sendStatus
 
     function updateFileList(UserTotal) {
@@ -365,7 +407,7 @@
                 pageIndex = P.config.pageIndex
 
                 $.ajax({
-                    url: "/user/query?" + queryParams(),
+                    url: "/filebackend/all?" + queryParams(),
                     type: "POST",
                     data: {
                         PageIndex: pageIndex, // 当前点击的页码
@@ -374,15 +416,7 @@
                     error: function (err) {
                         alert(JSON.stringify(err));
                     },
-                    success: function (body) {
-                        if (!body) {
-                            return;
-                        }
-                        var data = body;
-                        if (!data || data.length <= 0) {
-                            return;
-                        }
-
+                    success: function (response) {
                         var dlHost = 'http://localhost:9090';
                         var dlEntry = localStorage.getItem('downloadEntry');
                         if (dlEntry != null) {
@@ -408,66 +442,54 @@
                             'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">删除</button>';
 
 
+                        // 序列化返回内容，转化为json数据
+                        response = JSON.parse(response)
+
+                        // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
+                        if (response.code == -1){
+                            UIkit.notification({message: response.msg, status: 'danger'})
+                        }else {
+                            console.log(response.data)
+                            for (var i = 0; i < response.data.length; i++) {
+                                var x = document.getElementById('filetbl').insertRow();
+                                var cell = x.insertCell();
+                                cell.innerHTML = response.data[i].FileSha1.substr(0, 20) + "...";
 
 
-                        data = JSON.parse(data).data
-                        console.log( data)
-                        for (var i = 0; i < data.length; i++) {
-                            var x = document.getElementById('filetbl').insertRow();
-                            var cell = x.insertCell();
-                            cell.innerHTML = data[i].Username;
-                            cell.id = data[i].Username
+                                cell = x.insertCell();
+                                // 截取盘符
+                                Disk = response.data[i].FileAbsLocation.substring(0,response.data[i].FileAbsLocation.indexOf(":"))
+                                // 截取路径
+                                Path = response.data[i].FileAbsLocation.substring(response.data[i].FileAbsLocation.indexOf(":")+1,response.data[i].FileAbsLocation.length)
+                                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"'" +
+                                    " target='_blank' href= '"+dlHost+"/"+Disk+Path+"'>"
+                                    + response.data[i].FileName.substring(0,50)+"</a>";
 
-                            cell = x.insertCell();
-                            cell.innerHTML = data[i].Email;
+                                cell = x.insertCell();
+                                cell.innerHTML = response.data[i].FileSize;
 
-                            cell = x.insertCell();
-                            cell.innerHTML = data[i].Phone;
+                                cell = x.insertCell();
+                                var UploadAt = new Date(response.data[i].UploadAt)
+                                cell.innerHTML = formatDate(UploadAt);
 
-                            cell = x.insertCell();
-                            var SignupAt = new Date(data[i].SignupAt)
-                            cell.innerHTML = formatDate(SignupAt);
+                                cell = x.insertCell();
+                                var LastUpdate = new Date(response.data[i].LastUpdate)
+                                cell.innerHTML = formatDate(LastUpdate);
 
-                            cell = x.insertCell();
-                            var LastActiveAt = new Date(data[i].LastActiveAt)
-                            cell.innerHTML = formatDate(LastActiveAt);
+                                cell = x.insertCell();
+                                cell.innerHTML = response.data[i].UserName;
 
-                            //账户状态值单元格
-                            cell2 = x.insertCell();
+                                cell = x.insertCell();
+                                cell.innerHTML = renameUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                                    upUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                                    deleteUserHtml.format(response.data[i].Username, queryParams());
 
 
-
-                            cell = x.insertCell();
-                            cell.innerHTML = renameUserHtml.format(data[i].Username, data[i].Status, queryParams())+
-                                upUserHtml.format(data[i].Username, data[i].Status, queryParams())+
-                                deleteUserHtml.format(data[i].Username, queryParams());
-
-                            //开始对账户状态值单元格做判断
-                            if (data[i].Status == -1){
-                                cell2.innerHTML = "普通用户/正常使用中...";
-
-                            }else if (data[i].Status == 1){
-                                cell2.innerHTML = "系统管理员/正常使用中...";
-
-                                $("#"+data[i].Username+"_up").hide();
-
-                            }else if (data[i].Status == 0){
-                                cell2.innerHTML = "账户已被封禁";
-                                console.log(data[i].Status)
-                                //更改按钮文案为恢复账户
-                                //唯一状态值标识
-                                realStatus = data[i].Username+"_status"
-                                $('#'+realStatus).text("恢复账户");
-
-                                //更改按钮颜色
-                                $('#'+realStatus).attr("class","uk-button uk-button-primary uk-button-small");
-
-                            }
-
-                            if(data[i].Username == localStorage.getItem("username")){
-                                realStatus = data[i].Username+"_status"
-                                $("#"+realStatus).attr('disabled',true);
-                                $("#"+data[i].Username+"_delete").attr('disabled',true);
+                                // if(data[i].Username == localStorage.getItem("username")){
+                                //     realStatus = data[i].Username+"_status"
+                                //     $("#"+realStatus).attr('disabled',true);
+                                //     $("#"+data[i].Username+"_delete").attr('disabled',true);
+                                // }
                             }
                         }
                     }
@@ -475,6 +497,26 @@
                 // 清除原有页面的表格数据---配合分页使用
                 $("#filetbl tr:gt(0)").empty();
                 $("#filetbl tr").not(':eq(0)').empty()
+            }
+        });
+    }
+
+    /**
+     * 根据用户名搜索文件js
+     */
+    function SearchFilesByUserNmae() {
+        $.ajax({
+            url: "/filebackend/querybyusername",
+            type: "POST",
+            data: {
+                username:guest,
+               limit:15
+            },
+            error: function (err) {
+                alert(JSON.stringify(err));
+            },
+            success: function (data) {
+                alert(data)
             }
         });
     }

@@ -170,6 +170,7 @@
     <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
       <thead>
       <tr>
+        <th>文件Hash</th>
         <th>文件名</th>
         <th>文件大小</th>
         <th>上传时间</th>
@@ -558,7 +559,17 @@
                 var x = document.getElementById('filetbl').insertRow();
 
                 cell = x.insertCell();
-                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"' target='_blank' href= "+"#"+">"+ response.data[i].FileName.substring(0,50)+"</a>";
+                cell.innerHTML =  "<a uk-tooltip="+response.data[i].FileSha1+">"
+                + response.data[i].FileSha1.substring(0,10)+"...</a>";
+
+                cell = x.insertCell();
+                // 截取盘符
+                Disk = response.data[i].FileAbsLocation.substring(0,response.data[i].FileAbsLocation.indexOf(":"))
+                // 截取路径
+                Path = response.data[i].FileAbsLocation.substring(response.data[i].FileAbsLocation.indexOf(":")+1,response.data[i].FileAbsLocation.length)
+                cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"'" +
+                        " target='_blank' href= '"+dlHost+"/"+Disk+Path+"'>"
+                        + response.data[i].FileName.substring(0,50)+"</a>";
 
                 cell = x.insertCell();
                 cell.innerHTML = response.data[i].FileSize+" KB";

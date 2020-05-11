@@ -17,14 +17,12 @@ func CheckUserStatus(username string) (bool, error) {
 		log.Println(err.Error())
 		return false, err
 	}
-	if user.Status != 7 {
+	if user.Status != 1 {
 		err := errors.New("Forbidden")
 		return false, err
 	}
 	return true, nil
 }
-
-
 
 // 判断参数是否合法(通用)
 func CheckParams(params map[string]string) (bool, error) {
@@ -89,7 +87,6 @@ func CheckParams(params map[string]string) (bool, error) {
 	}
 	return true, nil
 }
-
 
 // 操作时顺带将数据存入全局变量中，提升下一次的查找时间
 func CheckGlobalFileMeta(filehash string) (*meta.BackendFile, error) {

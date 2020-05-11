@@ -175,7 +175,8 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseForm()
 	username := r.Form.Get("username")
-	limitp := r.Form.Get("limit")
+	pageIndexp := r.Form.Get("PageIndex")
+	pageSizep := r.Form.Get("PageSize")
 
 	// 判断请求接口的用户是否是系统管理员
 	_, err := CheckUserStatus(username)
@@ -192,7 +193,8 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 	// 判断参数是否合法
 	params := make(map[string]string)
 	params["username"] = username
-	params["limit"] = limitp
+	params["pageIndex"] = pageIndexp
+	params["pageSize"] = pageSizep
 	_, err = CheckParams(params)
 	if err != nil {
 		resp := util.RespMsg{
@@ -204,8 +206,9 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, _ := strconv.Atoi(limitp)
-	allUserFiles, err := dblayer.GetAllUserFiles(limit)
+	pageIndex, _ := strconv.Atoi(pageIndexp)
+	pageSize, _ := strconv.Atoi(pageSizep)
+	allUserFiles, err := dblayer.GetAllUserFiles(pageIndex, pageSize)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -218,7 +221,7 @@ func GetAllBackendUserFiles(w http.ResponseWriter, r *http.Request) {
 
 	resp := util.RespMsg{
 		Code: 1,
-		Msg:  "获取用户所有文件时成功！",
+		Msg:  "获取用户所有文件成功！",
 		Data: allUserFiles,
 	}
 	w.Write(resp.JSONBytes())

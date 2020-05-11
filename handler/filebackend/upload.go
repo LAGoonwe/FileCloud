@@ -14,8 +14,6 @@ import (
 	"os"
 )
 
-
-
 // 本地上传文件
 // 这里也是可以实现秒传的
 func BackendUploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -168,8 +166,6 @@ func BackendUploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/static/view/home.html", http.StatusFound)
 	}
 }
-
-
 
 // 秒传
 // 用户提供别人的文件hash值
@@ -364,8 +360,6 @@ func BackendTryFastUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // 阿里云上传字符串（上传Byte数组同理实现）
 func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -533,8 +527,6 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // 阿里云上传文件流
 func BackendUploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -685,11 +677,7 @@ func BackendUploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // 阿里云上传本地文件（同上传文件流一样）
-
-
 
 // 阿里云追加末尾上传
 // TODO 这里业务实现的话，考虑数据库表加字段
@@ -870,8 +858,6 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // 阿里云断点续传上传
 func BackendPartUploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -1027,8 +1013,6 @@ func BackendPartUploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 	}
 }
-
-
 
 // 阿里云分片上传
 func ComplexBackendPartUploadHandler(w http.ResponseWriter, r *http.Request) {
