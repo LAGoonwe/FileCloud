@@ -393,6 +393,7 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		username := r.Form.Get("username")
 		filename := r.Form.Get("filename")
+		checkusername := r.Form.Get("checkusername")
 
 		// 判断请求接口的用户是否是系统管理员
 		_, err := CheckUserStatus(username)
@@ -421,7 +422,7 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		objectName := username + "/" + filename
+		objectName := checkusername + "/" + filename
 		acl, err := oss.GetFileACL(objectName)
 		if err != nil {
 			resp := util.RespMsg{
@@ -450,6 +451,7 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		username := r.Form.Get("username")
 		filename := r.Form.Get("filename")
+		checkusername := r.Form.Get("checkusername")
 		// 这里原则需要校验
 		acl := r.Form.Get("acl")
 
@@ -480,7 +482,7 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		objectName := username + "/" + filename
+		objectName := checkusername + "/" + filename
 		_, err = oss.SetFileACL(objectName, acl)
 		if err != nil {
 			resp := util.RespMsg{

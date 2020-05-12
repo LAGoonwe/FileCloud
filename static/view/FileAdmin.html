@@ -185,46 +185,11 @@
             <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
         </div>
         <br> <br>
-        <button class="uk-button uk-button-primary" onclick="toFileMan()">文件管理</button>
+        <button class="uk-button uk-button-primary" onclick="toUserMan()">用户管理</button>
         <br> <br>
         <button class="uk-button uk-button-primary" onclick="toFileMetaMan()">文件元数据管理</button>
         <br> <br>
         <button class="uk-button uk-button-primary" onclick="toIndex()">退出登录</button>
-    </div>
-</div>
-
-<!--添加管理员模态框-->
-<div id="modal-add-admin" uk-modal>
-    <div class="uk-modal-dialog uk-modal-body">
-        <div>
-            <div class="uk-background-muted uk-padding uk-panel">
-                <div class="form">
-                    <h1 class="uk-heading-line uk-text-center"><span style="font-size: 20px;">宙斯云盘-添加管理员</span></h1>
-                    <!--用户名密码框开始-->
-                    <div class="uk-margin">
-                        <div class="uk-inline">
-                            <span class="uk-form-icon" uk-icon="icon: user"></span>
-                            <input class="uk-input" id="add-username" type="text" placeholder="管理员名长度不得为空！">
-                        </div>
-                    </div>
-                    <div class="uk-margin">
-                        <div class="uk-inline">
-                            <span class="uk-form-icon" uk-icon="icon: lock"></span>
-                            <input class="uk-input" id="add-password" type="password" placeholder="密码长度不得小于5！">
-                        </div>
-                    </div>
-                    <div class="uk-margin">
-                        <div class="uk-inline">
-                            <span class="uk-form-icon" uk-icon="icon: lock"></span>
-                            <input class="uk-input" id="add-passwordc" type="password" placeholder="请确认密码" onkeyup="validate()">
-                        </div><br>
-                        <span id="msg"></span>
-                    </div>
-                    <!--用户名密码框结束-->
-                    <button style="width: 235px;" id="signup" class="uk-button uk-button-primary uk-width-1-1 uk-margin-small-bottom" onclick="onSignup()">确认添加</button>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -248,16 +213,6 @@
         <!-- 分页插件显示区域 -->
         <div style="position:absolute;bottom:0;right:0;margin-bottom: 20px" class="page" id="Page"></div>
 
-        <!--删除确认模态框-->
-        <div id="modal-delete" uk-modal>
-            <div class="uk-modal-dialog uk-modal-body">
-                <P>确认删除吗？</P>
-                <p class="uk-text-right">
-                    <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
-                    <button id="deleteActionButton" class="uk-button uk-button-primary" type="button">确定</button>
-                </p>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -272,75 +227,30 @@
     </div>
 </div>
 
+<!-- 权限设置模态框 -->
+<div id="modal-SetACL" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body ">
+        <p id="ACLInfo" ></p>
+        <div class="uk-margin">
+            <!-- 文件权限设置下拉框-->
+            <select id="FileACLSel" class="uk-select uk-form-width" style="width: 235px;">
+                <option value="设置当前文件权限" selected>设置当前文件权限</option>
+                <option value="继承Bucket">继承Bucket</option>
+                <option value="私有">私有</option>
+                <option value="公共读">公共读</option>
+                <option value="公共读">公共读写</option>
+            </select><br>
+            <p class="uk-text-right">
+                <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+                <button id="SetACLButton" class="uk-button uk-button-primary" type="button">确定</button>
+            </p>
+        </div>
+    </div>
+</div>
 
 </body>
 
 <script lang="javascript">
-
-
-    //管理员添加逻辑检验
-    <!-- 密码与确认密码一致性校验 -->
-    function validate() {
-
-        var pwd = $("#add-password").val();
-        var pwd1 = $("#add-passwordc").val();
-        <!-- 对比两次输入的密码 -->
-        if(pwd == pwd1)
-        {
-            $("#msg").html("两次密码相同");
-            $("#msg").css("color","green");
-            $("#signup").removeAttr("disabled");
-        }
-        else {
-            $("#msg").html("两次密码不相同");
-            $("#msg").css("color","red")
-            $("#signup").attr("disabled","disabled");
-        }
-    }
-
-
-    function onSignup() {
-        var username = document.getElementById('add-username');
-        var password = document.getElementById('add-password');
-        var passwordc = document.getElementById('add-passwordc');
-        $.ajax({
-            url: "/user/addAdmin",
-            type: "POST",
-            data: {
-                "username": username.value,
-                "password": password.value,
-                "status":   7,
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus == "error") {
-                    alert(textStatus + " : " + errorThrown);
-                } else {
-                    alert(textStatus);
-                }
-            },
-            success: function (data, textStatus, jqXHR) {
-                if (data == 'SUCCESS') {
-                    // 成功后跳到登录页
-                    UIkit.notification({message: '添加成功<br>返回至用户管理界面中...', status: 'success'})
-                    setTimeout(() => {
-                        window.location.href = '/static/view/admin.html';
-                    }, 2000);
-
-                }else if (data == "None passwordc"){
-                    UIkit.notification({message: '请确认密码！', status: 'danger'})
-                }else if (data == "invalid parameter"){
-                    UIkit.notification({message: '用户名或密码长度有误！', status: 'danger'})
-                }else if (data == "Signined"){
-                    UIkit.notification({message: '该用户名已被注册！<br>请更换其他用户名！<br>用户名注册后不可修改！', status: 'danger'})
-                }
-                else {
-                    console.log(data)
-                    UIkit.notification({message: '注册失败', status: 'danger'})
-                }
-            }
-        });
-    }
-
 
     function toIndex() {
         // window.location.href = '/file/upload?' + queryParams();
@@ -350,9 +260,9 @@
     }
 
     //跳转去文件本体管理页面
-    function toFileMan() {
-        alert("即将唤起文件内容管理页面...")
-        window.open ("http://localhost:9090/static/view/FileAdmin.html");
+    function toUserMan() {
+        alert("即将前往用户管理页面...")
+        window.open ("http://localhost:9090/static/view/admin.html");
     }
 
     //跳转去文件元数据管理页面
@@ -385,11 +295,7 @@
                 document.getElementById("adminname2").innerHTML = resp.data.Username;
                 FileTotal = resp.all_file_meta_total
                 updateFileList(FileTotal)
-
                 searchBtn(resp.all_users,resp.all_files)
-
-
-
             }
         });
     }
@@ -416,14 +322,7 @@
             checkTime(minutes)+":"+checkTime(seconds));
     }
 
-    /**
-     * 获取所有的文件名，辅助搜索
-     */
-    function GetAllFileNames() {
-
-    }
-
-        //设置全局变量，需要更改发送的账户状态值
+    //设置全局变量，需要更改发送的账户状态值
     var sendStatus
 
     function updateFileList(FileTotal) {
@@ -461,10 +360,9 @@
                             }
                         }
 
-                        var renameUserHtml = '<button id="{0}_status" class="uk-button uk-button-danger uk-button-small" ' +
+                        var setACLHtml = '<button class="uk-button uk-button-danger uk-button-small" ' +
                             'style="height:30px;margin:5px 3px;"' +
-                            'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
-                            'update?CurlUsername={0}&{2}\')">权限设置</button>';
+                            'onClick = "GetACL(\'{0}\',\'{1}\',\'' + dlHost + '/filebackend/getossacl?filename={1}&{2}\')">权限设置</button>';
 
                         var downoadHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
                             'style="height:30px;margin:5px 3px;" onclick="DownLoadChoose({0})">本地下载</button>' +
@@ -519,7 +417,7 @@
                                 cell.innerHTML = response.data[i].UserName;
 
                                 cell = x.insertCell();
-                                cell.innerHTML = renameUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                                cell.innerHTML = setACLHtml.format(response.data[i].UserName, response.data[i].FileName, queryParams())+
                                     downoadHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())+
                                     deleteUserHtml.format(response.data[i].Username, queryParams());
 
@@ -538,6 +436,92 @@
                 $("#filetbl tr").not(':eq(0)').empty()
             }
         });
+    }
+
+    // 获取文件权限，渲染数据至模态框--模态框的按钮点击设置权限
+    function GetACL(checkusername,filename,durl) {
+
+        // 当前文件权限信息
+        let text;
+
+        $.ajax({
+            url:durl,
+            type:"POST",
+            data:{
+                checkusername:checkusername
+            },
+            error:function (error) {
+                alert(error)
+            },
+            success:function (response) {
+                response = JSON.parse(response)
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    acl = response.data
+
+                    if (acl == "default") {
+                        text = "继承Bucket"
+                    } else if (acl == "private") {
+                        text = "私有"
+                    } else if (acl == "public-read") {
+                        text = "公共读"
+                    } else if (acl == "public-read-write") {
+                        text = "公共读写"
+                    } else {
+                        text = "权限获取失败"
+                    }
+                    // 渲染数据
+
+                    $('#ACLInfo').html(filename+'&nbsp;&nbsp;文件权限为<strong>&nbsp;&nbsp;'+text+'</strong>')
+                    // 打开模态框
+                    UIkit.modal($('#modal-SetACL')).show();
+                    $('#SetACLButton').unbind("click").click(function () {
+                        let send_acl
+                        // 获取下拉框的值
+                        sel_acl = $("#FileACLSel option:selected").text();
+                        if (sel_acl == "继承Bucket"){
+                            send_acl = "default"
+                        }else if (sel_acl == "私有"){
+                            send_acl = "private"
+                        }else if (sel_acl == "公共读"){
+                            send_acl = "publicread"
+                        }else if (sel_acl == "公共读写"){
+                            send_acl = "publicreadwrite"
+                        }
+                        // 发送请求，设置权限
+                        SetACL(checkusername,filename,send_acl)
+                    })
+                }
+            }
+        })
+    }
+
+    // 设置文件权限
+    function SetACL(checkusername,filename,acl) {
+        $.ajax({
+            url:"/filebackend/setossacl?"+queryParams(),
+            type: "POST",
+            data: {
+                filename:filename,
+                checkusername:checkusername,
+                acl:acl
+            },
+            error:function (error) {
+                alert(error)
+            },
+            success:function (response) {
+                response = JSON.parse(response)
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    UIkit.notification({message: "文件权限设置成功！", status: 'success'})
+                    setTimeout(function(){
+                        window.location.reload();;
+                    }, 1000);
+                }
+            }
+        })
     }
 
    // 多种方式下载控制显示
@@ -629,7 +613,7 @@
 
     // 断点续传下载
     function downloadpart(filename,url) {
-// 重置模态框内元素
+        // 重置模态框内元素
         $('#dow_tip_pro').empty()
         $('#pros').removeAttr('value')
         $('#pros').removeAttr('max')
@@ -680,15 +664,19 @@
                     }
                 }
 
-                var renameUserHtml = '<button id="{0}_status" class="uk-button uk-button-danger uk-button-small" ' +
+                var setACLHtml = '<button class="uk-button uk-button-danger uk-button-small" ' +
                     'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
-                    'update?CurlUsername={0}&{2}\')">权限设置</button>';
+                    'onClick = "GetACL(\'{0}\',\'{1}\',\'' + dlHost + '/filebackend/getossacl?filename={1}&{2}\')">权限设置</button>';
 
-                var upUserHtml = '<button id="{0}_up" class="uk-button uk-button-primary uk-button-small" ' +
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "upUser(\'{0}\',1,\''+dlHost+'/status/' +
-                    'update?CurlUsername={0}&{2}\')">范围下载</button>';
+                var downoadHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
+                    'style="height:30px;margin:5px 3px;" onclick="DownLoadChoose({0})">本地下载</button>' +
+                    '<div id="{0}_dow" uk-dropdown="mode: click">' +
+                    '<button class="uk-button uk-button-primary uk-button-small"' +
+                    'onClick = "downloadFile(\'{1}\',\'' + dlHost + '/filebackend/download?filehash={0}&{2}\')">快速下载</button><br><br>' +
+                    '<button class="uk-button uk-button-primary uk-button-small" ' +
+                    'onclick="downloadlocal(\'{1}\',\'' + dlHost + '/filebackend/downloadlocal?filehash={0}&{2}\')">流式下载</button><br><br>' +
+                    '<button class="uk-button uk-button-primary uk-button-small"' +
+                    'onclick="downloadpart(\'{1}\',\'' + dlHost + '/filebackend/downloadpart?filehash={0}&{2}\')">断点续传下载</button></div>'
 
                 var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
                     ' style="height:30px;margin:5px 3px;"' +
@@ -733,8 +721,8 @@
                         cell.innerHTML = response.data[i].UserName;
 
                         cell = x.insertCell();
-                        cell.innerHTML = renameUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
-                            upUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                        cell.innerHTML = setACLHtml.format(response.data[i].UserName, response.data[i].FileName, queryParams())+
+                            downoadHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())+
                             deleteUserHtml.format(response.data[i].Username, queryParams());
 
 
@@ -750,66 +738,6 @@
         // 清除原有页面的表格数据
         $("#filetbBySearch tr:gt(0)").empty();
         $("#filetbBySearch tr").not(':eq(0)').empty()
-    }
-
-    function toAddAdmin() {
-        window.location.href = '/user/addAdmin?' + queryParams();
-    }
-
-    //设定弹窗文案值
-    var msg
-    //封禁或者解禁用户
-    function renameUser(username, status, renameUrl) {
-        if (status == -1){
-            sendStatus = 0
-        }else if (status == 0){
-            sendStatus = -1
-        }else {
-            //如果是管理员账户默认先执行封禁
-            sendStatus = 0
-        }
-
-        if (sendStatus == 0){
-            msg = "成功禁用该账户！"
-        }else if (sendStatus == -1){
-            msg = "成功恢复该账户！"
-        }
-
-        $.ajax({
-            url: renameUrl + "&status="+sendStatus,
-            type: "POST",
-            error: function (msg) {
-                console.log(JSON.stringify(msg))
-            },
-            success: function (body) {
-                console.log(body)
-                UIkit.notification({message: msg, status: 'success'})
-                setTimeout(function(){
-                    window.location.reload();;
-                }, 1000);
-
-            }
-        });
-    }
-
-    //升级普通用户为系统管理员
-    function upUser(username, status, renameUrl) {
-        msg = "升级成功！"
-        $.ajax({
-            url: renameUrl + "&status="+status,
-            type: "POST",
-            error: function (msg) {
-                console.log(JSON.stringify(msg))
-                alert(renameUrl);
-            },
-            success: function (body) {
-                console.log(body)
-                UIkit.notification({message: msg, status: 'success'})
-                setTimeout(function(){
-                    window.location.reload();;
-                }, 1000);
-            }
-        });
     }
 
     //删除用户
