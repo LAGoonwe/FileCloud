@@ -84,6 +84,8 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("content-disposition", "attachment; filename=\""+filename+"\"")
+	// 返回文件字节大小，辅助前端下载进度条实现
+	w.Header().Set("Content-Length", strconv.FormatInt(fileMeta.FileSize, 10))
 	w.Write(data)
 }
 
@@ -254,6 +256,8 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 	// TODO 前端需要解决如何处理下载方式（当前前端是点击下载后直接触发下载到浏览器指定路径）
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
+	// 返回文件字节大小，辅助前端下载进度条实现
+	w.Header().Set("Content-Length", strconv.FormatInt(fileMeta.FileSize, 10))
 	w.Write(data)
 }
 
@@ -326,6 +330,8 @@ func LocalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
+	// 返回文件字节大小，辅助前端下载进度条实现
+	w.Header().Set("Content-Length", strconv.FormatInt(fileMeta.FileSize, 10))
 	w.Write(data)
 }
 

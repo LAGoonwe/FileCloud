@@ -262,6 +262,18 @@
     </div>
   </div>
 </div>
+
+<!-- 下载展示模态框 -->
+<div id="modal-download" class="uk-flex-top" uk-modal>
+  <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
+    <button class="uk-modal-close-default" type="button" uk-close></button>
+    <p id="dow_tip" style="text-align: center"></p>
+    <p id="dow_tip_pro" style="text-align: center"></p>
+    <!-- 下载进度条 -->
+    <progress id="pros" class="uk-progress"></progress>
+  </div>
+</div>
+
 </body>
 
 
@@ -540,6 +552,10 @@
                     'style="height:30px;margin:5px 3px;"'+
                     ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
 
+            var shareFileHtml = '<button class="uk-button uk-button-primary uk-button-small"' +
+                    'style="height:30px;margin:5px 3px;"'+
+                    ' onClick = "shareFile(\'{1}\',\''+dlHost+'/filebackend/downloadurl?filehash={0}&{2}\')\"><span uk-icon="icon:social"><span>分享</button>';
+
 
             //给模态框表单添加验证
             $("#realusername").attr("value",localStorage.getItem("username"))
@@ -569,7 +585,7 @@
                 Path = response.data[i].FileAbsLocation.substring(response.data[i].FileAbsLocation.indexOf(":")+1,response.data[i].FileAbsLocation.length)
                 cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"'" +
                         " target='_blank' href= '"+dlHost+"/"+Disk+Path+"'>"
-                        + response.data[i].FileName.substring(0,50)+"</a>";
+                        + response.data[i].FileName.substring(0,10)+"...</a>";
 
                 cell = x.insertCell();
                 cell.innerHTML = response.data[i].FileSize+" KB";
@@ -585,10 +601,9 @@
 
                 cell = x.insertCell();
                 cell.innerHTML = downloadHtml.format(response.data[i].FileSha1,response.data[i].FileName,queryParams())  +
-                        renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName,
-                                queryParams())
-                        + deleteFileHtml
-                                .format(response.data[i].FileSha1, queryParams());
+                        renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())
+                        + deleteFileHtml.format(response.data[i].FileSha1, queryParams())
+                        +shareFileHtml.format(response.data[i].FileSha1,response.data[i].FileName, queryParams());
               }
             }
           }
@@ -647,24 +662,38 @@
     })
   }
 
+  // 解析下载文件流
   function download(filename,url){
-      var xmlResquest = new XMLHttpRequest();
-      xmlResquest.open("POST", url, true);
-      xmlResquest.setRequestHeader("Content-type", "application/json");
-      // xmlResquest.setRequestHeader("Authorization", "Bearer 6cda86e3-ba1c-4737-972c-f815304932ee");
-      xmlResquest.responseType = "blob";
-      xmlResquest.onload = function (oEvent) {
-        var content = xmlResquest.response;
-        var elink = document.createElement('a');
-        elink.download = filename;
-        elink.style.display = 'none';
-        var blob = new Blob([content]);
-        elink.href = URL.createObjectURL(blob);
-        document.body.appendChild(elink);
-        elink.click();
-        document.body.removeChild(elink);
-      };
-      xmlResquest.send();
+    var xmlResquest = new XMLHttpRequest();
+    // 进度条渲染
+    xmlResquest.onprogress = function(event){
+      if (event.lengthComputable){
+        var loaded = parseInt(event.loaded/event.total*100);
+        // $('#pros').width(loaded);
+        // $('#pros').text(loaded);
+        $('#pros').attr({value : event.loaded, max : event.total}); //更新数据到进度条
+        var percent = event.loaded/event.total*100;
+        $('#pros').html(event.loaded + "/" + event.total+" bytes. " + percent.toFixed(2) + "%");
+        $('#dow_tip_pro').html("已完成"+percent.toFixed(2) + "%")
+        $('#pros').css('width', percent.toFixed(2) + "%");
+      }
+    }
+    xmlResquest.open("POST", url, true);
+    xmlResquest.setRequestHeader("Content-type", "application/json");
+    // xmlResquest.setRequestHeader("Authorization", "Bearer 6cda86e3-ba1c-4737-972c-f815304932ee");
+    xmlResquest.responseType = "blob";
+    xmlResquest.onload = function (oEvent) {
+      var content = xmlResquest.response;
+      var elink = document.createElement('a');
+      elink.download = filename;
+      elink.style.display = 'none';
+      var blob = new Blob([content]);
+      elink.href = URL.createObjectURL(blob);
+      document.body.appendChild(elink);
+      elink.click();
+      document.body.removeChild(elink);
+    };
+    xmlResquest.send();
   }
 
   function downloadFile(filename,durl) {
@@ -675,18 +704,15 @@
         UIkit.notification({message: error, status: 'danger'})
       },
       success: function (response) {
-        // if (response.code == -1){
-        //   UIkit.notification({message: response.data.msg, status: 'danger'})
-        // }else {
-        //   try {
-        //     document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
-        //     setTimeout(function(){
-        //       download(body)
-        //     }, 2000);
-        //   } catch (e) {
-        //     alert(e);
-        //   }
-        // }
+        // 重置模态框内元素
+        $('#dow_tip_pro').empty()
+        $('#pros').removeAttr('value')
+        $('#pros').removeAttr('max')
+
+        // 打开模态框
+        UIkit.modal($('#modal-download')).show();
+        // 写入下载提示
+        $('#dow_tip').text("下载中请稍后...")
         download(filename,durl)
       }
     });
@@ -715,6 +741,38 @@
       });
       UIkit.modal($('#modal-delete')).hide()
     })
+  }
+
+  // 文件分享
+  function shareFile(filename,durl) {
+    $.ajax({
+      url: durl,
+      type: "POST",
+      error: function (error) {
+        alert(error)
+      },
+      success: function (response) {
+        response = JSON.parse(response)
+        if (response.code == -1){
+          UIkit.notification({message: "链接生成失败", status: 'danger'})
+        }else {
+          fURI="localhost:9090/static/view/FileShare.html?user="+localStorage.getItem("username")+"&filename="+filename+"&url="+response.data
+          Copy(fURI);
+        }
+      }
+    });
+  }
+
+  // 复制函数
+  function Copy(str) {
+    var save = function(e) {
+      e.clipboardData.setData('text/plain', str);
+      e.preventDefault();
+    };
+    document.addEventListener('copy', save);
+    document.execCommand('copy');
+    document.removeEventListener('copy', save);
+    UIkit.notification({message: "分享链接已复制到粘贴板<br>快去分享你的文件吧~", status: 'success'})
   }
 </script>
 

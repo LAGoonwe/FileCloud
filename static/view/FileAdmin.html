@@ -260,9 +260,23 @@
         </div>
     </div>
 </div>
+
+<!-- 下载展示模态框 -->
+<div id="modal-download" class="uk-flex-top" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <p id="dow_tip" style="text-align: center"></p>
+        <p id="dow_tip_pro" style="text-align: center"></p>
+        <!-- 下载进度条 -->
+        <progress id="pros" class="uk-progress"></progress>
+    </div>
+</div>
+
+
 </body>
 
 <script lang="javascript">
+
 
     //管理员添加逻辑检验
     <!-- 密码与确认密码一致性校验 -->
@@ -452,10 +466,15 @@
                             'onClick = "renameUser(\'{0}\',\'{1}\',\''+dlHost+'/status/' +
                             'update?CurlUsername={0}&{2}\')">权限设置</button>';
 
-                        var upUserHtml = '<button id="{0}_up" class="uk-button uk-button-primary uk-button-small" ' +
-                            'style="height:30px;margin:5px 3px;"' +
-                            'onClick = "upUser(\'{0}\',1,\''+dlHost+'/status/' +
-                            'update?CurlUsername={0}&{2}\')">本地下载</button>';
+                        var downoadHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
+                            'style="height:30px;margin:5px 3px;" onclick="DownLoadChoose({0})">本地下载</button>' +
+                            '<div id="{0}_dow" uk-dropdown="mode: click">' +
+                            '<button class="uk-button uk-button-primary uk-button-small"' +
+                            'onClick = "downloadFile(\'{1}\',\'' + dlHost + '/filebackend/download?filehash={0}&{2}\')">快速下载</button><br><br>' +
+                            '<button class="uk-button uk-button-primary uk-button-small" ' +
+                            'onclick="downloadlocal(\'{1}\',\'' + dlHost + '/filebackend/downloadlocal?filehash={0}&{2}\')">流式下载</button><br><br>' +
+                            '<button class="uk-button uk-button-primary uk-button-small"' +
+                            'onclick="downloadpart(\'{1}\',\'' + dlHost + '/filebackend/downloadpart?filehash={0}&{2}\')">断点续传下载</button></div>'
 
                         var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
                             ' style="height:30px;margin:5px 3px;"' +
@@ -501,7 +520,7 @@
 
                                 cell = x.insertCell();
                                 cell.innerHTML = renameUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
-                                    upUserHtml.format(response.data[i].Username, response.data[i].Status, queryParams())+
+                                    downoadHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())+
                                     deleteUserHtml.format(response.data[i].Username, queryParams());
 
 
@@ -519,6 +538,117 @@
                 $("#filetbl tr").not(':eq(0)').empty()
             }
         });
+    }
+
+   // 多种方式下载控制显示
+    function DownLoadChoose(fileHash) {
+        UIkit.dropdown($('#'+fileHash+'dow')).show();
+    }
+
+    // 解析下载文件流
+    function download(filename,url){
+        var xmlResquest = new XMLHttpRequest();
+        // 进度条渲染
+        xmlResquest.onprogress = function(event){
+            if (event.lengthComputable){
+                var loaded = parseInt(event.loaded/event.total*100);
+                // $('#pros').width(loaded);
+                // $('#pros').text(loaded);
+                $('#pros').attr({value : event.loaded, max : event.total}); //更新数据到进度条
+                var percent = event.loaded/event.total*100;
+                $('#pros').html(event.loaded + "/" + event.total+" bytes. " + percent.toFixed(2) + "%");
+                $('#dow_tip_pro').html("已完成"+percent.toFixed(2) + "%")
+                $('#pros').css('width', percent.toFixed(2) + "%");
+            }
+        }
+        xmlResquest.open("POST", url, true);
+        xmlResquest.setRequestHeader("Content-type", "application/json");
+        // xmlResquest.setRequestHeader("Authorization", "Bearer 6cda86e3-ba1c-4737-972c-f815304932ee");
+        xmlResquest.responseType = "blob";
+        xmlResquest.onload = function (oEvent) {
+            var content = xmlResquest.response;
+            var elink = document.createElement('a');
+            elink.download = filename;
+            elink.style.display = 'none';
+            var blob = new Blob([content]);
+            elink.href = URL.createObjectURL(blob);
+            document.body.appendChild(elink);
+            elink.click();
+            document.body.removeChild(elink);
+        };
+        xmlResquest.send();
+    }
+
+    // 快速下载
+    function downloadFile(filename,durl) {
+        $.ajax({
+            url: durl,
+            type: "POST",
+            error: function (error) {
+                UIkit.notification({message: error, status: 'danger'})
+            },
+            success: function (response) {
+                // 重置模态框内元素
+                $('#dow_tip_pro').empty()
+                $('#pros').removeAttr('value')
+                $('#pros').removeAttr('max')
+
+                // 打开模态框
+                UIkit.modal($('#modal-download')).show();
+                // 写入下载提示
+                $('#dow_tip').text("下载中请稍后...")
+                download(filename,durl)
+            }
+        });
+    }
+
+    // 流式下载
+    function downloadlocal(filename,url) {
+
+        // 重置模态框内元素
+        $('#dow_tip_pro').empty()
+        $('#pros').removeAttr('value')
+        $('#pros').removeAttr('max')
+
+        // 打开模态框
+        UIkit.modal($('#modal-download')).show();
+        // 写入下载提示
+        $('#dow_tip').text("下载中请稍后...")
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            error: function (error) {
+                alert(error);
+            },
+            success: function () {
+                download(filename,url)
+            }
+        })
+    }
+
+    // 断点续传下载
+    function downloadpart(filename,url) {
+// 重置模态框内元素
+        $('#dow_tip_pro').empty()
+        $('#pros').removeAttr('value')
+        $('#pros').removeAttr('max')
+
+        // 打开模态框
+        UIkit.modal($('#modal-download')).show();
+        // 写入下载提示
+        $('#dow_tip').text("下载中请稍后...")
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            error: function (error) {
+                alert(error);
+            },
+            success: function () {
+                download(filename,url)
+            }
+        })
     }
 
     /**

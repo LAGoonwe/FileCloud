@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="Content-Type" content="text/html; charset=gbk" />
+<head>
+    <title>查看分享文件</title>
+    <link rel="stylesheet" href="../css/uikit.min.css" />
+    <script src="../js/uikit.min.js"></script>
+    <script src="../js/uikit-icons.min.js"></script>
+    <script  src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <style>
+        html,body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            align-items: center; /*定义body的元素垂直居中*/
+            justify-content: center; /*定义body的里的元素水平居中*/
+        }
+    </style>
+</head>
+<body>
+<div class="uk-card uk-card-default uk-card-body uk-width-1-2@m">
+<div class="uk-background-muted uk-padding uk-panel">
+<article class="uk-comment uk-comment-primary" style="width: 500px;height: 500px;background-color: white">
+    <header class="uk-comment-header uk-grid-medium uk-flex-middle" uk-grid>
+        <div class="uk-width-auto">
+            <img class="uk-comment-avatar" src="http://b-ssl.duitang.com/uploads/item/201808/06/20180806101031_hZyjM.thumb.700_0.jpeg" width="80" height="80" alt="">
+        </div>
+        <div class="uk-width-expand">
+            <h4 class="uk-comment-title uk-margin-remove"><a id="fileFrom" class="uk-link-reset" href="#">Author</a></h4>
+            <ul class="uk-comment-meta uk-subnav uk-subnav-divider uk-margin-remove-top">
+                <li><a href="#">分享了文件给您</a></li>
+                <li><a href="#">请查收</a></li>
+            </ul>
+        </div>
+    </header>
+    <div class="uk-comment-body">
+        <p style="text-align: center"><span id="pd"  class="uk-label uk-label-success">Success</span></p>
+        <a id="fileTo">
+            <div style="text-align:center">
+                <button class="uk-button uk-button-primary">下载</button>
+            </div>
+        </a>
+    </div>
+
+    <div style="width: 500px;height: 200px;text-align:center;margin-top: 100px;">
+        <img style="width: 200px;height: 200px;" src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1589290166410&di=0efd9d4210f2687b19860b39fae67c51&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201804%2F08%2F20180408040002_E8uRa.thumb.700_0.jpeg">
+    </div>
+</article>
+</div>
+</div>
+
+
+
+</body>
+<script>
+    (function ($) {
+        $.getUrlParam = function (name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+            var r = decodeURI(window.location.search).substr(1).match(reg); //匹配目标参数
+            if (r != null) return unescape(r[2]); return null; //返回参数值
+        }
+    })(jQuery);
+    fileURL = window.location.href.substring(window.location.href.indexOf('url')+4,window.location.href.length)
+    $('#pd').text($.getUrlParam('filename'))
+    $('#fileFrom').text($.getUrlParam('user'))
+    $('#fileTo').attr("href",decodeURIComponent(fileURL))
+</script>
+</html>
