@@ -4,6 +4,7 @@ import (
 	cfg "FileCloud/config"
 	"FileCloud/store/oss"
 	"FileCloud/util"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -62,7 +63,7 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 
 	objectname := fileMeta.FileRelLocation
 	filename := fileMeta.FileName
-	body, err := oss.DownLoadStream(objectname)
+	data, err := oss.DownLoadStream(objectname)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -73,7 +74,6 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := ioutil.ReadAll(body)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -81,10 +81,11 @@ func NormalDownLoadFile(w http.ResponseWriter, r *http.Request) {
 			Data: "",
 		}
 		w.Write(resp.JSONBytes())
+		return
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\""+filename+"\"")
-	w.Write(data)
+	w.Header().Set("content-disposition", "attachment; filename=\"" + filename + "\"")
+	w.Write([]byte(data))
 }
 
 // 阿里云范围下载
@@ -140,9 +141,8 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 
 	objectName := fileMeta.FileRelLocation
 	fileName := fileMeta.FileName
-	body, err := oss.DownLoadRangeFile(objectName, startInt, endInt)
+	data, err := oss.DownLoadRangeFile(objectName, startInt, endInt)
 
-	data, err := ioutil.ReadAll(body)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,
@@ -153,8 +153,8 @@ func RangeDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
-	w.Write(data)
+	w.Header().Set("content-disposition", "attachment; filename=\"" + fileName + "\"")
+	w.Write([]byte(data))
 }
 
 // 阿里云断点续传下载
@@ -209,7 +209,8 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 
 	objectName := fileMeta.FileRelLocation
 	fileName := fileMeta.FileName
-	preFilePath := cfg.PreUploadPath + username + objectName
+	preFilePath := cfg.PreUploadPath + username + "\\" + fileName
+	fmt.Println(preFilePath)
 	_, err = oss.DownLoadPartsFile(objectName, preFilePath, 3)
 	if err != nil {
 		resp := util.RespMsg{
@@ -220,6 +221,7 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 		return
 	}
+
 	preLocalFile, err := os.Open(preFilePath)
 	if err != nil {
 		log.Println("PartDownLoadFile Error")
@@ -234,8 +236,15 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 	defer preLocalFile.Close()
 
 	data, err := ioutil.ReadAll(preLocalFile)
+	fmt.Println(data)
 	// 读取完文件后删除临时文件
 	if err != nil {
+		// 报错的时候删除临时文件
+		err = os.Remove(preFilePath)
+		if err != nil {
+			log.Println("OS PreLocalFile Remove Error")
+			log.Println(err.Error())
+		}
 		log.Println("DownLocalFile ReadAll Error")
 		resp := util.RespMsg{
 			Code: -1,
@@ -245,15 +254,17 @@ func PartDownLoadFile(w http.ResponseWriter, r *http.Request) {
 		w.Write(resp.JSONBytes())
 		return
 	}
-	err = os.Remove(preFilePath)
-	if err != nil {
-		log.Println("OS Remove Error")
-		log.Println(err.Error())
-	}
+
+	// 临时文件的删除出现错误，文件会被另外的进程占用
+	//err = os.Remove(preFilePath)
+	//if err != nil {
+	//	log.Println("OS PreLocalFile Remove Error")
+	//	log.Println(err.Error())
+	//}
 
 	// TODO 前端需要解决如何处理下载方式（当前前端是点击下载后直接触发下载到浏览器指定路径）
 	w.Header().Set("Content-Type", "application/octect-stream")
-	w.Header().Set("content-disposition", "attachment; filename=\""+fileName+"\"")
+	w.Header().Set("content-disposition", "attachment; filename=\"" + fileName + "\"")
 	w.Write(data)
 }
 

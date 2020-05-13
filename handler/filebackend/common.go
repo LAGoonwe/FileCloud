@@ -17,7 +17,7 @@ func CheckUserStatus(username string) (bool, error) {
 		log.Println(err.Error())
 		return false, err
 	}
-	if user.Status != 7 {
+	if user.Status != 1 {
 		err := errors.New("Forbidden")
 		return false, err
 	}

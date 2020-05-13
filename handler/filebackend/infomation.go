@@ -6,6 +6,7 @@ import (
 	"FileCloud/meta"
 	"FileCloud/store/oss"
 	"FileCloud/util"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -292,6 +293,8 @@ func GetBackendUserFilesByUserName(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+
+
 // 根据文件名模糊检索文件（暂时没考虑传入多个文件名的情况）
 // 这种大数据量的接口不用系统的全局内存变量
 func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
@@ -352,6 +355,8 @@ func GetBackendUserFileByFileName(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+
+
 // 返回所选文件的外链
 func GetDownLoadFileURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -408,6 +413,8 @@ func GetDownLoadFileURL(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp.JSONBytes())
 }
 
+
+
 // 系统管理员列举OSS的所有文件
 func ListAllOSSFiles(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -449,6 +456,8 @@ func ListAllOSSFiles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+
 // 系统管理员获取文件权限
 func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -457,6 +466,7 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		r.ParseForm()
 		username := r.Form.Get("username")
+		checkusername := r.Form.Get("checkusername")
 		filename := r.Form.Get("filename")
 
 		// 判断请求接口的用户是否是系统管理员
@@ -486,7 +496,7 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		objectName := username + "/" + filename
+		objectName := checkusername + "/" + filename
 		acl, err := oss.GetFileACL(objectName)
 		if err != nil {
 			resp := util.RespMsg{
@@ -507,6 +517,8 @@ func GetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+
 // 系统管理员设置文件权限
 func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
@@ -514,9 +526,11 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.Method == http.MethodPost {
 		username := r.Form.Get("username")
+		checkusername := r.Form.Get("checkusername")
 		filename := r.Form.Get("filename")
 		// 这里原则需要校验
 		acl := r.Form.Get("acl")
+		fmt.Println(acl)
 
 		// 判断请求接口的用户是否是系统管理员
 		_, err := CheckUserStatus(username)
@@ -545,7 +559,7 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		objectName := username + "/" + filename
+		objectName := checkusername + "/" + filename
 		_, err = oss.SetFileACL(objectName, acl)
 		if err != nil {
 			resp := util.RespMsg{
@@ -557,10 +571,22 @@ func SetOSSFileACL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// 重新读取一遍权限确保设置成功
+		currentAcl, err := oss.GetFileACL(objectName)
+		if err != nil {
+			resp := util.RespMsg{
+				Code: -1,
+				Msg:  "获取文件权限失败！",
+				Data: "",
+			}
+			w.Write(resp.JSONBytes())
+			return
+		}
+
 		resp := util.RespMsg{
 			Code: 1,
 			Msg:  "设置文件权限成功！",
-			Data: acl,
+			Data: currentAcl,
 		}
 		w.Write(resp.JSONBytes())
 	}
@@ -575,6 +601,7 @@ func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if r.Method == http.MethodPost {
 		username := r.Form.Get("username")
+		checkusername := r.Form.Get("checkusername")
 		filename := r.Form.Get("filename")
 
 		// 判断请求接口的用户是否是系统管理员
@@ -604,7 +631,7 @@ func IsExistOSSFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		objectName := username + "/" + filename
+		objectName := checkusername + "/" + filename
 		result, err := oss.IsExistFile(objectName)
 		if err != nil {
 			resp := util.RespMsg{
