@@ -21,6 +21,7 @@ import (
 )
 
 // 原生的分块上传
+// TODO 分块上传后期扩展：可以新建文件来记录上传分块的情况
 // 分块信息
 type MultipartUploadInfo struct {
 	FileHash   string

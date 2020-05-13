@@ -371,7 +371,7 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.Form.Get("username")
 		// 用户提供文件名
 		filename := r.Form.Get("filename")
-		// 文件中的字符串内容
+		// 文件中的字符串内容，原则上要进行校验
 		content := r.Form.Get("content")
 
 		params := make(map[string]string)
@@ -413,7 +413,9 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 
 		objectName := username + "/" + filename
 		localFileName := cfg.UploadPath + username + "/" + filename
+		fmt.Println(localFileName)
 		preLocalFileName := cfg.PreUploadPath + username + "/" + filename
+		fmt.Println(preLocalFileName)
 		// 创建本地服务器文件，并向本地服务器文件写入字符串内容
 		newFile, err := os.Create(localFileName)
 		preNewFile, err := os.Create(preLocalFileName)
@@ -467,16 +469,18 @@ func BackendUploadStringHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 删除掉刚才的备用文件
-		err = os.Remove(preLocalFileName)
-		if err != nil {
-			resp := util.RespMsg{
-				Code: -1,
-				Msg:  "上传阿里云字符串文件失败！",
-				Data: "",
-			}
-			w.Write(resp.JSONBytes())
-			return
-		}
+		// 同样还是线程占用的问题
+		//err = os.Remove(preLocalFileName)
+		//if err != nil {
+		//	fmt.Println(err.Error())
+		//	resp := util.RespMsg{
+		//		Code: -1,
+		//		Msg:  "上传阿里云字符串文件失败！",
+		//		Data: "",
+		//	}
+		//	w.Write(resp.JSONBytes())
+		//	return
+		//}
 
 		backendFile := meta.BackendFile{
 			UserName:        username,
@@ -715,6 +719,7 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		params["filename"] = filename
 		_, err := CheckParams(params)
 		if err != nil {
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "传入的参数不合法！",
@@ -737,6 +742,7 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		// 判断该文件是否存在
 		result, err := dblayer.IsExistSameNameFile(username, filename)
 		if err != nil {
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "阿里云追加上传文件失败！",
@@ -757,8 +763,12 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		fmt.Println(username)
+		fmt.Println(filename)
 		result, fileMeta, err := dblayer.GetFileByUserNameAndFileName(username, filename)
 		if err != nil {
+			log.Println(err.Error())
+			log.Println("1")
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "上传文件失败！",
@@ -769,10 +779,14 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		objectName := fileMeta.FileRelLocation
 		localFileName := fileMeta.FileAbsLocation
+		fmt.Println(objectName)
+		fmt.Println(localFileName)
 
 		// 先对本地文件做追加处理
-		file, err := os.OpenFile(localFileName, os.O_WRONLY, 0644)
+		file, err := os.OpenFile(localFileName, os.O_RDWR, 0666)
 		if err != nil {
+			log.Println("2")
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "阿里云追加上传文件失败！",
@@ -783,9 +797,12 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		// 查找文件末尾的偏移量
 		end, _ := file.Seek(0, os.SEEK_END)
+		fmt.Println(end)
 		// 从末尾开始写入内容
 		_, err = file.WriteAt([]byte(appendValue), end)
 		if err != nil {
+			log.Println("3")
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "阿里云追加上传文件失败！",
@@ -797,8 +814,11 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 
 		// 重新计算filehash和filesize
 		preLocalFileName := cfg.PreUploadPath + username + "/" + filename
+		fmt.Println(preLocalFileName)
 		preNewFile, err := os.Create(preLocalFileName)
 		if err != nil {
+			log.Println("4")
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "阿里云追加上传文件失败！",
@@ -809,6 +829,8 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		filesize, err := io.Copy(preNewFile, file)
 		if err != nil {
+			log.Println("5")
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "阿里云追加上传文件失败！",
@@ -818,9 +840,11 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		filesha1 := util.FileSha1(preNewFile)
+		fmt.Println(filesha1)
 		// 判断数据库中有没有相同内容的文件
 		result, err = dblayer.IsExistSameContentFile(username, filesha1)
 		if err != nil {
+			log.Println(err.Error())
 			resp := util.RespMsg{
 				Code: -1,
 				Msg:  "不可重复上传内容相同的文件！",
@@ -829,12 +853,7 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			w.Write(resp.JSONBytes())
 			return
 		}
-		os.Remove(preLocalFileName)
-
-		// 找出原来的对象
-		oldFileMeta, err := CheckGlobalFileMeta(filesha1)
-		oldFileMeta.FileSize = filesize
-		oldFileMeta.FileSha1 = filesha1
+		//os.Remove(preLocalFileName)
 
 		// TODO 这块还需要完善 通过RabbitMQ实现异步上传
 		if !cfg.AsyncTransferEnable {
@@ -856,6 +875,10 @@ func BackendAppendUpload(w http.ResponseWriter, r *http.Request) {
 			// 写入异步转移任务队列
 		}
 
+		// 找出原来的对象
+		oldFileMeta, err := CheckGlobalFileMeta(filesha1)
+		oldFileMeta.FileSize = filesize
+		oldFileMeta.FileSha1 = filesha1
 		// 同步到全局内存变量
 		meta.UpdateBackendFileMeta(*oldFileMeta)
 		// 需要更新数据库记录
