@@ -274,6 +274,24 @@
   </div>
 </div>
 
+<!--被冻结文件展示模态框-->
+<div id="modal-ListFreezeFiles" uk-modal>
+  <div class="uk-modal-dialog uk-modal-body">
+    <P>该页文件因违反宙斯存储规定被冻结，有疑问请联系管理员</P>
+    <table id="FreezeFiles" class="uk-table uk-table-hover uk-table-divider">
+      <thead>
+      <tr>
+        <th>文件名</th>
+      </tr>
+      </thead>
+    </table>
+    <p class="uk-text-right">
+      <button class="uk-button uk-button-default uk-modal-close" type="button">我已知晓</button>
+      <button class="uk-button uk-button-primary" type="button">有异议，联系管理员</button>
+    </p>
+  </div>
+</div>
+
 </body>
 
 
@@ -501,6 +519,9 @@
 
   function updateFileList(FileTotal) {
 
+    // 设置文件被冻结列表
+    var FreezedFiles = new Array()
+
     var pageIndex
 
     // 激活分页插件
@@ -573,6 +594,7 @@
               console.log(response)
               for (var i = 0; i < response.data.length; i++) {
                 var x = document.getElementById('filetbl').insertRow();
+                x.id=response.data[i].FileSha1+"_tr"
 
                 cell = x.insertCell();
                 cell.innerHTML =  "<a uk-tooltip="+response.data[i].FileSha1+">"
@@ -604,10 +626,37 @@
                         renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())
                         + deleteFileHtml.format(response.data[i].FileSha1, queryParams())
                         +shareFileHtml.format(response.data[i].FileSha1,response.data[i].FileName, queryParams());
+
+                // 装配被封禁文件组和置灰元素
+                if (response.data[i].Status == 0){
+                  FreezedFiles.push(response.data[i].FileName)
+                  // 隐藏违禁数据
+                  $('#'+response.data[i].FileSha1+"_tr").hide()
+                }
+
               }
             }
+            // 设置表格内容
+            for (var j=0;j<FreezedFiles.length;j++){
+              var y = document.getElementById('FreezeFiles').insertRow();
+              cell = y.insertCell();
+              cell.innerHTML = FreezedFiles[j];
+            }
+
+
+
+            // 显示模态框
+            UIkit.modal($('#modal-ListFreezeFiles')).show();
           }
         });
+
+        // 清空文件列表
+        FreezedFiles=[]
+
+        // 清空模态框表格数据
+        $("#FreezeFiles tr:gt(0)").empty();
+        $("#FreezeFiles tr").not(':eq(0)').empty()
+
         // 清除原有页面的表格数据---配合分页使用
         $("#filetbl tr:gt(0)").empty();
         $("#filetbl tr").not(':eq(0)').empty()

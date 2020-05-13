@@ -248,6 +248,17 @@
     </div>
 </div>
 
+<!--文件冻结确认模态框-->
+<div id="modal-changeStatus" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P id="bef_change_tip"></P>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button id="ChangeStatusActionButton" class="uk-button uk-button-primary" type="button">确定</button>
+        </p>
+    </div>
+</div>
+
 </body>
 
 <script lang="javascript">
@@ -374,9 +385,9 @@
                             '<button class="uk-button uk-button-primary uk-button-small"' +
                             'onclick="downloadpart(\'{1}\',\'' + dlHost + '/filebackend/downloadpart?filehash={0}&{2}\')">断点续传下载</button></div>'
 
-                        var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
+                        var changeFileStatusHtml = '<button id="{0}_changestatus" class="uk-button uk-button-danger uk-button-small" ' +
                             ' style="height:30px;margin:5px 3px;"' +
-                            'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">文件冻结</button>';
+                            'onClick = "changeFileStatus(\'{0}\',\'{1}\',\'' + dlHost + '/filebackend/changefilestatus?{2}\')">文件冻结</button>';
 
 
                         // 序列化返回内容，转化为json数据
@@ -419,8 +430,16 @@
                                 cell = x.insertCell();
                                 cell.innerHTML = setACLHtml.format(response.data[i].UserName, response.data[i].FileName, queryParams())+
                                     downoadHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())+
-                                    deleteUserHtml.format(response.data[i].Username, queryParams());
+                                    changeFileStatusHtml.format(response.data[i].FileSha1,response.data[i].FileName, queryParams());
 
+                                // 初始化文件冻结按钮文本显示和样式
+                                if (response.data[i].Status == 1){
+                                    $('#'+response.data[i].FileSha1+"_changestatus").attr("class","uk-button uk-button-danger uk-button-small");
+                                    $('#'+response.data[i].FileSha1+'_changestatus').text("冻结文件")
+                                }else{
+                                    $('#'+response.data[i].FileSha1+"_changestatus").attr("class","uk-button uk-button-primary uk-button-small");
+                                    $('#'+response.data[i].FileSha1+'_changestatus').text("解除冻结")
+                                }
 
                                 // if(data[i].Username == localStorage.getItem("username")){
                                 //     realStatus = data[i].Username+"_status"
@@ -678,9 +697,9 @@
                     '<button class="uk-button uk-button-primary uk-button-small"' +
                     'onclick="downloadpart(\'{1}\',\'' + dlHost + '/filebackend/downloadpart?filehash={0}&{2}\')">断点续传下载</button></div>'
 
-                var deleteUserHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle' +
+                var changeFileStatusHtml = '<button id="{0}_delete" class="uk-button uk-button-danger uk-button-small"' +
                     ' style="height:30px;margin:5px 3px;"' +
-                    'onClick = "deleteUser(\'{0}\',\'' + dlHost + '/user/delete?username={0}&{1}\')">文件冻结</button>';
+                    'onClick = "changeFileStatus(\'{0}\',\'{1}\',\'' + dlHost + '/filebackend/changefilestatus?{2}\')">文件冻结</button>';
 
 
                 // 序列化返回内容，转化为json数据
@@ -723,8 +742,17 @@
                         cell = x.insertCell();
                         cell.innerHTML = setACLHtml.format(response.data[i].UserName, response.data[i].FileName, queryParams())+
                             downoadHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())+
-                            deleteUserHtml.format(response.data[i].Username, queryParams());
+                            changeFileStatusHtml.format(response.data[i].FileSha1,response.data[i].FileName, queryParams());
 
+
+                        // 初始化文件冻结按钮文本显示和样式
+                        if (response.data[i].Status == 1){
+                            $('#'+response.data[i].FileSha1+"_changestatus").attr("class","uk-button uk-button-danger uk-button-small");
+                            $('#'+response.data[i].FileSha1+'_changestatus').text("冻结文件")
+                        }else{
+                            $('#'+response.data[i].FileSha1+"_changestatus").attr("class","uk-button uk-button-primary uk-button-small");
+                            $('#'+response.data[i].FileSha1+'_changestatus').text("解除冻结")
+                        }
 
                         // if(data[i].Username == localStorage.getItem("username")){
                         //     realStatus = data[i].Username+"_status"
@@ -740,27 +768,62 @@
         $("#filetbBySearch tr").not(':eq(0)').empty()
     }
 
-    //删除用户
-    function deleteUser(username,durl) {
+    /**
+     * 更改文件状态，切换1和0值
+     * 1代表文件正常访问，0代表文件已经被管理员冻结
+     * @param username
+     * @param durl
+     */
+    function changeFileStatus(filehash,filename,durl) {
 
-        $('#deleteActionButton').unbind("click").click(function () {
+        if ($('#'+filehash+"_changestatus").text() == "冻结文件"){
+            $('#bef_change_tip').html("确定冻结文件<strong>"+filename+"</strong>吗？")
+        }else{
+            $('#bef_change_tip').html("确定解冻文件<strong>"+filename+"</strong>吗？")
+        }
+
+        // 打开模态框
+        UIkit.modal($('#modal-changeStatus')).show();
+
+        $('#ChangeStatusActionButton').unbind("click").click(function () {
 
             $.ajax({
                 url: durl,
                 type: "POST",
-                error: function (jqXHR, textStatus, errorThrown) {
-                    if (textStatus == "error") {
-                        alert(textStatus + " : " + errorThrown);
-                    } else {
-                        alert(textStatus);
-                    }
+                data: {
+                    filehash:filehash
                 },
-                success: function (body, textStatus, jqXHR) {
-                    UIkit.notification({message: "用户删除成功", status: 'success'})
-                    $("#"+username).parent().remove();
+                error: function (error) {
+                    alert(error)
+                },
+                success: function (response) {
+                    response=JSON.parse(response)
+                    if (response.code == -1){
+                        UIkit.notification({message: response.msg, status: 'danger'})
+                    }else {
+                        if ($('#'+filehash+"_changestatus").text() == "冻结文件"){
+                            UIkit.notification({message: "文件冻结成功", status: 'success'})
+                            // 更改按钮文字
+                            $('#'+filehash+"_changestatus").text('解除冻结')
+                            // 更改按钮颜色
+                            $('#'+filehash+"_changestatus").attr("class","uk-button uk-button-primary uk-button-small");
+                            // setTimeout(function(){
+                            //     window.location.reload();;
+                            // }, 1500);
+                        }else {
+                            UIkit.notification({message: "文件解冻成功", status: 'success'})
+                            // 更改按钮文字
+                            $('#'+filehash+"_changestatus").text('冻结文件')
+                            // 更改按钮颜色
+                            $('#'+filehash+"_changestatus").attr("class","uk-button uk-button-danger uk-button-small");
+                            // setTimeout(function(){
+                            //     window.location.reload();;
+                            // }, 1500);
+                        }
+                    }
                 }
             });
-            UIkit.modal($('#modal-delete')).hide()
+            UIkit.modal($('#modal-changeStatus')).hide()
         })
     }
 

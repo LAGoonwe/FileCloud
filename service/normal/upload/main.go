@@ -124,6 +124,8 @@ func main() {
 	http.HandleFunc("/filebackend/setossacl", handler.HTTPInterceptor(backendhandler.SetOSSFileACL))
 	// 系统管理员判断OSS文件是否存在√---
 	http.HandleFunc("/filebackend/isexistossfile", handler.HTTPInterceptor(backendhandler.IsExistOSSFile))
+	// 系统管理员冻结文件或者取消冻结文件--
+	http.HandleFunc("/filebackend/changefilestatus", handler.HTTPInterceptor(backendhandler.UpdateFileStatus))
 
 	// 文件元数据管理
 	// 获取文件元信息×

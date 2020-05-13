@@ -170,6 +170,12 @@ func GetLocalFile(filesha1 string) (BackendUserFile, error) {
 	return backendUserFile, nil
 }
 
+/**
+冻结文件--更改文件status值
+（暂时采取更改数据库信息的方法，后期考虑加入阿里云临时授权STS访问API以区别普通用户和管理员对文件的访问和操作）
+1--文件可正常访问
+0--文件被管理员冻结，用户不可访问
+*/
 // 修改文件状态
 func UpdateFileStatus(filehash string) (BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -213,7 +219,7 @@ func UpdateFileStatus(filehash string) (BackendUserFile, error) {
 		status = 1
 		backendUserFile.Status = 0
 	}
-	result, err := stmt.Exec(status, filehash)
+	result, err := stmt2.Exec(status, filehash)
 	if err != nil {
 		log.Println("UpdateFileStatus Update SQL2 Failed")
 		log.Println(err.Error())
