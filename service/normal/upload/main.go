@@ -99,8 +99,6 @@ func main() {
 
 	// 系统管理员通过名称模糊查询文件信息√---
 	http.HandleFunc("/filebackend/querybyname", handler.HTTPInterceptor(backendhandler.GetBackendUserFilesByName))
-	// 系统管理员通过文件名模糊查询文件信息√
-	http.HandleFunc("/filebackend/querybyfilename", handler.HTTPInterceptor(backendhandler.GetBackendUserFileByFileName))
 	// 系统管理员阿里云范围下载√
 	http.HandleFunc("/filebackend/downloadrange", handler.HTTPInterceptor(backendhandler.RangeDownLoadFile))
 	// 系统管理员阿里云流式下载√
