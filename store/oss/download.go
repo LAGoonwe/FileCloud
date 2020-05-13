@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/aliyun-oss-go-sdk/oss"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -11,11 +12,11 @@ import (
 
 
 // 下载文件到流
-func DownLoadStream(objectName string) (io.Reader, error) {
+func DownLoadStream(objectName string) (string, error) {
 	bucket := Bucket()
 	if bucket == nil {
 		log.Println("获取Bucket失败")
-		return nil, errors.New("获取Bucket失败")
+		return "", errors.New("获取Bucket失败")
 	}
 
 	// 下载文件到流
@@ -23,10 +24,17 @@ func DownLoadStream(objectName string) (io.Reader, error) {
 	if err != nil {
 		log.Println("DownLoadStream Failed")
 		log.Println(err.Error())
-		return nil, err
+		return "", err
 	}
 
-	return body, nil
+	data, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Println("DownLoadStream ReadAll Failed")
+		log.Println(err.Error())
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 
@@ -64,23 +72,30 @@ func DownLoadLocalFileStream(objectName string, localFileName string) (bool, err
 
 
 // 范围下载：如果仅需要文件中的部分数据，您可以使用范围下载，下载指定范围内的数据
-func DownLoadRangeFile(objectName string, start int64, end int64) (io.Reader, error) {
+func DownLoadRangeFile(objectName string, start int64, end int64) (string, error) {
 	bucket := Bucket()
 	if bucket == nil {
 		log.Println("获取Bucket失败")
-		return nil, errors.New("获取Bucket失败")
+		return "", errors.New("获取Bucket失败")
 	}
 
 	body, err := bucket.GetObject(objectName, oss.Range(start, end))
 	if err != nil {
 		log.Println("DownLoadRangeFile GetObject Fail")
 		log.Println(err.Error())
-		return nil, err
+		return "", err
 	}
 	// 数据读取完成后，获取的流必须关闭，否则会造成连接泄露，导致请求无连接可用
 	defer body.Close()
 
-	return body, nil
+	data, err  := ioutil.ReadAll(body)
+	if err != nil {
+		log.Println("DownLoadRangeFile ReadAll Failed")
+		log.Println(err.Error())
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 

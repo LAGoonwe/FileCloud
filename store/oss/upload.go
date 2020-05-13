@@ -155,7 +155,7 @@ func PartUpload(objectName string, filePath string, routineNum int) (bool, error
 		return false, errors.New("获取Bucket失败")
 	}
 
-	err := bucket.UploadFile(objectName, filePath, 10 * 1024, oss.Routines(routineNum), oss.Checkpoint(true, ""))
+	err := bucket.UploadFile(objectName, filePath, 100 * 1024, oss.Routines(routineNum), oss.Checkpoint(true, ""))
 	if err != nil {
 		log.Println("PartUpload Failed")
 		log.Println(err.Error())
@@ -167,6 +167,7 @@ func PartUpload(objectName string, filePath string, routineNum int) (bool, error
 
 
 // 分片上传
+// 这个可以上传较大的文件，因为价格的原因，还没做测试
 // 分片上传和断点续传的区别：前者是一块块上传上去，后者是上传上去后再合并
 func ComplexPartUpload(objectName string, filePath string, partNum int) (bool, error) {
 	bucket := Bucket()

@@ -251,3 +251,8 @@ func GetDownLoadURL(objectName string) (string, error) {
 }
 
 
+
+// 更改文件存储类型
+//func ChangeFileStore(objectName string, storeName string) (bool, error) {
+//}
+

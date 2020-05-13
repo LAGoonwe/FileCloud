@@ -6,6 +6,7 @@ import (
 	backendhandler "FileCloud/handler/filebackend"
 	"FileCloud/handler/filemetabackend"
 	"FileCloud/util"
+	operationhandler "FileCloud/handler/operation"
 	"fmt"
 	"net/http"
 )
@@ -68,8 +69,7 @@ func main() {
 	/filemetabackend 为文件元数据模块接口
 	= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 	*/
-
-	// 文件上传（用户简单上传）
+	// 文件上传（用户简单上传）√
 	http.HandleFunc("/filebackend/upload", handler.HTTPInterceptor(backendhandler.BackendUploadHandler))
 	// 文件重命名√
 	http.HandleFunc("/filebackend/update", handler.HTTPInterceptor(backendhandler.UpdateBackendUserFilesName))
@@ -81,8 +81,10 @@ func main() {
 	http.HandleFunc("/filebackend/delete", handler.HTTPInterceptor(backendhandler.DeleteFile))
 	// 返回下载外链√
 	http.HandleFunc("/filebackend/downloadurl", handler.HTTPInterceptor(backendhandler.GetDownLoadFileURL))
-	// 秒传√---
+	// 秒传√
 	http.HandleFunc("/filebackend/fastupload", handler.HTTPInterceptor(backendhandler.BackendTryFastUpload))
+	// 修改文件内容
+	http.HandleFunc("/filebackend/updatefilecontent", handler.HTTPInterceptor(backendhandler.UpdateFileContent))
 
 	// 初始化分块√---
 	http.HandleFunc("/filebackend/mpupload/init", handler.HTTPInterceptor(backendhandler.InitialMultipartUpload))
@@ -97,43 +99,67 @@ func main() {
 
 	// 系统管理员通过名称模糊查询文件信息√---
 	http.HandleFunc("/filebackend/querybyname", handler.HTTPInterceptor(backendhandler.GetBackendUserFilesByName))
-	// 系统管理员阿里云范围下载√---
+	// 系统管理员阿里云范围下载√
 	http.HandleFunc("/filebackend/downloadrange", handler.HTTPInterceptor(backendhandler.RangeDownLoadFile))
-	// 系统管理员阿里云本地下载√---
+	// 系统管理员阿里云流式下载√
 	http.HandleFunc("/filebackend/downloadlocal", handler.HTTPInterceptor(backendhandler.NormalDownLoadFile))
-	// 系统管理员阿里云断点续传下载√---
+	// 系统管理员阿里云断点续传下载√
 	http.HandleFunc("/filebackend/downloadpart", handler.HTTPInterceptor(backendhandler.PartDownLoadFile))
 
-	// 系统管理员获取全部文件信息√---
+	// 系统管理员获取全部文件信息√
 	http.HandleFunc("/filebackend/all", handler.HTTPInterceptor(backendhandler.GetAllBackendUserFiles))
-	// 系统管理员上传字符√---
+	// 系统管理员上传字符√
 	http.HandleFunc("/filebackend/uploadstring", handler.HTTPInterceptor(backendhandler.BackendUploadStringHandler))
-	// 系统管理员上传文件流（同上传本地文件实现原理）√---
+	// 系统管理员上传文件流（同上传本地文件实现原理）√
 	http.HandleFunc("/filebackend/uploadfile", handler.HTTPInterceptor(backendhandler.BackendUploadFileHandler))
-	// 系统管理员追加上传√---
+	// 系统管理员追加上传×（有问题，ErrorCode=ObjectNotAppendable）
 	http.HandleFunc("/filebackend/uploadappend", handler.HTTPInterceptor(backendhandler.BackendAppendUpload))
-	// 系统管理员断点续传上传√---
+	// 系统管理员断点续传上传√
 	http.HandleFunc("/filebackend/uploadpart", handler.HTTPInterceptor(backendhandler.BackendPartUploadHandler))
-	// 系统管理员分片上传√---
+	// 系统管理员分片上传√
 	http.HandleFunc("/filebackend/uploadcomplexpart", handler.HTTPInterceptor(backendhandler.ComplexBackendPartUploadHandler))
-	// 系统管理员列举OSS的所有文件√---
+	// 系统管理员列举OSS的所有文件√
 	http.HandleFunc("/filebackend/listallossfiles", handler.HTTPInterceptor(backendhandler.ListAllOSSFiles))
-	// 系统管理员获取文件访问权限√---
+	// 系统管理员获取文件访问权限√
 	http.HandleFunc("/filebackend/getossacl", handler.HTTPInterceptor(backendhandler.GetOSSFileACL))
-	// 系统管理员设置文件访问权限√---
+	// 系统管理员设置文件访问权限√
 	http.HandleFunc("/filebackend/setossacl", handler.HTTPInterceptor(backendhandler.SetOSSFileACL))
-	// 系统管理员判断OSS文件是否存在√---
+	// 系统管理员判断OSS文件是否存在√
 	http.HandleFunc("/filebackend/isexistossfile", handler.HTTPInterceptor(backendhandler.IsExistOSSFile))
 	// 系统管理员冻结文件或者取消冻结文件--
 	http.HandleFunc("/filebackend/changefilestatus", handler.HTTPInterceptor(backendhandler.UpdateFileStatus))
+	// 系统管理员更改所选文件状态√
+	http.HandleFunc("/filebackend/updatefilestatus", handler.HTTPInterceptor(backendhandler.UpdateFileStatus))
+	// 系统管理员复制所选文件√---
+	http.HandleFunc("/filebackend/copyfile", handler.HTTPInterceptor(backendhandler.CopyFile))
+	// 系统管理员移动所选文件√---
+	http.HandleFunc("/filebackend/movefile", handler.HTTPInterceptor(backendhandler.MoveFile))
+	// 系统管理员更改文件存储类型（暂时不实现）
+	http.HandleFunc("/filebackend/changefilestore", handler.HTTPInterceptor(backendhandler.ChangeFileStore))
 
 	// 文件元数据管理
-	// 获取文件元信息×
+	// 系统管理员获取所有文件元信息√
+	http.HandleFunc("/filebackend/getallmeta", handler.HTTPInterceptor(filemetabackend.GetAllObjectMeta))
+	// 系统管理员获取文件元信息√
 	http.HandleFunc("/filebackend/getobjectmeta", handler.HTTPInterceptor(filemetabackend.GetObjectMeta))
-	// 修改文件元信息×
+	// 系统管理员修改文件元信息√
 	http.HandleFunc("/filebackend/updateobjectmeta", handler.HTTPInterceptor(filemetabackend.UpdateObjectMeta))
-	// 查看文件元信息修改记录×
-	http.HandleFunc("/filebackend/getobjectrecord", handler.HTTPInterceptor(filemetabackend.GetObjectMetaRecord))
+	// 系统管理员查看文件元信息操作记录√
+	http.HandleFunc("/filebackend/getobjectmetaoperation", handler.HTTPInterceptor(filemetabackend.GetObjectMetaOperation))
+
+	// 操作记录查看
+	// 系统管理员获取所有的操作记录√
+	http.HandleFunc("/filebackend/getalloperations", handler.HTTPInterceptor(operationhandler.GetAllOperations))
+	// 系统管理员获取指定文件的操作记录√
+	http.HandleFunc("/filebackend/getoperationsbyfile", handler.HTTPInterceptor(operationhandler.GetOperationsByUserFileId))
+	// 系统管理员获取某个用户的操作记录√
+	http.HandleFunc("/filebackend/getoperationsbyuser", handler.HTTPInterceptor(operationhandler.GetOperationsByUserId))
+	// 系统管理员获取某个时间段的操作记录√
+	http.HandleFunc("/filebackend/getoperationsbytime", handler.HTTPInterceptor(operationhandler.GetOperationsByTime))
+	// 系统管理员获取某个操作类型的操作记录√
+	http.HandleFunc("/filebackend/getoperationsbytype", handler.HTTPInterceptor(operationhandler.GetOperationsByOperationType))
+	// 系统管理员获取某个操作id对应的操作记录√
+	http.HandleFunc("/filebackend/getoperationsbyid", handler.HTTPInterceptor(operationhandler.GetOperationsByOperationId))
 
 	// Bucket管理（SDK已实现，考虑到安全性问题，暂时不实现）
 
