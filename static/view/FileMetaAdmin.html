@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>宙斯云盘-文件元数据管理</title>
+    <title>宙斯云盘-文件元信息数据管理</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../css/uikit.min.css" />
@@ -52,25 +52,25 @@
             <li>
                 <a href="#">
                     <span class="uk-icon uk-margin-small-right" uk-icon="icon: star"></span>
-                    文件元数据管理
+                    文件元信息数据管理
                 </a>
             </li>
         </ul>
         <div class="uk-navbar-item">
             <form action="javascript:void(0)">
-                <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
-                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+                <input class="uk-input uk-form-width-large" disabled type="text" placeholder="文件元信息数据管理--高权限管理">
+                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-searchOper">查找文件元信息操作记录</button>
             </form>
-        </div>
+        </div><br>
         <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-push" style="float: right;margin-right: 30px;">更多操作</button>
 
         <div class="uk-card-header">
             <div class="uk-grid-small uk-flex-middle" uk-grid>
                 <div class="uk-width-auto">
-                    <img class="uk-border-circle" width="40" height="40" src="http://b-ssl.duitang.com/uploads/item/201704/10/20170410095843_SEvMy.thumb.700_0.jpeg">
+                    <img class="uk-border-circle" width="40" height="40" src="http://cdn.duitang.com/uploads/item/201508/08/20150808085253_ctAEQ.thumb.700_0.jpeg">
                 </div>
                 <div class="uk-width-expand">
-                    <h3 id="adminname1" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
+                    <h3 id="adminname1" class="uk-card-title uk-margin-remove-bottom"></h3>
                     <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
                 </div>
             </div>
@@ -78,16 +78,20 @@
 
     </div>
 </nav>
-<!--搜索结果抽屉 -->
-<div id="offcanvas-usage" uk-offcanvas>
+
+<!-- 查找指定操作记录选择抽屉 -->
+<div id="offcanvas-searchOper" uk-offcanvas="mode: reveal; overlay: true;flip: true">
     <div class="uk-offcanvas-bar">
 
         <button class="uk-offcanvas-close" type="button" uk-close></button>
 
-        <h3>宙斯SOU</h3>
+        <h3>查找操作记录</h3>
 
-        <p>抱歉，未找到您想搜索的东西</p>
-
+        <button class="uk-button uk-button-primary" >查找指定文件操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" >查找指定用户操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" >查找指定时间段操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" >查找指定类型操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" >查找指定ID操作记录</button><br><br>
     </div>
 </div>
 
@@ -103,7 +107,7 @@
             <h3 id="adminname2" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
             <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
         </div>
-        <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle>文件管理</button>
+        <button class="uk-button uk-button-primary"onclick="toFileMan()">文件管理</button>
         <br> <br>
         <button class="uk-button uk-button-primary" onclick="toUserMan()">用户管理</button>
         <br> <br>
@@ -135,13 +139,8 @@
         <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
             <thead>
             <tr>
-                <th>文件Hash值</th>
                 <th>文件名</th>
-                <th>文件大小</th>
-                <th>创建时间</th>
-                <th>最近修改时间</th>
-                <th>归属用户</th>
-                <th>操作</th>
+                <th>文件元信息操作</th>
             </tr>
             </thead>
         </table>
@@ -158,6 +157,26 @@
         </div>
     </div>
 </div>
+
+<!-- 文件元信息数据查看模态框 -->
+<div id="modal-ShowFileMeta" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <p id="Accept-Ranges"></p><hr>
+        <p id="Connection"></p><hr>
+        <p id="Content-Length"></p><hr>
+        <p id="Content-Md5"></p><hr>
+        <p id="Content-Type"></P><hr>
+        <p id="Date"></p><hr>
+        <p id="Etag"></p><hr>
+        <p id="Last-Modified"></p><hr>
+        <p id="Server"></p><hr>
+        <p id="X-Oss-Hash-Crc64ecma"></p><hr>
+        <p id="X-Oss-Object-Type"></p><hr>
+        <p id="X-Oss-Request-Id"></p><hr>
+        <p id="X-Oss-Server-Time"></p><hr>
+        <p id="X-Oss-Storage-Class"></p>
+    </div>
+</div>
 </body>
 
 <script lang="javascript">
@@ -169,6 +188,12 @@
         window.location.href = "/static/view/signin.html";
     }
 
+    //跳转去文件本体管理页面
+    function toFileMan() {
+        alert("即将唤起文件内容管理页面...")
+        window.open ("http://localhost:9090/static/view/FileAdmin.html");
+    }
+
 
     //跳转去用户管理页面
     function toUserMan() {
@@ -178,8 +203,8 @@
         }, 1500);
     }
 
-
     window.onload = function () {
+
         var username = document.getElementById('username');
         $.ajax({
             url: "/user/info?" + queryParams(),
@@ -199,7 +224,7 @@
                 var resp = JSON.parse(body);
                 document.getElementById("adminname1").innerHTML = resp.data.Username;
                 document.getElementById("adminname2").innerHTML = resp.data.Username;
-                updateFileList();
+                updateFileList(resp.all_files);
             }
         });
     }
@@ -226,82 +251,178 @@
             checkTime(minutes)+":"+checkTime(seconds));
     }
 
-    function updateFileList() {
+    // 根据文件名从oss获取文件元信息
+    function GetFileMetaFromOSS(objectname){
+
+        // 模态框内装载数据前清空模态框
+        $('#Accept-Ranges').empty()
+        $('#Connection').empty()
+        $('#Content-Length').empty()
+        $('#Content-Md5').empty()
+        $('#Content-Type').empty()
+        $('#Date').empty()
+        $('#Etag').empty()
+        $('#Last-Modified').empty()
+        $('#Server').empty()
+        $('#X-Oss-Hash-Crc64ecma').empty()
+        $('#X-Oss-Object-Type').empty()
+        $('#X-Oss-Request-Id').empty()
+        $('#X-Oss-Server-Time').empty()
+        $('#X-Oss-Storage-Class').empty()
+
         $.ajax({
-            url: "/file/all?" + queryParams(),
-            type: "POST",
-            data: {
-                limit: 15
+            url:"/filebackend/getobjectmeta?"+ queryParams(),
+            type:"POST",
+            data:{
+                objectname:objectname
             },
-            error: function (err) {
-                alert(JSON.stringify(err));
+            error:function (error) {
+                alert(error)
             },
-            success: function (body) {
-                console.log(body)
-                if (!body) {
-                    return;
-                }
-                var data = body;
-                if (!data || data.length <= 0) {
-                    return;
-                }
+            success:function (response) {
+                response = JSON.parse(response)
+                console.log(response)
+                // 装载当前文件元信息数据
+                $('#Accept-Ranges').html('Accept-Ranges:&nbsp;<strong>'+JSON.parse(response.data)['Accept-Ranges']+'</strong>')
+                $('#Connection').html('Connection:&nbsp;<strong>'+JSON.parse(response.data)['Connection']+'</strong>')
+                $('#Content-Length').html('Content-Length:&nbsp;<strong>'+JSON.parse(response.data)['Content-Length']+'</strong>')
+                $('#Content-Md5').html('Content-Md5:&nbsp;<strong>'+JSON.parse(response.data)['Content-Md5']+'</strong>')
+                $('#Content-Type').html('Content-Type:&nbsp;<strong>'+JSON.parse(response.data)['Content-Type'][0]+'</strong>')
+                $('#Date').html('Date:&nbsp;<strong>'+JSON.parse(response.data)['Date']+'</strong>')
+                $('#Etag').html('Etag:&nbsp;<strong>'+JSON.parse(response.data)['Etag']+'</strong>')
+                $('#Last-Modified').html('Last-Modified:&nbsp;<strong>'+JSON.parse(response.data)['Last-Modified']+'</strong>')
+                $('#Server').html('Server:&nbsp;<strong>'+JSON.parse(response.data)['Server']+'</strong>')
+                $('#X-Oss-Hash-Crc64ecma').html('X-Oss-Hash-Crc64ecma:&nbsp;<strong>'+JSON.parse(response.data)['X-Oss-Hash-Crc64ecma']+'</strong>')
+                $('#X-Oss-Object-Type').html('X-Oss-Object-Type:&nbsp;<strong>'+JSON.parse(response.data)['X-Oss-Object-Type']+'</strong>')
+                $('#X-Oss-Request-Id').html('X-Oss-Request-Id:&nbsp;<strong>'+JSON.parse(response.data)['X-Oss-Request-Id']+'</strong>')
+                $('#X-Oss-Server-Time').html('X-Oss-Server-Time:&nbsp;<strong>'+JSON.parse(response.data)['X-Oss-Server-Time']+'</strong>')
+                $('#X-Oss-Storage-Class').html('X-Oss-Storage-Class:&nbsp;<strong>'+JSON.parse(response.data)['X-Oss-Storage-Class']+'</strong>')
 
-                var dlHost = 'http://localhost:9090';
-                var dlEntry = localStorage.getItem('downloadEntry');
-                if (dlEntry != null) {
-                    if (dlEntry.indexOf('http:')<0) {
-                        dlHost = 'http://' + dlEntry;
-                    } else {
-                        dlHost = dlEntry;
-                    }
-                }
-
-                var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
-                var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
-                    'style="height:30px;margin:5px 3px;"' +
-                    'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
-
-
-                //给模态框表单添加验证
-                $("#realusername").attr("value",localStorage.getItem("username"))
-                console.log(localStorage.getItem("username"))
-                $("#token").attr("value",localStorage.getItem("token"))
-                console.log(localStorage.getItem("token"))
-
-                data = JSON.parse(data)
-                console.log(data)
-                for (var i = 0; i < data.length; i++) {
-                    var x = document.getElementById('filetbl').insertRow();
-                    var cell = x.insertCell();
-                    cell.innerHTML = data[i].FileHash.substr(0, 20) + "...";
-
-                    cell = x.insertCell();
-                    fileShowURL = dlHost+"/static/files/"+data[i].RealName;
-                    cell.innerHTML = "<a uk-tooltip="+data[i].FileName+" id='"+data[i].FileHash+"' target='_blank' href= "+fileShowURL+">"+ data[i].FileName.substring(0,50)+"</a>";
-
-                    cell = x.insertCell();
-                    cell.innerHTML = data[i].FileSize+" KB";
-
-                    cell = x.insertCell();
-                    var UploadAt = new Date(data[i].UploadAt)
-                    cell.innerHTML = formatDate(UploadAt);
-
-                    cell = x.insertCell();
-                    var LastUpdated = new Date(data[i].LastUpdated);
-                    cell.innerHTML = formatDate(LastUpdated);
-
-                    cell = x.insertCell();
-                    cell.innerHTML = data[i].UserName;
-
-                    cell = x.insertCell();
-                    cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
-                            .format(data[i].FileHash, queryParams());
-                }
-
+                // 显示模态框
+                UIkit.modal($('#modal-ShowFileMeta')).show();
             }
-        });
+        })
+    }
+
+    // 获取所有文件元信息
+    function updateFileList(all_files) {
+        console.log(all_files)
+
+        // 填充文件名数据
+        for (var i = 0; i < all_files.length; i++) {
+            var x = document.getElementById('filetbl').insertRow();
+            var cell = x.insertCell();
+            cell.innerHTML = all_files[i].FileName;
+
+            // var dlHost = 'http://localhost:9090';
+            // var dlEntry = localStorage.getItem('downloadEntry');
+            // if (dlEntry != null) {
+            //     if (dlEntry.indexOf('http:')<0) {
+            //         dlHost = 'http://' + dlEntry;
+            //     } else {
+            //         dlHost = dlEntry;
+            //     }
+            // }
+
+
+
+            var GetFileMetaHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "GetFileMetaFromOSS(\'{0}\')">查看文件元信息</button>';
+
+            var ShowFileMetaOperHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "GetFileMetaFromOSS(\'{0}\')">查看文件操作记录</button>';
+
+            cell = x.insertCell();
+            cell.innerHTML = GetFileMetaHtml.format(all_files[i].FileRelLocation)+ShowFileMetaOperHtml.format(all_files[i].FileRelLocation);
+
+
+        }
+
+        // $.ajax({
+        //     url: "/filebackend/getallmeta?" + queryParams(),
+        //     type: "POST",
+        //     data: {
+        //         limit: 15
+        //     },
+        //     error: function (err) {
+        //         alert(JSON.stringify(err));
+        //     },
+        //     success: function (response) {
+        //
+        //         var dlHost = 'http://localhost:9090';
+        //         var dlEntry = localStorage.getItem('downloadEntry');
+        //         if (dlEntry != null) {
+        //             if (dlEntry.indexOf('http:')<0) {
+        //                 dlHost = 'http://' + dlEntry;
+        //             } else {
+        //                 dlHost = dlEntry;
+        //             }
+        //         }
+        //
+        //         var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
+        //             'style="height:30px;margin:5px 3px;"' +
+        //             'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
+        //         var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
+        //             'style="height:30px;margin:5px 3px;"' +
+        //             'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
+        //
+        //
+        //         // //给模态框表单添加验证
+        //         // $("#realusername").attr("value",localStorage.getItem("username"))
+        //         // console.log(localStorage.getItem("username"))
+        //         // $("#token").attr("value",localStorage.getItem("token"))
+        //         // console.log(localStorage.getItem("token"))
+        //
+        //         // 序列化返回内容，转化为json数据
+        //         response = JSON.parse(response)
+        //         console.log(response)
+        //
+        //         // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
+        //         if (response.code == -1){
+        //             UIkit.notification({message: response.msg, status: 'danger'})
+        //         }else {
+        //             for (var i = 0; i < response.data.length; i++) {
+        //                 var x = document.getElementById('filetbl').insertRow();
+        //                 var cell = x.insertCell();
+        //                 cell.innerHTML = response.data[i].UserFileId;
+        //
+        //                 cell = x.insertCell();
+        //                 // 装载当前文件元信息数据
+        //                 $('#Accept-Ranges').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Accept-Ranges']+'</strong>')
+        //                 $('#Connection').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Connection']+'</strong>')
+        //                 $('#Content-Length').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Length']+'</strong>')
+        //                 $('#Content-Md5').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Md5']+'</strong>')
+        //                 $('#Content-Type').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Type'][0]+'</strong>')
+        //                 $('#Date').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Date']+'</strong>')
+        //                 $('#Etag').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Etag']+'</strong>')
+        //                 $('#Last-Modified').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Last-Modified']+'</strong>')
+        //                 $('#Server').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Server']+'</strong>')
+        //                 $('#X-Oss-Hash-Crc64ecma').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Hash-Crc64ecma']+'</strong>')
+        //                 $('#X-Oss-Object-Type').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Object-Type']+'</strong>')
+        //                 $('#X-Oss-Request-Id').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Request-Id']+'</strong>')
+        //                 $('#X-Oss-Server-Time').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Server-Time']+'</strong>')
+        //                 $('#X-Oss-Storage-Class').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Storage-Class']+'</strong>')
+        //                 cell.innerHTML = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-ShowFileMeta" uk-toggle>点击查看文件元信息</button>'
+        //                 // cell.innerHTML = JSON.parse(response.data[i].Meta)['X-Oss-Hash-Crc64ecma'];
+        //                 console.log(JSON.parse(response.data[i].Meta)['Content-Type'][0])
+        //
+        //                 cell = x.insertCell();
+        //                 var UploadAt = new Date(response.data[i].UploadAt)
+        //                 cell.innerHTML = formatDate(UploadAt);
+        //
+        //                 cell = x.insertCell();
+        //                 var LastUpdated = new Date(response.data[i].LastUpdate);
+        //                 cell.innerHTML = formatDate(LastUpdated);
+        //
+        //                 cell = x.insertCell();
+        //                 cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
+        //                     .format(data[i].FileHash, queryParams());
+        //             }
+        //         }
+        //     }
+        // });
     }
 
     function download(url){

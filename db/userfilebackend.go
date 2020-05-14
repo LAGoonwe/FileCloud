@@ -10,7 +10,7 @@ import (
 
 // 用户文件结构体 tbl_user_file
 type BackendUserFile struct {
-	Id			    int
+	Id              int
 	UserName        string
 	FileSha1        string
 	FileName        string
@@ -21,8 +21,6 @@ type BackendUserFile struct {
 	LastUpdate      string
 	Status          int
 }
-
-
 
 // 获取系统中所有用户的文件
 func GetAllUserFiles(pageIndex, pageSize int) ([]BackendUserFile, error) {
@@ -67,11 +65,10 @@ func GetAllUserFiles(pageIndex, pageSize int) ([]BackendUserFile, error) {
 	return backendUserFiles, nil
 }
 
-
 // 返回系统所有文件名--辅助搜索提示
 func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select file_name from tbl_user_file")
+		"select file_name,file_rel_location from tbl_user_file")
 	if err != nil {
 		log.Println("GetAllFilesExcPage DB Failed")
 		log.Println(err.Error())
@@ -89,7 +86,7 @@ func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	var backendUserFiles []BackendUserFile
 	for rows.Next() {
 		backendUserFile := BackendUserFile{}
-		err := rows.Scan(&backendUserFile.FileName)
+		err := rows.Scan(&backendUserFile.FileName, &backendUserFile.FileRelLocation)
 		if err != nil {
 			log.Println("GetAllFilesExcPage Scan Failed")
 			log.Println(err.Error())
@@ -99,7 +96,6 @@ func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	}
 	return backendUserFiles, nil
 }
-
 
 // 根据名称检索文件
 func GetFilesByName(name string) ([]BackendUserFile, error) {
@@ -146,8 +142,6 @@ func GetFilesByName(name string) ([]BackendUserFile, error) {
 	fmt.Println(backendUserFiles)
 	return backendUserFiles, nil
 }
-
-
 
 // 获取文件重要信息（通用）
 func GetLocalFile(filesha1 string) (BackendUserFile, error) {
@@ -202,7 +196,7 @@ func UpdateFileStatus(filehash string) (BackendUserFile, error) {
 			// 找不到数据
 			log.Println("UpdateFileStatus No Data")
 			return BackendUserFile{}, errors.New("数据不存在")
-		} else  {
+		} else {
 			log.Println("GetLocalFileAllMeta QueryRow Failed")
 			log.Println(err.Error())
 			return BackendUserFile{}, err
@@ -242,8 +236,6 @@ func UpdateFileStatus(filehash string) (BackendUserFile, error) {
 	return BackendUserFile{}, errors.New("数据更新异常")
 }
 
-
-
 // 判断数据库中是否存在同名文件
 func IsExistSameNameFile(username string, filename string) (bool, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -274,8 +266,6 @@ func IsExistSameNameFile(username string, filename string) (bool, error) {
 	}
 	return true, nil
 }
-
-
 
 // 判断数据库中是否存在内容相同的文件
 func IsExistSameContentFile(username string, filesha1 string) (bool, error) {
@@ -309,8 +299,6 @@ func IsExistSameContentFile(username string, filesha1 string) (bool, error) {
 	return true, nil
 }
 
-
-
 // 判断文件是否已经被上传过
 func IsFileHasUploaded(filesha1 string) (bool, error) {
 	stmt, err := mydb.DBConn().Prepare("" +
@@ -333,8 +321,6 @@ func IsFileHasUploaded(filesha1 string) (bool, error) {
 	return true, nil
 }
 
-
-
 // 上传完毕向用户文件表插入新的数据
 func OnBackendUserFileUploadFinished(username, filesha1, filename, fileAbsLocation, fileRelLocation string, filesize int64, status int) (bool, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -354,8 +340,6 @@ func OnBackendUserFileUploadFinished(username, filesha1, filename, fileAbsLocati
 	}
 	return true, nil
 }
-
-
 
 // 通过filesha1获取文件对象
 func GetFileByFileSha1(filesha1 string, username string) (*BackendUserFile, error) {
@@ -398,8 +382,6 @@ func UpdateFileName(filesha1, newFileName, fileAbsLocation, fileRelLocation stri
 	}
 	return true, nil
 }
-
-
 
 // 批量获取用户文件信息（这里不展示filesha1，绝对路径）
 // filesha1这种值不应该暴露给用户吗，本地服务器的绝对路径也是，存在安全风险
@@ -454,8 +436,6 @@ func DeleteFile(filesha1 string) (bool, error) {
 	}
 	return true, nil
 }
-
-
 
 // 根据用户名和文件名找到文件
 func GetFileByUserNameAndFileName(username, filename string) (bool, BackendUserFile, error) {

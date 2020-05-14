@@ -19,12 +19,11 @@ import (
 2、获取特定文件元信息()
 3、修改文件元信息()
 4、查看元数据变更记录()
- */
+*/
 
 // 可能可以通过阿里云来获取文件元数据
 // 文件元信息（Object Meta）是对上传到OSS的文件的属性描述，分为两种：HTTP标准属性（HTTP Headers）和 User Meta（用户自定义元信息）。
 // 文件元信息可以在各种方式上传时或者拷贝文件时进行设置。
-
 
 // 获取已有文件元信息列表
 func GetAllObjectMeta(w http.ResponseWriter, r *http.Request) {
@@ -61,14 +60,12 @@ func GetAllObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := util.RespMsg{
-		Code: -1,
+		Code: 1,
 		Msg:  "获取文件元信息列表成功！",
 		Data: allObjectMetas,
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 从OSS获取文件元数据信息并存入本地
 func GetObjectMeta(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +144,7 @@ func GetObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 异步：修改记录插入到数据库中
-	detail := "用户：" + username +  "，修改文件：" + backendUserFile.FileRelLocation + "的元信息"
+	detail := "用户：" + username + "，查看文件：" + backendUserFile.FileRelLocation + "的元信息"
 	_, err = dblayer.InsertOperation(common.GetObjectMeta, metaId, backendUserFile.FileSha1, username, detail)
 	if err != nil {
 		// 不影响主要业务
@@ -161,8 +158,6 @@ func GetObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 修改文件元信息
 // 自定义元信息，以X-Oss-Meta-为前缀的参数
@@ -255,7 +250,7 @@ func UpdateObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 异步：修改记录插入到数据库中
-	detail := "用户：" + username +  "，修改文件：" + backendUserFile.FileRelLocation + "元信息"
+	detail := "用户：" + username + "，修改文件：" + backendUserFile.FileRelLocation + "元信息"
 	_, err = dblayer.InsertOperation(common.UpdateObjectMeta, metaId, backendUserFile.FileSha1, username, detail)
 	if err != nil {
 		// 不影响主要业务
@@ -269,8 +264,6 @@ func UpdateObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resp.JSONBytes())
 }
-
-
 
 // 查看文件元信息修改记录
 func GetObjectMetaOperation(w http.ResponseWriter, r *http.Request) {
