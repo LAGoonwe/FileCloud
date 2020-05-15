@@ -68,7 +68,7 @@ func GetAllUserFiles(pageIndex, pageSize int) ([]BackendUserFile, error) {
 // 返回系统所有文件名--辅助搜索提示
 func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select file_name,file_rel_location from tbl_user_file")
+		"select file_sha1,user_name,file_name,file_rel_location from tbl_user_file")
 	if err != nil {
 		log.Println("GetAllFilesExcPage DB Failed")
 		log.Println(err.Error())
@@ -86,7 +86,7 @@ func GetAllFilesExcPage() ([]BackendUserFile, error) {
 	var backendUserFiles []BackendUserFile
 	for rows.Next() {
 		backendUserFile := BackendUserFile{}
-		err := rows.Scan(&backendUserFile.FileName, &backendUserFile.FileRelLocation)
+		err := rows.Scan(&backendUserFile.FileSha1, &backendUserFile.UserName, &backendUserFile.FileName, &backendUserFile.FileRelLocation)
 		if err != nil {
 			log.Println("GetAllFilesExcPage Scan Failed")
 			log.Println(err.Error())

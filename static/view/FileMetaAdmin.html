@@ -82,16 +82,12 @@
 <!-- 查找指定操作记录选择抽屉 -->
 <div id="offcanvas-searchOper" uk-offcanvas="mode: reveal; overlay: true;flip: true">
     <div class="uk-offcanvas-bar">
-
         <button class="uk-offcanvas-close" type="button" uk-close></button>
-
         <h3>查找操作记录</h3>
-
-        <button class="uk-button uk-button-primary" >查找指定文件操作记录</button><br><br>
-        <button class="uk-button uk-button-primary" >查找指定用户操作记录</button><br><br>
-        <button class="uk-button uk-button-primary" >查找指定时间段操作记录</button><br><br>
-        <button class="uk-button uk-button-primary" >查找指定类型操作记录</button><br><br>
-        <button class="uk-button uk-button-primary" >查找指定ID操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" href="#modal-GetFileMetaByFile" uk-toggle>查找指定文件操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" href="#modal-GetFileMetaByName" uk-toggle>查找指定用户操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" href="#modal-GetFileMetaByTime" uk-toggle>查找指定时间段操作记录</button><br><br>
+        <button class="uk-button uk-button-primary" href="#modal-GetFileMetaByType" uk-toggle>查找指定操作类型操作记录</button><br><br>
     </div>
 </div>
 
@@ -140,23 +136,88 @@
             <thead>
             <tr>
                 <th>文件名</th>
+                <th>文件Hash值</th>
+                <th>文件所属用户</th>
                 <th>文件元信息操作</th>
             </tr>
             </thead>
         </table>
 
-        <!--删除确认模态框-->
-        <div id="modal-delete" uk-modal>
+        <!--修改文件元信息选择模态框-->
+        <div id="modal-SetFileMeta" uk-modal>
             <div class="uk-modal-dialog uk-modal-body">
-                <P>确认删除吗？</P>
+                <P>请选择要修改的文件元信息类型</P>
+                <div class="uk-margin">
+                    <!-- 选择下拉框-->
+                    <select class="uk-select uk-form-width" onchange="ChangeType()">
+                        <option value="请选择验证方式" selected>请选择要修改的文件元信息类型</option>
+                        <option value="Accept-Ranges">Accept-Ranges</option>
+                        <option value="Connection">Connection</option>
+                    </select><br>
+                </div>
                 <p class="uk-text-right">
                     <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
-                    <button id="deleteActionButton" class="uk-button uk-button-primary" type="button">确定</button>
+                    <button id="SetFileMetaActionButton" class="uk-button uk-button-primary" type="button">确定</button>
                 </p>
             </div>
         </div>
     </div>
 </div>
+
+
+<!--查找指定操作类型的文件元信息操作记录模态框-->
+<div id="modal-GetFileMetaByType" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P>请输入要查找的操作类型代号</P>
+        <P>10是查看文件元信息的操作，11是修改文件元信息的操作</P>
+        <input id="operationTypeId" class="uk-input" type="text">
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button class="uk-button uk-button-primary" type="button" onclick="GetFileMetaByType()">确定</button>
+        </p>
+    </div>
+</div>
+
+<!--查找指定HASH的文件元信息操作记录模态框-->
+<div id="modal-GetFileMetaByFile" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P>请输入要查找的文件HASH值</P>
+        <input id="FileHash" class="uk-input" type="text">
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button class="uk-button uk-button-primary" type="button" onclick="GetFileMetaByFile()">确定</button>
+        </p>
+    </div>
+</div>
+
+<!--查找指定时间段文件元信息操作记录模态框-->
+<div id="modal-GetFileMetaByTime" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P>请选择要查找的时间段</P>
+        <form id="TimeForm">
+        <input id="StartTime" type="datetime-local" value="2020-05-15T00:00:00"/>
+        <span>——</span>
+        <input id="EndTime" type="datetime-local" value="2020-05-16T00:00:00"/>
+        </form>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button class="uk-button uk-button-primary" type="button" onclick="GetFileMetaByTime()">确定</button>
+        </p>
+    </div>
+</div>
+
+<!--查找指定管理员做的文件元信息操作记录模态框-->
+<div id="modal-GetFileMetaByName" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <P>请输入指定的管理员名称</P>
+        <input id="AdminName" class="uk-input" type="text">
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
+            <button class="uk-button uk-button-primary" type="button" onclick="GetFileMetaByName()">确定</button>
+        </p>
+    </div>
+</div>
+
 
 <!-- 文件元信息数据查看模态框 -->
 <div id="modal-ShowFileMeta" uk-modal>
@@ -177,9 +238,165 @@
         <p id="X-Oss-Storage-Class"></p>
     </div>
 </div>
+
+
+<!-- 文件操作记录查看模态框 -->
+<div id="modal-OperData_show" class="uk-modal-full" uk-modal>
+    <div class="uk-modal-dialog">
+        <button class="uk-modal-close-full uk-close-large" type="button" uk-close></button>
+        <div class="uk-grid-collapse uk-child-width-1-2@s uk-flex-middle" uk-grid>
+            <div class="uk-background-cover" uk-height-viewport style="width: 100%">
+                <br>
+                <h2 style="text-align: center;">操作记录如下</h2>
+                <hr class="uk-divider-icon">
+                <div style="text-align: center" id="OperData_show">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 
 <script lang="javascript">
+
+    // 指定文件查找操作记录
+    function GetFileMetaByFile() {
+        // 清空显示
+        $('#OperData_show').empty()
+
+        $.ajax({
+            url: "/filebackend/getoperationsbyfile?" + queryParams(),
+            type: "POST",
+            data: {
+                filehash: $('#FileHash').val(),
+            },
+            error: function (error) {
+                alert(error)
+            },
+            success: function (response) {
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    response = JSON.parse(response)
+                    if (response.data == null){
+                        UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                    }else{
+                        for (var i = 0;i<response.data.length;i++){
+                            var OperationTime = new Date(response.data[i].OperationTime);
+                            $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                        }
+                        console.log(response)
+                        UIkit.modal($('#modal-OperData_show')).show();
+                    }
+                }
+            }
+        })
+    }
+
+    // 指定操作类型查找操作记录
+    function GetFileMetaByType() {
+        // 清空显示
+        $('#OperData_show').empty()
+
+        $.ajax({
+            url: "/filebackend/getoperationsbytype?" + queryParams(),
+            type: "POST",
+            data: {
+                operationid: $('#operationTypeId').val(),
+            },
+            error: function (error) {
+                alert(error)
+            },
+            success: function (response) {
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    response = JSON.parse(response)
+                    if (response.data == null){
+                        UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                    }else{
+                        for (var i = 0;i<response.data.length;i++){
+                            var OperationTime = new Date(response.data[i].OperationTime);
+                            $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                        }
+                        console.log(response)
+                        UIkit.modal($('#modal-OperData_show')).show();
+                    }
+                }
+            }
+        })
+    }
+    
+    // 根据指定时间段获取文件元数据信息操作记录
+    function GetFileMetaByTime() {
+        // 清空显示
+        $('#OperData_show').empty()
+        var StartTime = new Date($('#StartTime').val())
+        var EndTime = new Date($('#EndTime').val())
+        $.ajax({
+            url: "/filebackend/getoperationsbytime?" + queryParams(),
+            type: "POST",
+            data: {
+                start: formatDate(StartTime),
+                end: formatDate(EndTime),
+            },
+            error: function (error) {
+                alert(error)
+            },
+            success: function (response) {
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    response = JSON.parse(response)
+                    if (response.data == null){
+                        UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                    }else{
+                        for (var i = 0;i<response.data.length;i++){
+                            var OperationTime = new Date(response.data[i].OperationTime);
+                            $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                        }
+                        console.log(response)
+                        UIkit.modal($('#modal-OperData_show')).show();
+                    }
+                }
+            }
+        })
+    }
+
+    // 查询指定管理员做的操作记录
+    function GetFileMetaByName() {
+        // 清空显示
+        $('#OperData_show').empty()
+
+        $.ajax({
+            url: "/filebackend/getoperationsbyuser?" + queryParams(),
+            type: "POST",
+            data: {
+                checkusername: $('#AdminName').val(),
+            },
+            error: function (error) {
+                alert(error)
+            },
+            success: function (response) {
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    response = JSON.parse(response)
+                    if (response.data == null){
+                        UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                    }else{
+                        for (var i = 0;i<response.data.length;i++){
+                            var OperationTime = new Date(response.data[i].OperationTime);
+                            $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                        }
+                        console.log(response)
+                        UIkit.modal($('#modal-OperData_show')).show();
+                    }
+                }
+            }
+        })
+    }
 
     function toIndex() {
         // window.location.href = '/file/upload?' + queryParams();
@@ -304,6 +521,42 @@
         })
     }
 
+    // 修改文件元信息
+    function SetFileMetaToOSS() {
+        UIkit.modal($('#modal-SetFileMeta')).show();
+    }
+
+    // 根据文件名和用户名获取该文件的元信息操作记录
+    function GetFileMetaOpertion(filehash,checkusername) {
+
+        $('#OperData_show').empty()
+
+        $.ajax({
+            url: "/filebackend/getoperationsbyfile?" + queryParams(),
+            type: "POST",
+            data: {
+                filehash: filehash,
+                checkusername:checkusername,
+            },
+            error: function (error) {
+                alert(error)
+            },
+            success: function (response) {
+                if (response.code == -1){
+                    UIkit.notification({message: response.msg, status: 'danger'})
+                }else {
+                    response = JSON.parse(response)
+                    for (var i = 0;i<response.data.length;i++){
+                        var OperationTime = new Date(response.data[i].OperationTime);
+                        $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                    }
+                    console.log(response)
+                    UIkit.modal($('#modal-OperData_show')).show();
+                }
+            }
+        })
+    }
+
     // 获取所有文件元信息
     function updateFileList(all_files) {
         console.log(all_files)
@@ -313,6 +566,12 @@
             var x = document.getElementById('filetbl').insertRow();
             var cell = x.insertCell();
             cell.innerHTML = all_files[i].FileName;
+
+            var cell = x.insertCell();
+            cell.innerHTML = all_files[i].FileSha1;
+
+            var cell = x.insertCell();
+            cell.innerHTML = all_files[i].UserName;
 
             // var dlHost = 'http://localhost:9090';
             // var dlEntry = localStorage.getItem('downloadEntry');
@@ -330,13 +589,18 @@
                 'style="height:30px;margin:5px 3px;"' +
                 'onClick = "GetFileMetaFromOSS(\'{0}\')">查看文件元信息</button>';
 
+            var SetFileMetaHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
+                'style="height:30px;margin:5px 3px;"' +
+                'onClick = "SetFileMetaToOSS(\'{0}\')">修改文件元信息</button>';
+
             var ShowFileMetaOperHtml = '<button class="uk-button uk-button-primary uk-button-small" ' +
                 'style="height:30px;margin:5px 3px;"' +
-                'onClick = "GetFileMetaFromOSS(\'{0}\')">查看文件操作记录</button>';
+                'onClick = "GetFileMetaOpertion(\'{0}\',\'{1}\')">查看文件元信息操作记录</button>';
 
             cell = x.insertCell();
-            cell.innerHTML = GetFileMetaHtml.format(all_files[i].FileRelLocation)+ShowFileMetaOperHtml.format(all_files[i].FileRelLocation);
-
+            cell.innerHTML = GetFileMetaHtml.format(all_files[i].FileRelLocation)+
+                SetFileMetaHtml.format(all_files[i].FileRelLocation)+
+                ShowFileMetaOperHtml.format(all_files[i].FileSha1,all_files[i].UserName);
 
         }
 

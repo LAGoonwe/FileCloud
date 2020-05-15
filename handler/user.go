@@ -231,7 +231,7 @@ func UserInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// 加载系统所有用户--辅助搜索提示
 	allUsers, _ := dblayer.GetAllUserExcPage()
 
-	// 加载系统所有文件名--辅助搜索提示
+	// 加载系统所有文件--辅助搜索提示
 	allFiles, _ := dblayer.GetAllFilesExcPage()
 
 	// 4. 组装并且响应用户数据

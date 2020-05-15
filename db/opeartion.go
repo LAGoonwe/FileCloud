@@ -8,14 +8,12 @@ import (
 
 type Operation struct {
 	OperationTypeId int
-	MetaId int
-	UserName string
-	UserFileSha1 string
-	Detail string
-	OperationTime string
+	MetaId          int
+	UserName        string
+	UserFileSha1    string
+	Detail          string
+	OperationTime   string
 }
-
-
 
 // 插入操作记录
 func InsertOperation(typeOperationId int, metaId int, userFileSha1 string, userName, detail string) (int, error) {
@@ -38,8 +36,6 @@ func InsertOperation(typeOperationId int, metaId int, userFileSha1 string, userN
 	}
 	return resultIdInt, nil
 }
-
-
 
 // 根据文件元信息id获取操作记录
 func GetOperationByMetaId(metaId int) ([]Operation, error) {
@@ -68,8 +64,6 @@ func GetOperationByMetaId(metaId int) ([]Operation, error) {
 	return operations, nil
 }
 
-
-
 // 根据操作id查看操作记录
 func GetOperationById(operationId int) (Operation, error) {
 	stmt, err := mydb.DBConn().Prepare(
@@ -92,8 +86,6 @@ func GetOperationById(operationId int) (Operation, error) {
 	}
 	return operation, nil
 }
-
-
 
 // 获取所有的文件操作记录
 func GetAllOperations(limit int) ([]Operation, error) {
@@ -122,12 +114,10 @@ func GetAllOperations(limit int) ([]Operation, error) {
 	return operations, nil
 }
 
-
-
 // 获取指定文件的操作记录
-func GetOperationsByUserFileId(username, userFileSha1 string) ([]Operation, error) {
+func GetOperationsByUserFileId(userFileSha1 string) ([]Operation, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where user_name = ? and user_file_sha1 = ?")
+		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where user_file_sha1 = ?")
 	if err != nil {
 		log.Println("GetOperationByUserFileId DB Failed")
 		log.Println(err.Error())
@@ -135,7 +125,7 @@ func GetOperationsByUserFileId(username, userFileSha1 string) ([]Operation, erro
 	}
 
 	var operations []Operation
-	rows, err := stmt.Query(username, userFileSha1)
+	rows, err := stmt.Query(userFileSha1)
 	for rows.Next() {
 		operation := Operation{}
 		err := rows.Scan(
@@ -150,12 +140,10 @@ func GetOperationsByUserFileId(username, userFileSha1 string) ([]Operation, erro
 	return operations, nil
 }
 
-
-
 // 获取指定用户的操作记录
-func GetOperationsByUserId(username string, limit int) ([]Operation, error) {
+func GetOperationsByUserId(username string) ([]Operation, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where user_name = ? limit ?")
+		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where user_name = ?")
 	if err != nil {
 		log.Println("GetOperationByUserId DB Failed")
 		log.Println(err.Error())
@@ -164,7 +152,7 @@ func GetOperationsByUserId(username string, limit int) ([]Operation, error) {
 	defer stmt.Close()
 
 	var operations []Operation
-	rows, err := stmt.Query(username, limit)
+	rows, err := stmt.Query(username)
 	for rows.Next() {
 		operation := Operation{}
 		err := rows.Scan(
@@ -179,12 +167,10 @@ func GetOperationsByUserId(username string, limit int) ([]Operation, error) {
 	return operations, nil
 }
 
-
-
 // 获取某个操作类型的操作记录
-func GetOperationsByOperationType(operationTypeId, limit int) ([]Operation, error) {
+func GetOperationsByOperationType(operationTypeId int) ([]Operation, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where operation_type_id = ? limit ?")
+		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where operation_type_id = ?")
 	if err != nil {
 		log.Println("GetOperationByOperationType DB Failed")
 		log.Println(err.Error())
@@ -193,7 +179,7 @@ func GetOperationsByOperationType(operationTypeId, limit int) ([]Operation, erro
 	defer stmt.Close()
 
 	var operations []Operation
-	rows, err := stmt.Query(operationTypeId, limit)
+	rows, err := stmt.Query(operationTypeId)
 	for rows.Next() {
 		operation := Operation{}
 		err := rows.Scan(
@@ -208,12 +194,10 @@ func GetOperationsByOperationType(operationTypeId, limit int) ([]Operation, erro
 	return operations, nil
 }
 
-
-
 // 获取某个时间段的操作记录
-func GetOperationsByTime(startTime, endTime string, limit int) ([]Operation, error) {
+func GetOperationsByTime(startTime, endTime string) ([]Operation, error) {
 	stmt, err := mydb.DBConn().Prepare(
-		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where operation_time >= ? and operation_time <= ? limit ?")
+		"select operation_type_id,user_name,user_file_sha1,detail,operation_time from tbl_operation where operation_time >= ? and operation_time <= ?")
 	if err != nil {
 		log.Println("GetOperationByTime DB Failed")
 		log.Println(err.Error())
@@ -222,7 +206,7 @@ func GetOperationsByTime(startTime, endTime string, limit int) ([]Operation, err
 	defer stmt.Close()
 
 	var operations []Operation
-	rows, err := stmt.Query(startTime, endTime, limit)
+	rows, err := stmt.Query(startTime, endTime)
 	for rows.Next() {
 		operation := Operation{}
 		err := rows.Scan(
