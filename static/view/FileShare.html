@@ -28,7 +28,7 @@
 <article class="uk-comment uk-comment-primary" style="width: 500px;height: 500px;background-color: white">
     <header class="uk-comment-header uk-grid-medium uk-flex-middle" uk-grid>
         <div class="uk-width-auto">
-            <img class="uk-comment-avatar" src="http://cdn.duitang.com/uploads/item/201508/08/20150808085253_ctAEQ.thumb.700_0.jpeg" width="80" height="80" alt="">
+            <img class="uk-comment-avatar" src="../img/avatar.jpeg" width="80" height="80" alt="">
         </div>
         <div class="uk-width-expand">
             <h4 class="uk-comment-title uk-margin-remove"><a id="fileFrom" class="uk-link-reset" href="#">Author</a></h4>
@@ -48,7 +48,7 @@
     </div>
 
     <div style="width: 500px;height: 200px;text-align:center;margin-top: 100px;">
-        <img style="width: 200px;height: 200px;" src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1589290166410&di=0efd9d4210f2687b19860b39fae67c51&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201804%2F08%2F20180408040002_E8uRa.thumb.700_0.jpeg">
+        <img style="width: 200px;height: 200px;" src="../img/timg.jpg">
     </div>
 </article>
 </div>
@@ -68,6 +68,8 @@
     fileURL = window.location.href.substring(window.location.href.indexOf('url')+4,window.location.href.length)
     $('#pd').text($.getUrlParam('filename'))
     $('#fileFrom').text($.getUrlParam('user'))
-    $('#fileTo').attr("href",decodeURIComponent(fileURL))
+    $('#fileTo').attr("href",fileURL)
+
+    // 设置文件预览
 </script>
 </html>
