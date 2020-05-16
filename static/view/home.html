@@ -65,6 +65,12 @@
       background-color: yellowgreen;
       transition: all .3s ease;
     }
+
+    .searchResult{width: 500px;position: absolute; background-color: #fff;
+      border: 1px solid #bbb; overflow: hidden; padding: 3px 5px;box-sizing: border-box;max-height:280px;overflow-y:auto;margin-top: 0!important;}
+    .hide{display: none}
+    .searchResult li{padding:3px 0;}
+    .searchResult li:hover{cursor:pointer;}
   </style>
 </head>
 <body>
@@ -83,10 +89,64 @@
     </ul>
     <div class="uk-navbar-item">
       <form action="javascript:void(0)">
-        <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
-        <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+        <input id="searchInput" class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
+        <ul class="searchResult hide"></ul>
+        <button class="uk-button uk-button-primary" href="#modal-full" uk-toggle onclick="SearchFilesByname()">宙斯sou一下~</button>
       </form>
     </div>
+
+    <!-- 搜索js逻辑 -->
+    <script>
+      var arry = new Array()
+      function searchBtn(allusers,allfiles) {
+        // 如果是属于当前登录用户的文件的话
+        for (j=0;j<allfiles.length;j++){
+          if (allfiles[j].UserName == localStorage.getItem("username")){
+            arry.push( allfiles[j].FileName)
+          }
+        }
+        var searchInput = $.trim($("#searchInput").val());
+        // $(".searchResult").html(" ");
+        if (searchInput == "") {}
+        else {
+          if ($.inArray(searchInput, arry)>0) {   //如果input中的内容在数组中，
+            $(".searchResult").addClass("hide");
+          }
+          else {
+            $(".searchResult").addClass("hide");
+            alert("请输入正确的名称");
+          }
+        }
+      }
+      $(function () {
+        //input框输入内容时
+        $("#searchInput").keyup(function () {
+          $(".searchResult").html("");
+          var searchInput = $.trim($(this).val().toString());
+          if (searchInput != "") {
+            $.each(arry, function (index, val) {
+              //如果输入的内容包括在数据中，就将其加入ul li中
+              if (val.indexOf(searchInput) != -1) {
+                $(".searchResult").append("<li>" + val + "</li>");
+              }
+              //如果ul中有子元素，则ul显示出来
+              if ($(".searchResult").html()!="") {
+                $(".searchResult").removeClass("hide");
+              }
+            })
+          }
+          //点击ul li中的数据，将其写入input中并清空ul中数据，隐藏ul。
+          $(".searchResult li").click(function () {
+            $("#searchInput").val($(this).html());
+            $(this).parent().html();
+            $(".searchResult").addClass("hide");
+          })
+          return false;
+        })
+
+      })
+    </script>
+
     <button class="uk-button uk-button-primary" href="#modal-upload" uk-toggle style="float: right;margin-right: 30px;">上传文件</button>
   </div>
 </nav>
@@ -114,16 +174,30 @@
   </div>
 </div>
 
-<!--搜索结果抽屉 -->
-<div id="offcanvas-usage" uk-offcanvas>
-  <div class="uk-offcanvas-bar">
-
-    <button class="uk-offcanvas-close" type="button" uk-close></button>
-
-    <h3>宙斯SOU</h3>
-
-    <p>抱歉，未找到您想搜索的东西</p>
-
+<!--搜索结果全屏模态框 -->
+<div id="modal-full" class="uk-modal-full" uk-modal>
+  <div class="uk-modal-dialog">
+    <button class="uk-modal-close-full uk-close-large" type="button" uk-close></button>
+    <div class="uk-grid-collapse uk-child-width-1-2@s uk-flex-middle" uk-grid>
+      <div class="uk-background-cover" uk-height-viewport style="width: 100%">
+        <br>
+        <h2 style="text-align: center;">搜索结果</h2>
+        <hr class="uk-divider-icon">
+        <!-- 搜索结果展示tb-->
+        <table id="filetbBySearch" class="uk-table uk-table-hover uk-table-divider">
+          <thead>
+          <tr>
+            <th>文件Hash</th>
+            <th>文件名</th>
+            <th>文件大小</th>
+            <th>上传时间</th>
+            <th>最近更新</th>
+            <th>文件操作</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -277,7 +351,7 @@
 <!--被冻结文件展示模态框-->
 <div id="modal-ListFreezeFiles" uk-modal>
   <div class="uk-modal-dialog uk-modal-body">
-    <P>该页文件因违反宙斯存储规定被冻结，有疑问请联系管理员</P>
+    <P>该页以下文件因违反宙斯存储规定被冻结，有疑问请联系管理员</P>
     <table id="FreezeFiles" class="uk-table uk-table-hover uk-table-divider">
       <thead>
       <tr>
@@ -286,8 +360,9 @@
       </thead>
     </table>
     <p class="uk-text-right">
-      <button class="uk-button uk-button-default uk-modal-close" type="button">我已知晓</button>
-      <button class="uk-button uk-button-primary" type="button">有异议，联系管理员</button>
+      <button class="uk-button uk-button-default uk-modal-close" type="button" onclick="NoTipAgain()">不再提醒</button>
+      <a target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=1346948628&site=qq&menu=yes"> <button id="update" class="uk-button uk-button-primary " type="button">有异议，联系管理员</button></a>
+
     </p>
   </div>
 </div>
@@ -491,6 +566,7 @@
         $("#ModalEmail").attr("value",resp.data.Email)
         FileTotal = resp.file_total
         updateFileList(FileTotal);
+        searchBtn(resp.all_users,resp.all_files)
       }
     });
   }
@@ -631,28 +707,30 @@
                 if (response.data[i].Status == 0){
                   FreezedFiles.push(response.data[i].FileName)
                   // 隐藏违禁数据
-                  $('#'+response.data[i].FileSha1+"_tr").hide()
+                  $('#'+response.data[i].FileSha1+"_tr a").attr("disabled" ,"disabled").css("pointer-events","none");;
+                  $('#'+response.data[i].FileSha1+"_tr button").attr("disabled" ,"disabled");
                 }
 
               }
             }
             // 设置表格内容
-            for (var j=0;j<FreezedFiles.length;j++){
-              var y = document.getElementById('FreezeFiles').insertRow();
-              cell = y.insertCell();
-              cell.innerHTML = FreezedFiles[j];
+            if (FreezedFiles.length == 0){
+
+            }else {
+              for (var j=0;j<FreezedFiles.length;j++){
+                var y = document.getElementById('FreezeFiles').insertRow();
+                cell = y.insertCell();
+                cell.innerHTML = FreezedFiles[j];
+              }
+              // 显示模态框
+              UIkit.modal($('#modal-ListFreezeFiles')).show();
             }
 
-
-
-            // // 显示模态框
-            // UIkit.modal($('#modal-ListFreezeFiles')).show();
           }
         });
 
         // 清空文件列表
         FreezedFiles=[]
-
         // 清空模态框表格数据
         $("#FreezeFiles tr:gt(0)").empty();
         $("#FreezeFiles tr").not(':eq(0)').empty()
@@ -662,6 +740,11 @@
         $("#filetbl tr").not(':eq(0)').empty()
       }
     });
+  }
+
+  // 不再提醒逻辑
+  function NoTipAgain() {
+    $('#modal-ListFreezeFiles').remove()
   }
 
   function renameFile(filehash, filename, renameUrl) {
@@ -823,6 +906,130 @@
     document.removeEventListener('copy', save);
     UIkit.notification({message: "分享链接已复制到粘贴板<br>快去分享你的文件吧~", status: 'success'})
   }
+
+  /**
+   * 根据名称搜索文件js
+   */
+  function SearchFilesByname() {
+
+    if ( $('#searchInput').val() == ""){
+      $("#filetbBySearch").hide()
+    }
+
+    $.ajax({
+      url: "/filebackend/querybyname?"+queryParams(),
+      type: "POST",
+      data: {
+        checkname:$('#searchInput').val(),
+      },
+      error: function (error) {
+        alert(error);
+      },
+      success: function (response) {
+        // 设置相关值
+        var dlHost = 'http://localhost:9090';
+        var dlEntry = localStorage.getItem('downloadEntry');
+        if (dlEntry != null) {
+          if (dlEntry.indexOf('http:')<0) {
+            dlHost = 'http://' + dlEntry;
+          } else {
+            dlHost = dlEntry;
+          }
+        }
+
+        // 设置操作按钮
+
+        var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small"' +
+                'style="height:30px;margin:5px 3px;"'+
+                ' onClick = "downloadFile(\'{1}\',\'' + dlHost + '/filebackend/download?filehash={0}&{2}\')">下载</button>';
+        var renameFileHtml = '<button class="uk-button uk-button-default uk-button-small" href="#modal-newname" uk-toggle ' +
+                'style="height:30px;margin:5px 3px;"'+
+                ' onClick = "renameFile(\'{0}\',\'{1}\',\''+dlHost+'/filebackend/update?filehash={0}&{2}\')\">重命名</button>';
+        var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
+                'style="height:30px;margin:5px 3px;"'+
+                ' onClick = "deleteFile(\'{0}\',\'' + dlHost + '/filebackend/delete?filehash={0}&{1}\')">删除</button>';
+
+        var shareFileHtml = '<button class="uk-button uk-button-primary uk-button-small"' +
+                'style="height:30px;margin:5px 3px;"'+
+                ' onClick = "shareFile(\'{1}\',\''+dlHost+'/filebackend/downloadurl?filehash={0}&{2}\')\"><span uk-icon="icon:social"><span>分享</button>';
+
+
+        //给模态框表单添加验证
+        $("#realusername").attr("value",localStorage.getItem("username"))
+        console.log(localStorage.getItem("username"))
+        $("#token").attr("value",localStorage.getItem("token"))
+        console.log(localStorage.getItem("token"))
+
+        // 序列化返回内容，转化为json数据
+        response = JSON.parse(response)
+
+        // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
+        if (response.code == -1){
+          UIkit.notification({message: response.msg, status: 'danger'})
+        }else {
+          console.log(response)
+          for (var i = 0; i < response.data.length; i++) {
+            var x = document.getElementById('filetbBySearch').insertRow();
+            x.id=response.data[i].FileSha1+"_tr"
+
+            cell = x.insertCell();
+            cell.innerHTML =  "<a uk-tooltip="+response.data[i].FileSha1+">"
+                    + response.data[i].FileSha1.substring(0,10)+"...</a>";
+
+            cell = x.insertCell();
+            // 截取盘符
+            Disk = response.data[i].FileAbsLocation.substring(0,response.data[i].FileAbsLocation.indexOf(":"))
+            // 截取路径
+            Path = response.data[i].FileAbsLocation.substring(response.data[i].FileAbsLocation.indexOf(":")+1,response.data[i].FileAbsLocation.length)
+            cell.innerHTML = "<a uk-tooltip="+response.data[i].FileName+" id='"+response.data[i].FileSha1+"'" +
+                    " target='_blank' href= '"+dlHost+"/"+Disk+Path+"'>"
+                    + response.data[i].FileName.substring(0,10)+"...</a>";
+
+            cell = x.insertCell();
+            cell.innerHTML = response.data[i].FileSize+" KB";
+
+
+            cell = x.insertCell();
+            var UploadAt = new Date(response.data[i].UploadAt)
+            cell.innerHTML = formatDate(UploadAt);
+
+            cell = x.insertCell();
+            var LastUpdated = new Date(response.data[i].LastUpdate);
+            cell.innerHTML = formatDate(LastUpdated);
+
+            cell = x.insertCell();
+            cell.innerHTML = downloadHtml.format(response.data[i].FileSha1,response.data[i].FileName,queryParams())  +
+                    renameFileHtml.format(response.data[i].FileSha1, response.data[i].FileName, queryParams())
+                    + deleteFileHtml.format(response.data[i].FileSha1, queryParams())
+                    +shareFileHtml.format(response.data[i].FileSha1,response.data[i].FileName, queryParams());
+
+            // 装配被封禁文件组和置灰元素
+            if (response.data[i].Status == 0){
+              FreezedFiles.push(response.data[i].FileName)
+              // 隐藏违禁数据
+              $('#'+response.data[i].FileSha1+"_tr").hide()
+            }
+
+          }
+        }
+        // 设置表格内容
+        for (var j=0;j<FreezedFiles.length;j++){
+          var y = document.getElementById('FreezeFiles').insertRow();
+          cell = y.insertCell();
+          cell.innerHTML = FreezedFiles[j];
+        }
+
+
+
+        // // 显示模态框
+        // UIkit.modal($('#modal-ListFreezeFiles')).show();
+      }
+    });
+    // 清除原有页面的表格数据
+    $("#filetbBySearch tr:gt(0)").empty();
+    $("#filetbBySearch tr").not(':eq(0)').empty()
+  }
+
 </script>
 
 </html>

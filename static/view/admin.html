@@ -64,8 +64,8 @@
         </ul>
         <div class="uk-navbar-item">
             <form action="javascript:void(0)">
-                <input class="uk-input uk-form-width-large" type="text" placeholder="找不到，搜一下？">
-                <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-usage">宙斯sou一下~</button>
+                <input class="uk-input uk-form-width-large" type="text" placeholder="用户管理--高级权限管理" disabled>
+                <button class="uk-button uk-button-primary" href="#modal-add-admin" uk-toggle>添加管理员</button>
             </form>
         </div>
         <button class="uk-button uk-button-primary" uk-toggle="target: #offcanvas-push" style="float: right;margin-right: 30px;">更多操作</button>
@@ -84,18 +84,6 @@
 
     </div>
 </nav>
-<!--搜索结果抽屉 -->
-<div id="offcanvas-usage" uk-offcanvas>
-    <div class="uk-offcanvas-bar">
-
-        <button class="uk-offcanvas-close" type="button" uk-close></button>
-
-        <h3>宙斯SOU</h3>
-
-        <p>抱歉，未找到您想搜索的东西</p>
-
-    </div>
-</div>
 
 <!--更多操作抽屉 -->
 <div id="offcanvas-push" uk-offcanvas="mode: push; overlay: true">
@@ -109,8 +97,6 @@
             <h3 id="adminname2" class="uk-card-title uk-margin-remove-bottom">文琪-ADMIIN</h3>
             <p class="uk-text-meta uk-margin-remove-top"><span class="uk-label uk-label-danger">管理员</span></p>
         </div>
-        <button class="uk-button uk-button-primary" href="#modal-add-admin" uk-toggle>添加管理员</button>
-        <br> <br>
         <button class="uk-button uk-button-primary" onclick="toFileMan()">文件管理</button>
         <br> <br>
         <button class="uk-button uk-button-primary" onclick="toFileMetaMan()">文件元数据管理</button>
@@ -307,14 +293,15 @@
             error: function (jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
                     if (errorThrown == "Forbidden")
-                        UIkit.notification({message: '请先登录本系统！', status: 'danger'})
+                        UIkit.notification({message: '登录失效！请重新登录网站！', status: 'danger'})
                     setTimeout(function(){
                         window.location.href = "/static/view/signin.html";
                     }, 1000);
                 } else {
                     UIkit.notification({message: textStatus, status: 'danger'})
                 }
-            },            success: function (body, textStatus, jqXHR) {
+            },
+            success: function (body, textStatus, jqXHR) {
                 var resp = JSON.parse(body);
                 console.log(resp)
                 document.getElementById("adminname1").innerHTML = resp.data.Username;

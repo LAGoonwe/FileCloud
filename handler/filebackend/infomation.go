@@ -235,27 +235,27 @@ func GetBackendUserFilesByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r.ParseForm()
-	username := r.Form.Get("username")
+	//username := r.Form.Get("username")
 	checkname := r.Form.Get("checkname")
 	//limitp := r.Form.Get("limit")
 
 	// 判断请求接口的用户是否是系统管理员
-	_, err := CheckUserStatus(username)
-	if err != nil {
-		resp := util.RespMsg{
-			Code: -1,
-			Msg:  "没有权限访问该接口！",
-			Data: "",
-		}
-		w.Write(resp.JSONBytes())
-		return
-	}
+	//_, err := CheckUserStatus(username)
+	//if err != nil {
+	//	resp := util.RespMsg{
+	//		Code: -1,
+	//		Msg:  "没有权限访问该接口！",
+	//		Data: "",
+	//	}
+	//	w.Write(resp.JSONBytes())
+	//	return
+	//}
 
 	// 判断参数是否合法
 	params := make(map[string]string)
-	params["username"] = username
+	//params["username"] = username
 	//params["limit"] = limitp
-	_, err = CheckParams(params)
+	_, err := CheckParams(params)
 	if err != nil {
 		resp := util.RespMsg{
 			Code: -1,

@@ -429,7 +429,7 @@
             error: function (jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
                     if (errorThrown == "Forbidden")
-                        UIkit.notification({message: '请先登录本系统！', status: 'danger'})
+                        UIkit.notification({message: '登录失效！请重新登录网站！', status: 'danger'})
                     setTimeout(function(){
                         window.location.href = "/static/view/signin.html";
                     }, 1000);
