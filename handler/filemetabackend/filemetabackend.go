@@ -258,7 +258,7 @@ func UpdateObjectMeta(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := util.RespMsg{
-		Code: -1,
+		Code: 1,
 		Msg:  "修改OSS文件元信息成功！",
 		Data: metaString,
 	}

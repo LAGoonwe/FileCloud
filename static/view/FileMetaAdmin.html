@@ -134,7 +134,7 @@
     <div class="righter">
         <table id="filetbl" class="uk-table uk-table-hover uk-table-divider">
             <thead>
-            <tr>
+            <tr id="tbHead">
                 <th>文件名</th>
                 <th>文件Hash值</th>
                 <th>文件所属用户</th>
@@ -146,21 +146,24 @@
         <!--修改文件元信息选择模态框-->
         <div id="modal-SetFileMeta" uk-modal>
             <div class="uk-modal-dialog uk-modal-body">
-                <P>请选择要修改的文件元信息类型</P>
-                <div class="uk-margin">
-                    <!-- 选择下拉框-->
-                    <select class="uk-select uk-form-width" onchange="ChangeType()">
-                        <option value="请选择验证方式" selected>请选择要修改的文件元信息类型</option>
-                        <option value="Accept-Ranges">Accept-Ranges</option>
-                        <option value="Connection">Connection</option>
-                    </select><br>
-                </div>
+                <P>请输入要修改的文件元信息【没有的将新增】</P>
+                <input id="MetaKey" class="uk-input" type="text"><br>
+                <input id="MetaValue" class="uk-input" type="text">
                 <p class="uk-text-right">
                     <button class="uk-button uk-button-default uk-modal-close" type="button">取消</button>
                     <button id="SetFileMetaActionButton" class="uk-button uk-button-primary" type="button">确定</button>
                 </p>
             </div>
         </div>
+        <span style="float: right;margin-right: 50px;">
+            <a id = "pre_page">上一页</a>
+            <span>
+                <span id = "current_page">1</span>
+                <span>/</span>
+                <span id = "total_page"></span>
+            </span>
+            <a id = "next_page">下一页</a>
+        </span>
     </div>
 </div>
 
@@ -255,7 +258,6 @@
         </div>
     </div>
 </div>
-
 </body>
 
 <script lang="javascript">
@@ -281,6 +283,7 @@
                     response = JSON.parse(response)
                     if (response.data == null){
                         UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                        return false
                     }else{
                         for (var i = 0;i<response.data.length;i++){
                             var OperationTime = new Date(response.data[i].OperationTime);
@@ -315,6 +318,7 @@
                     response = JSON.parse(response)
                     if (response.data == null){
                         UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                        return false
                     }else{
                         for (var i = 0;i<response.data.length;i++){
                             var OperationTime = new Date(response.data[i].OperationTime);
@@ -351,6 +355,7 @@
                     response = JSON.parse(response)
                     if (response.data == null){
                         UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                        return false
                     }else{
                         for (var i = 0;i<response.data.length;i++){
                             var OperationTime = new Date(response.data[i].OperationTime);
@@ -385,6 +390,7 @@
                     response = JSON.parse(response)
                     if (response.data == null){
                         UIkit.notification({message: "没有相应的操作记录！<br>请确定查找条件正确！", status: 'danger'})
+                        return false
                     }else{
                         for (var i = 0;i<response.data.length;i++){
                             var OperationTime = new Date(response.data[i].OperationTime);
@@ -522,8 +528,36 @@
     }
 
     // 修改文件元信息
-    function SetFileMetaToOSS() {
+    function SetFileMetaToOSS(objectname) {
+        $('#MetaKey').empty()
+        $('#MetaValue').empty()
         UIkit.modal($('#modal-SetFileMeta')).show();
+
+        $('#SetFileMetaActionButton').unbind('click').click(function () {
+            $.ajax({
+                url:"/filebackend/updateobjectmeta?"+ queryParams(),
+                type:"POST",
+                data:{
+                    metakey:$('#MetaKey').val(),
+                    metavalue:$('#MetaValue').val(),
+                    objectname:objectname
+                },
+                error:function (error) {
+                    alert(error)
+                },
+                success:function (response) {
+                    $('#MetaKey').empty()
+                    $('#MetaValue').empty()
+                    UIkit.modal($('#modal-SetFileMeta')).hide();
+                    response = JSON.parse(response)
+                    if (response.code == -1){
+                        UIkit.notification({message: response.msg, status: 'danger'})
+                    }else {
+                        UIkit.notification({message: '文件元信息修改成功', status: 'success'})
+                    }
+                }
+            })
+        })
     }
 
     // 根据文件名和用户名获取该文件的元信息操作记录
@@ -546,12 +580,17 @@
                     UIkit.notification({message: response.msg, status: 'danger'})
                 }else {
                     response = JSON.parse(response)
-                    for (var i = 0;i<response.data.length;i++){
-                        var OperationTime = new Date(response.data[i].OperationTime);
-                        $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                    if (response.data == null){
+                        UIkit.notification({message: '该文件暂时没有操作记录！', status: 'danger'})
+                        return false
+                    }else {
+                        for (var i = 0;i<response.data.length;i++){
+                            var OperationTime = new Date(response.data[i].OperationTime);
+                            $('#OperData_show').append(formatDate(OperationTime)+"&nbsp;&nbsp;"+response.data[i].Detail+"<br><hr>")
+                        }
+                        console.log(response)
+                        UIkit.modal($('#modal-OperData_show')).show();
                     }
-                    console.log(response)
-                    UIkit.modal($('#modal-OperData_show')).show();
                 }
             }
         })
@@ -603,148 +642,57 @@
                 ShowFileMetaOperHtml.format(all_files[i].FileSha1,all_files[i].UserName);
 
         }
-
-        // $.ajax({
-        //     url: "/filebackend/getallmeta?" + queryParams(),
-        //     type: "POST",
-        //     data: {
-        //         limit: 15
-        //     },
-        //     error: function (err) {
-        //         alert(JSON.stringify(err));
-        //     },
-        //     success: function (response) {
-        //
-        //         var dlHost = 'http://localhost:9090';
-        //         var dlEntry = localStorage.getItem('downloadEntry');
-        //         if (dlEntry != null) {
-        //             if (dlEntry.indexOf('http:')<0) {
-        //                 dlHost = 'http://' + dlEntry;
-        //             } else {
-        //                 dlHost = dlEntry;
-        //             }
-        //         }
-        //
-        //         var downloadHtml = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-download" uk-toggle ' +
-        //             'style="height:30px;margin:5px 3px;"' +
-        //             'onClick = "downloadFile(\'' + dlHost + '/file/downloadurl?filehash={0}&{1}\')">下载</button>';
-        //         var deleteFileHtml = '<button class="uk-button uk-button-danger uk-button-small" href="#modal-delete" uk-toggle '+
-        //             'style="height:30px;margin:5px 3px;"' +
-        //             'onClick = "deleteFile(\'{0}\',\'' + dlHost + '/file/delete?filehash={0}&{1}\')">删除</button>';
-        //
-        //
-        //         // //给模态框表单添加验证
-        //         // $("#realusername").attr("value",localStorage.getItem("username"))
-        //         // console.log(localStorage.getItem("username"))
-        //         // $("#token").attr("value",localStorage.getItem("token"))
-        //         // console.log(localStorage.getItem("token"))
-        //
-        //         // 序列化返回内容，转化为json数据
-        //         response = JSON.parse(response)
-        //         console.log(response)
-        //
-        //         // 解析json数据，如果code为-1，则展示错误信息，否则正常展示查询数据
-        //         if (response.code == -1){
-        //             UIkit.notification({message: response.msg, status: 'danger'})
-        //         }else {
-        //             for (var i = 0; i < response.data.length; i++) {
-        //                 var x = document.getElementById('filetbl').insertRow();
-        //                 var cell = x.insertCell();
-        //                 cell.innerHTML = response.data[i].UserFileId;
-        //
-        //                 cell = x.insertCell();
-        //                 // 装载当前文件元信息数据
-        //                 $('#Accept-Ranges').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Accept-Ranges']+'</strong>')
-        //                 $('#Connection').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Connection']+'</strong>')
-        //                 $('#Content-Length').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Length']+'</strong>')
-        //                 $('#Content-Md5').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Md5']+'</strong>')
-        //                 $('#Content-Type').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Content-Type'][0]+'</strong>')
-        //                 $('#Date').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Date']+'</strong>')
-        //                 $('#Etag').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Etag']+'</strong>')
-        //                 $('#Last-Modified').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Last-Modified']+'</strong>')
-        //                 $('#Server').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['Server']+'</strong>')
-        //                 $('#X-Oss-Hash-Crc64ecma').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Hash-Crc64ecma']+'</strong>')
-        //                 $('#X-Oss-Object-Type').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Object-Type']+'</strong>')
-        //                 $('#X-Oss-Request-Id').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Request-Id']+'</strong>')
-        //                 $('#X-Oss-Server-Time').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Server-Time']+'</strong>')
-        //                 $('#X-Oss-Storage-Class').append('&nbsp;<strong>'+JSON.parse(response.data[i].Meta)['X-Oss-Storage-Class']+'</strong>')
-        //                 cell.innerHTML = '<button class="uk-button uk-button-primary uk-button-small" href="#modal-ShowFileMeta" uk-toggle>点击查看文件元信息</button>'
-        //                 // cell.innerHTML = JSON.parse(response.data[i].Meta)['X-Oss-Hash-Crc64ecma'];
-        //                 console.log(JSON.parse(response.data[i].Meta)['Content-Type'][0])
-        //
-        //                 cell = x.insertCell();
-        //                 var UploadAt = new Date(response.data[i].UploadAt)
-        //                 cell.innerHTML = formatDate(UploadAt);
-        //
-        //                 cell = x.insertCell();
-        //                 var LastUpdated = new Date(response.data[i].LastUpdate);
-        //                 cell.innerHTML = formatDate(LastUpdated);
-        //
-        //                 cell = x.insertCell();
-        //                 cell.innerHTML = downloadHtml.format(data[i].FileHash, queryParams()) + deleteFileHtml
-        //                     .format(data[i].FileHash, queryParams());
-        //             }
-        //         }
-        //     }
-        // });
+        SetPage()
     }
 
-    function download(url){
-        try {
-            var elemIF = document.createElement("iframe");
-            elemIF.src = url;
-            elemIF.style.display = "none";
-            document.body.appendChild(elemIF);
-        } catch (e) {
-            alert("下载异常！");
-        }
-    }
+    // 分页接入
+   function SetPage(){
+        /*设置每页显示的条数*/
+        $every_page = 8;
+        $items = $("#filetbl").find("tr");
+        $total_all = $items.length;//总条数
+        $page_num = Math.ceil($total_all/$every_page)//向上取整（2.5 ==> 3）
 
-    function downloadFile(durl) {
-        $.ajax({
-            url: durl,
-            type: "POST",
-            error: function (jqXHR, textStatus, errorThrown) {
-                if (textStatus == "error") {
-                    mes = textStatus + " : " + errorThrown
-                    UIkit.notification({message: mes, status: 'danger'})
-                } else {
-                    UIkit.notification({message: textStatus, status: 'danger'})
-                }
-            },
-            success: function (body, textStatus, jqXHR) {
-                try {
-                    document.getElementById("downloadAction").innerHTML = "文件即将下载自:<br>"+body;
-                    setTimeout(function(){
-                        download(body)
-                    }, 2000);
-                } catch (e) {
-                    alert(e);
-                }
-            }
-        });
-    }
-
-
-    function deleteFile(filehash,durl) {
-        $('#deleteActionButton').unbind("click").click(function () {
-            $.ajax({
-                url: durl,
-                type: "POST",
-                error: function (jqXHR, textStatus, errorThrown) {
-                    if (textStatus == "error") {
-                        mes = textStatus + " : " + errorThrown
-                        UIkit.notification({message: mes, status: 'danger'})
-                    } else {
-                        UIkit.notification({message: textStatus, status: 'danger'})
+        $("#total_page").text($page_num);
+        //初始化页面，只显示前5条。
+        $("#filetbl tr:gt("+($every_page-1)+")").each(function(){
+            $(this).hide();
+        })
+        //点击下一条按钮函数。
+        $("#next_page").click(function(){
+            $current_page = ($("#current_page").text());//获取当前页码
+            if($current_page <$page_num){
+                $("#current_page").text(++$current_page);
+                $.each($("#filetbl tr"),function(index,item){
+                    //获取下一页显示的开始索引。
+                    var start = ($("#current_page").text()-1)*$every_page;
+                    if(index>=start&& index<start+$every_page){
+                        $('#tbHead').show()
+                        $(this).show();
+                    }else{
+                        $(this).hide();
                     }
-                },
-                success: function (body, textStatus, jqXHR) {
-                    UIkit.notification({message: '文件删除成功！', status: 'success'})
-                    $("#"+filehash).parent().parent().remove();
-                }
-            });
-            UIkit.modal($('#modal-delete')).hide()
+                })
+            }else{
+                return false;
+            }
+        })
+        $("#pre_page").click(function(){
+            $current_page = ($("#current_page").text());
+            if($current_page > 1){
+                $("#current_page").text(--$current_page);
+                $.each($("#filetbl tr"),function(index,item){
+                    var start = ($("#current_page").text()-1)*$every_page;
+                    if(index>=start&& index<start+$every_page){
+                        $('#tbHead').show()
+                        $(this).show();
+                    }else{
+                        $(this).hide();
+                    }
+                })
+            }else{
+                return false;
+            }
         })
     }
 </script>
